@@ -1,48 +1,30 @@
 package com.outr.arango
 
-import gigahorse.{Config, FullResponse}
-import gigahorse.support.asynchttpclient.Gigahorse
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.parser._
-import io.circe.syntax._
 import io.circe.generic.auto._
+import io.youi.client.HttpClient
+import io.youi.http.{Headers, HttpResponse}
+import io.youi.net.URL
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoDB(baseURL: String) {
-  protected def url(path: String): String = s"$baseURL$path"
+  private val client = new HttpClient
 
-  protected[arango] def defaultErrorHandler[Response]: FullResponse => Response = (response: FullResponse) => {
-    throw new RuntimeException(s"Error from server: ${response.statusText} (${response.status}) with content: ${response.bodyAsString}")
+  protected def url(path: String): URL = URL(s"$baseURL$path")
+
+  protected[arango] def defaultErrorHandler[Response]: HttpResponse => Response = (response: HttpResponse) => {
+    throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
   }
 
   protected[arango] def restful[Request, Response](path: String,
                                                    request: Request,
                                                    token: Option[String],
-                                                   errorHandler: FullResponse => Response = defaultErrorHandler[Response])
+                                                   errorHandler: HttpResponse => Response = defaultErrorHandler[Response])
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    val http = Gigahorse.http(Config())
-    val json = request.asJson.spaces2
-    var req = Gigahorse.url(url(path)).post(json, Gigahorse.utf8)
-    token.foreach { t =>
-      req = req.withHeaders("Authorization" -> s"bearer $t")
-    }
-    val future = http.processFull(req).map { res =>
-      val body = res.bodyAsString
-      if (res.status >= 200 && res.status < 300) {
-        decode[Response](body) match {
-          case Left(error) => throw new RuntimeException(s"JSON decoding error: $body", error)
-          case Right(result) => result
-        }
-      } else {
-        errorHandler(res)
-      }
-    }
-    future.onComplete { _ =>
-      http.close()
-    }
-    future
+    val headers = token.map(t =>Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
+    client.restful[Request, Response](url(path), request, headers, errorHandler)
   }
 
   def auth(username: String, password: String): Future[ArangoSession] = {
@@ -54,28 +36,24 @@ class ArangoDB(baseURL: String) {
   case class AuthenticationRequest(username: String, password: String)
 
   case class AuthenticationResponse(jwt: String, must_change_password: Boolean)
+
+  def dispose(): Unit = client.dispose()
 }
 
 class ArangoSession(val server: ArangoDB, val token: String) {
-  def db(name: String): ArangoDBSession = new ArangoDBSession(this, name)
-}
-
-class ArangoDBSession(session: ArangoSession, db: String) {
   protected def restful[Request, Response](name: String,
                                            request: Request,
-                                           errorHandler: FullResponse => Response = session.server.defaultErrorHandler[Response])
+                                           errorHandler: HttpResponse => Response = server.defaultErrorHandler[Response])
                                           (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    session.server.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), errorHandler)
+    server.restful[Request, Response](s"/_api/$name", request, Some(token), errorHandler)
   }
+
+  def db(name: String): ArangoDBSession = new ArangoDBSession(this, name)
 
   def parse(query: String): Future[ParseResult] = {
     restful[ParseRequest, ParseResult]("query", ParseRequest(query), (response) => {
-      ParseResult(error = true, code = response.status, parsed = false, collections = Nil, bindVars = Nil, ast = Nil)
+      ParseResult(error = true, code = response.status.code, parsed = false, collections = Nil, bindVars = Nil, ast = Nil)
     })
-  }
-
-  def cursor(query: String, count: Boolean, batchSize: Int): Future[QueryResponse] = {
-    restful[QueryRequest, QueryResponse]("cursor", QueryRequest(query, count, batchSize))
   }
 
   case class ParseRequest(query: String)
@@ -91,6 +69,19 @@ class ArangoDBSession(session: ArangoSession, db: String) {
                        name: Option[String],
                        id: Option[Int],
                        subNodes: Option[List[ParsedAST]])
+}
+
+class ArangoDBSession(session: ArangoSession, db: String) {
+  protected def restful[Request, Response](name: String,
+                                           request: Request,
+                                           errorHandler: HttpResponse => Response = session.server.defaultErrorHandler[Response])
+                                          (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
+    session.server.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), errorHandler)
+  }
+
+  def cursor(query: String, count: Boolean, batchSize: Int): Future[QueryResponse] = {
+    restful[QueryRequest, QueryResponse]("cursor", QueryRequest(query, count, batchSize))
+  }
 
   case class QueryRequest(query: String, count: Boolean, batchSize: Int)
 

@@ -11,8 +11,9 @@ fork := true
 val circeVersion = "0.7.0"
 
 libraryDependencies ++= Seq(
-	"com.outr" %% "scribe" % "1.3.2",
-	"com.eed3si9n" %% "gigahorse-asynchttpclient" % "0.2.0",
+	"com.outr" %% "scribe" % "1.4.1",
+	"io.youi" %% "youi-client" % "0.2.0",
+  "org.powerscala" %% "powerscala-io" % "2.0.5",
 	"org.scalactic" %% "scalactic" % "3.0.1",
 	"org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
