@@ -3,7 +3,7 @@ package com.outr.arango
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
 import io.youi.client.HttpClient
-import io.youi.http.{Headers, HttpResponse}
+import io.youi.http.{Headers, HttpResponse, Method}
 import io.youi.net.URL
 
 import scala.concurrent.Future
@@ -26,6 +26,15 @@ class ArangoDB(baseURL: String) {
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t =>Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     client.restful[Request, Response](url(path), request, headers, errorHandler)
+  }
+
+  protected[arango] def call[Response](path: String,
+                                       method: Method,
+                                       token: Option[String],
+                                       errorHandler: HttpResponse => Response = defaultErrorHandler[Response])
+                                      (implicit decoder: Decoder[Response]): Future[Response] = {
+    val headers = token.map(t =>Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
+    client.call[Response](url(path), method, headers, errorHandler)
   }
 
   def auth(username: String, password: String): Future[ArangoSession] = {
@@ -52,6 +61,13 @@ class ArangoSession(val server: ArangoDB, val token: String) {
                                            errorHandler: HttpResponse => Response = server.defaultErrorHandler[Response])
                                           (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     server.restful[Request, Response](s"/_api/$name", request, Some(token), errorHandler)
+  }
+
+  protected def call[Response](name: String,
+                               method: Method,
+                               errorHandler: HttpResponse => Response = server.defaultErrorHandler[Response])
+                              (implicit decoder: Decoder[Response]): Future[Response] = {
+    server.call[Response](s"/_api/$name", method, Some(token), errorHandler)
   }
 
   def db(name: String): ArangoDBSession = new ArangoDBSession(this, name)
@@ -95,9 +111,81 @@ class ArangoDBSession(session: ArangoSession, db: String) {
     session.server.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), errorHandler)
   }
 
+  protected def call[Response](name: String,
+                               method: Method,
+                               errorHandler: HttpResponse => Response = session.server.defaultErrorHandler[Response])
+                              (implicit decoder: Decoder[Response]): Future[Response] = {
+    session.server.call[Response](s"/_db/$db/_api/$name", method, Some(session.token), errorHandler)
+  }
+
+  def createCollection(name: String,
+                       journalSize: Option[Long] = None,
+                       replicationFactor: Int = 1,
+                       keyOptions: KeyOptions = KeyOptions(),
+                       waitForSync: Boolean = false,
+                       doCompact: Boolean = true,
+                       isVolatile: Boolean = false,
+                       shardKeys: Option[Array[String]] = None,
+                       numberOfShards: Int = 1,
+                       isSystem: Boolean = false,
+                       `type`: Int = 2,
+                       indexBuckets: Int = 16): Future[CreateCollectionResponse] = {
+    val request = CreateCollectionRequest(
+      name = name,
+      journalSize = journalSize,
+      replicationFactor = replicationFactor,
+      keyOptions = keyOptions,
+      waitForSync = waitForSync,
+      doCompact = doCompact,
+      isVolatile = isVolatile,
+      shardKeys = shardKeys,
+      numberOfShards = numberOfShards,
+      isSystem = isSystem,
+      `type` = `type`,
+      indexBuckets = indexBuckets
+    )
+    restful[CreateCollectionRequest, CreateCollectionResponse]("collection", request)
+  }
+
+  def dropCollection(name: String, isSystem: Boolean = false): Future[DropCollectionResponse] = {
+    call[DropCollectionResponse](s"collection/$name?isSystem=$isSystem", Method.Delete)
+  }
+
   def cursor(query: String, count: Boolean, batchSize: Int): Future[QueryResponse] = {
     restful[QueryRequest, QueryResponse]("cursor", QueryRequest(query, count, batchSize))
   }
+
+  case class CreateCollectionRequest(name: String,
+                                     journalSize: Option[Long],
+                                     replicationFactor: Int,
+                                     keyOptions: KeyOptions,
+                                     waitForSync: Boolean,
+                                     doCompact: Boolean,
+                                     isVolatile: Boolean,
+                                     shardKeys: Option[Array[String]],
+                                     numberOfShards: Int,
+                                     isSystem: Boolean,
+                                     `type`: Int,
+                                     indexBuckets: Int)
+
+  case class KeyOptions(allowUserKeys: Option[Boolean] = None,
+                        `type`: Option[String] = None,
+                        increment: Option[Int] = None,
+                        offset: Option[Int] = None)
+
+  case class CreateCollectionResponse(id: String,
+                                      name: String,
+                                      waitForSync: Boolean,
+                                      isVolatile: Boolean,
+                                      isSystem: Boolean,
+                                      status: Int,
+                                      `type`: Int,
+                                      error: Boolean,
+                                      code: Int)
+
+  case class DropCollectionResponse(id: String,
+                                    error: Boolean,
+                                    code: Int)
 
   case class QueryRequest(query: String, count: Boolean, batchSize: Int)
 
