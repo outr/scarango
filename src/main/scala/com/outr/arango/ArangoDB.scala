@@ -71,6 +71,16 @@ class ArangoSession(val server: ArangoDB, val token: String) {
                        subNodes: Option[List[ParsedAST]])
 }
 
+object ArangoSession {
+  def default: Future[ArangoSession] = {
+    val url = Option(System.getenv("ARANGO_URL")).getOrElse("http://localhost:8529")
+    val username = Option(System.getenv("ARANGO_USERNAME")).getOrElse("root")
+    val password = Option(System.getenv("ARANGO_PASSWORD")).getOrElse("root")
+    val instance = new ArangoDB(url)
+    instance.auth(username, password)
+  }
+}
+
 class ArangoDBSession(session: ArangoSession, db: String) {
   protected def restful[Request, Response](name: String,
                                            request: Request,

@@ -1,10 +1,7 @@
 package com.outr.arango
 
-import com.outr.Query
-import org.powerscala.io._
-
 import scala.annotation.compileTimeOnly
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -30,28 +27,32 @@ object Macros {
         }
         val argsMap = args.zipWithIndex.map {
           case (value, index) => {
-            s"arg${index + 1}" -> value
+            val vt = value.actualType
+            val queryArg = if (vt <:< typeOf[String]) {
+              c.Expr[QueryArg](q"com.outr.arango.QueryArg.string($value)")
+            } else if (vt <:< typeOf[Int]) {
+              c.Expr[QueryArg](q"com.outr.arango.QueryArg.int($value)")
+            } else {
+              c.abort(c.enclosingPosition, s"Unsupported QueryArg: $vt.")
+            }
+            s"arg${index + 1}" -> queryArg
           }
         }.toMap
 
-        val url = Option(System.getenv("ARANGO_URL")).getOrElse("http://localhost:8529")
-        val username = Option(System.getenv("ARANGO_USERNAME")).getOrElse("root")
-        val password = Option(System.getenv("ARANGO_PASSWORD")).getOrElse("root")
-        val instance = new ArangoDB(url)
-        try {
-          val query = b.toString()
-          val future = instance.auth(username, password).flatMap { session =>
-            session.parse(query)
+        val query = b.toString().trim
+        val future = ArangoSession.default.flatMap { session =>
+          val result = session.parse(query)
+          result.onComplete { _ =>
+            session.server.dispose()
           }
-          val result = Await.result(future, 30.seconds)
-          if (result.error) {
-            c.abort(c.enclosingPosition, s"Error #${result.code}. Bad syntax for AQL query: $query.")
-          }
-          // TODO: return a Query
-          c.abort(c.enclosingPosition, s"Testing: $b, Error: ${result.error}, BindVars: ${result.bindVars}, $result")
-        } finally {
-          instance.dispose()
+          result
         }
+
+        val result = Await.result(future, 30.seconds)
+        if (result.error) {
+          c.abort(c.enclosingPosition, s"Error #${result.code}. Bad syntax for AQL query: $query.")
+        }
+        c.Expr[Query](q"""com.outr.arango.Query($query, $argsMap)""")
       }
       case _ => c.abort(c.enclosingPosition, "Bad usage of cypher interpolation.")
     }
