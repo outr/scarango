@@ -10,6 +10,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoDB(baseURL: String) {
+  private var disposed = false
   private val client = new HttpClient
 
   protected def url(path: String): URL = URL(s"$baseURL$path")
@@ -37,7 +38,12 @@ class ArangoDB(baseURL: String) {
 
   case class AuthenticationResponse(jwt: String, must_change_password: Boolean)
 
-  def dispose(): Unit = client.dispose()
+  def isDisposed: Boolean = disposed
+
+  def dispose(): Unit = {
+    client.dispose()
+    disposed = true
+  }
 }
 
 class ArangoSession(val server: ArangoDB, val token: String) {

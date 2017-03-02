@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango._
-import org.scalatest.{AsyncWordSpec, Matchers, WordSpec}
+import org.scalatest.{AsyncWordSpec, Matchers}
 
 class AQLSpec extends AsyncWordSpec with Matchers {
   "AQL" when {
@@ -20,6 +20,12 @@ class AQLSpec extends AsyncWordSpec with Matchers {
           s.parse("FOR user IN users RETURNING user")
         }.map { parseResult =>
           parseResult.error should be(true)
+        }
+      }
+      "close the session" in {
+        session.map { s =>
+          s.server.dispose()
+          s.server.isDisposed should be(true)
         }
       }
     }
