@@ -187,6 +187,25 @@ class ArangoDBSession(session: ArangoSession, db: String) {
     restful[QueryRequest, QueryResponse]("cursor", QueryRequest(query, count, batchSize))
   }
 
+  def document[T](collection: String, documentHandle: String)
+                 (implicit decoder: Decoder[T]): Future[T] = {
+    call[T](s"document/$collection/$documentHandle", Method.Get)
+  }
+
+  def createDocument[T](collection: String,
+                        document: T,
+                        waitForSync: Boolean = false,
+                        returnNew: Boolean = false,
+                        silent: Boolean = false)
+                       (implicit encoder: Encoder[T], decoder: Decoder[CreateDocument[T]]): Future[CreateDocument[T]] = {
+    restful[T, CreateDocument[T]](s"document/$collection?waitForSync=$waitForSync&returnNew=$returnNew&silent=$silent", document)
+  }
+
+  case class CreateDocument[T](_id: Option[String],
+                               _key: Option[String],
+                               _rev: Option[String],
+                               `new`: Option[T])
+
   case class CreateCollectionRequest(name: String,
                                      journalSize: Option[Long],
                                      replicationFactor: Int,
