@@ -118,6 +118,10 @@ class ArangoDBSession(session: ArangoSession, db: String) {
     session.server.call[Response](s"/_db/$db/_api/$name", method, Some(session.token), errorHandler)
   }
 
+  def collections(excludeSystem: Boolean = true): Future[Collections] = {
+    call[Collections](s"collection?excludeSystem=$excludeSystem", Method.Get)
+  }
+
   def createCollection(name: String,
                        journalSize: Option[Long] = None,
                        replicationFactor: Int = 1,
@@ -147,6 +151,34 @@ class ArangoDBSession(session: ArangoSession, db: String) {
     restful[CreateCollectionRequest, CreateCollectionResponse]("collection", request)
   }
 
+  def loadCollection(name: String, count: Boolean = true): Future[CollectionLoad] = {
+    call[CollectionLoad](s"collection/$name/load?count=$count", Method.Put)
+  }
+
+  def unloadCollection(name: String): Future[CollectionLoad] = {
+    call[CollectionLoad](s"collection/$name/unload", Method.Put)
+  }
+
+  def collectionInformation(name: String): Future[CollectionInformation] = {
+    call[CollectionInformation](s"collection/$name", Method.Get)
+  }
+
+  def collectionProperties(name: String): Future[CollectionProperties] = {
+    call[CollectionProperties](s"collection/$name/properties", Method.Get)
+  }
+
+  def collectionCount(name: String): Future[CollectionCount] = {
+    call[CollectionCount](s"collection/$name/count", Method.Get)
+  }
+
+  def collectionRevision(name: String): Future[CollectionRevision] = {
+    call[CollectionRevision](s"collection/$name/revision", Method.Get)
+  }
+
+  def truncateCollection(name: String): Future[TruncateCollectionResponse] = {
+    call[TruncateCollectionResponse](s"collection/$name/truncate", Method.Put)
+  }
+
   def dropCollection(name: String, isSystem: Boolean = false): Future[DropCollectionResponse] = {
     call[DropCollectionResponse](s"collection/$name?isSystem=$isSystem", Method.Delete)
   }
@@ -173,6 +205,14 @@ class ArangoDBSession(session: ArangoSession, db: String) {
                         increment: Option[Int] = None,
                         offset: Option[Int] = None)
 
+  case class Collections(result: List[Collection])
+
+  case class Collection(id: String,
+                        name: String,
+                        isSystem: Boolean,
+                        status: Int,
+                        `type`: Int)
+
   case class CreateCollectionResponse(id: String,
                                       name: String,
                                       waitForSync: Boolean,
@@ -182,6 +222,60 @@ class ArangoDBSession(session: ArangoSession, db: String) {
                                       `type`: Int,
                                       error: Boolean,
                                       code: Int)
+
+  case class CollectionLoad(id: String,
+                            name: String,
+                            count: Option[Int],
+                            status: Int,
+                            `type`: Int,
+                            isSystem: Boolean)
+
+  case class CollectionInformation(id: String,
+                                   name: String,
+                                   status: Int,
+                                   `type`: Int,
+                                   isSystem: Boolean)
+
+  case class CollectionProperties(waitForSync: Boolean,
+                                  doCompact: Boolean,
+                                  journalSize: Int,
+                                  keyOptions: KeyOptions,
+                                  isVolatile: Boolean,
+                                  numberOfShards: Option[Int],
+                                  shardKeys: Option[List[String]],
+                                  replicationFactor: Option[Int])
+
+  case class CollectionCount(id: String,
+                             name: String,
+                             isSystem: Boolean,
+                             doCompact: Boolean,
+                             isVolatile: Boolean,
+                             journalSize: Long,
+                             keyOptions: KeyOptions,
+                             waitForSync: Boolean,
+                             indexBuckets: Int,
+                             count: Int,
+                             status: Int,
+                             `type`: Int,
+                             error: Boolean,
+                             code: Int)
+
+  case class CollectionRevision(id: String,
+                                name: String,
+                                isSystem: Boolean,
+                                status: Int,
+                                `type`: Int,
+                                revision: String,
+                                error: Boolean,
+                                code: Int)
+
+  case class TruncateCollectionResponse(id: String,
+                                        name: String,
+                                        isSystem: Boolean,
+                                        status: Int,
+                                        `type`: Int,
+                                        error: Boolean,
+                                        code: Int)
 
   case class DropCollectionResponse(id: String,
                                     error: Boolean,
