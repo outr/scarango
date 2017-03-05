@@ -9,7 +9,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "create a new collection" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.createCollection("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.create().map { response =>
           response.error should be(false)
         }
         future.onComplete { _ =>
@@ -33,7 +34,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "get collection information" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.collectionInformation("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.information().map { response =>
           response.name should be("test")
           response.`type` should be(2)
           response.status should be(3)
@@ -47,7 +49,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "get collection properties" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.collectionProperties("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.properties().map { response =>
           response.waitForSync should be(false)
         }
         future.onComplete { _ =>
@@ -59,7 +62,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "get collection count" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.collectionCount("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.count().map { response =>
           response.name should be("test")
           response.`type` should be(2)
           response.status should be(3)
@@ -74,7 +78,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "get collection revision" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.collectionRevision("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.revision().map { response =>
           response.name should be("test")
           response.`type` should be(2)
           response.status should be(3)
@@ -89,7 +94,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "list all collections" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.collections().map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.list().map { response =>
           val collectionNames = response.result.map(_.name).toSet
           collectionNames should be(Set("test"))
         }
@@ -102,7 +108,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "truncate the collection" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.truncateCollection("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.truncate().map { response =>
           response.error should be(false)
         }
         future.onComplete { _ =>
@@ -114,7 +121,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "drop the new collection" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.dropCollection("test").map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.drop().map { response =>
           response.error should be(false)
         }
         future.onComplete { _ =>
