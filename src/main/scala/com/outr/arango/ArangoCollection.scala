@@ -7,7 +7,9 @@ import io.youi.http.{HttpResponse, Method}
 
 import scala.concurrent.Future
 
-class ArangoCollection(db: ArangoDB, collection: String) {
+class ArangoCollection(val db: ArangoDB, val collection: String) {
+  lazy val document: ArangoDocument = new ArangoDocument(this)
+
   protected[arango] def restful[Request, Response](name: Option[String],
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,

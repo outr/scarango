@@ -22,7 +22,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "insert a document" in {
       ArangoSession.default.flatMap { session =>
         val dbSession = session.db("_system")
-        val future = dbSession.createDocument("test", User("John Doe", 30), waitForSync = true, returnNew = true).map { response =>
+        val collection = dbSession.collection("test")
+        val future = collection.document.create(User("John Doe", 30), waitForSync = true, returnNew = true).map { response =>
           response.`new` should be(Some(User("John Doe", 30)))
         }
         future.onComplete { _ =>

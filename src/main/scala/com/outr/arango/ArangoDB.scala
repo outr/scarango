@@ -29,22 +29,4 @@ class ArangoDB(val session: ArangoSession, db: String) {
   def cursor(query: String, count: Boolean, batchSize: Int): Future[QueryResponse] = {
     restful[QueryRequest, QueryResponse]("cursor", QueryRequest(query, count, batchSize))
   }
-
-  def document[T](collection: String, documentHandle: String)
-                 (implicit decoder: Decoder[T]): Future[T] = {
-    call[T](s"document/$collection/$documentHandle", Method.Get)
-  }
-
-  def createDocument[T](collection: String,
-                        document: T,
-                        waitForSync: Boolean = false,
-                        returnNew: Boolean = false,
-                        silent: Boolean = false)
-                       (implicit encoder: Encoder[T], decoder: Decoder[CreateDocument[T]]): Future[CreateDocument[T]] = {
-    restful[T, CreateDocument[T]](s"document/$collection", document, params = Map(
-      "waitForSync" -> waitForSync.toString,
-      "returnNew" -> returnNew.toString,
-      "silent" -> silent.toString
-    ))
-  }
 }
