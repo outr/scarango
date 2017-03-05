@@ -21,12 +21,12 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "create a new collection" in {
-      test.create().map { response =>
+      test.create(waitForSync = true).map { response =>
         response.error should be(false)
       }
     }
     "insert a document" in {
-      test.document.create(User("John Doe", 30), waitForSync = true, returnNew = true).map { response =>
+      test.document.create(User("John Doe", 30), returnNew = true).map { response =>
         response.`new` should be(Some(User("John Doe", 30)))
       }
     }
@@ -39,7 +39,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     }
     "get collection properties" in {
       test.properties().map { response =>
-        response.waitForSync should be(false)
+        response.waitForSync should be(true)
       }
     }
     "get collection count" in {
