@@ -1,125 +1,33 @@
 package com.outr.arango
 
-import io.circe.{Decoder, Encoder, Json}
+import com.outr.arango.rest._
 import io.circe.generic.auto._
-import io.youi.client.HttpClient
-import io.youi.http.{Headers, HttpResponse, Method}
-import io.youi.net.URL
+import io.circe.{Decoder, Encoder, Json}
+import io.youi.http.{HttpResponse, Method}
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class ArangoDB(baseURL: String) {
-  private var disposed = false
-  private val client = new HttpClient
-
-  protected def url(path: String): URL = URL(s"$baseURL$path")
-
-  protected[arango] def defaultErrorHandler[Response]: HttpResponse => Response = (response: HttpResponse) => {
-    throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
-  }
-
-  protected[arango] def restful[Request, Response](path: String,
-                                                   request: Request,
-                                                   token: Option[String],
-                                                   errorHandler: HttpResponse => Response = defaultErrorHandler[Response])
-                                                  (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    val headers = token.map(t =>Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
-    client.restful[Request, Response](url(path), request, headers, errorHandler)
-  }
-
-  protected[arango] def call[Response](path: String,
-                                       method: Method,
-                                       token: Option[String],
-                                       errorHandler: HttpResponse => Response = defaultErrorHandler[Response])
-                                      (implicit decoder: Decoder[Response]): Future[Response] = {
-    val headers = token.map(t =>Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
-    client.call[Response](url(path), method, headers, errorHandler)
-  }
-
-  def auth(username: String, password: String): Future[ArangoSession] = {
-    restful[AuthenticationRequest, AuthenticationResponse]("/_open/auth", AuthenticationRequest(username, password), None).map { response =>
-      new ArangoSession(this, response.jwt)
-    }
-  }
-
-  case class AuthenticationRequest(username: String, password: String)
-
-  case class AuthenticationResponse(jwt: String, must_change_password: Boolean)
-
-  def isDisposed: Boolean = disposed
-
-  def dispose(): Unit = {
-    client.dispose()
-    disposed = true
-  }
-}
-
-class ArangoSession(val server: ArangoDB, val token: String) {
+class ArangoDB(session: ArangoSession, db: String) {
   protected def restful[Request, Response](name: String,
                                            request: Request,
-                                           errorHandler: HttpResponse => Response = server.defaultErrorHandler[Response])
+                                           params: Map[String, String] = Map.empty,
+                                           errorHandler: HttpResponse => Response = session.instance.defaultErrorHandler[Response])
                                           (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    server.restful[Request, Response](s"/_api/$name", request, Some(token), errorHandler)
+    session.instance.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), params, errorHandler)
   }
 
   protected def call[Response](name: String,
                                method: Method,
-                               errorHandler: HttpResponse => Response = server.defaultErrorHandler[Response])
+                               params: Map[String, String] = Map.empty,
+                               errorHandler: HttpResponse => Response = session.instance.defaultErrorHandler[Response])
                               (implicit decoder: Decoder[Response]): Future[Response] = {
-    server.call[Response](s"/_api/$name", method, Some(token), errorHandler)
-  }
-
-  def db(name: String): ArangoDBSession = new ArangoDBSession(this, name)
-
-  def parse(query: String): Future[ParseResult] = {
-    restful[ParseRequest, ParseResult]("query", ParseRequest(query), (response) => {
-      ParseResult(error = true, code = response.status.code, parsed = false, collections = Nil, bindVars = Nil, ast = Nil)
-    })
-  }
-
-  case class ParseRequest(query: String)
-
-  case class ParseResult(error: Boolean,
-                         code: Int,
-                         parsed: Boolean,
-                         collections: List[String],
-                         bindVars: List[String],
-                         ast: List[ParsedAST])
-
-  case class ParsedAST(`type`: String,
-                       name: Option[String],
-                       id: Option[Int],
-                       subNodes: Option[List[ParsedAST]])
-}
-
-object ArangoSession {
-  def default: Future[ArangoSession] = {
-    val url = Option(System.getenv("ARANGO_URL")).getOrElse("http://localhost:8529")
-    val username = Option(System.getenv("ARANGO_USERNAME")).getOrElse("root")
-    val password = Option(System.getenv("ARANGO_PASSWORD")).getOrElse("root")
-    val instance = new ArangoDB(url)
-    instance.auth(username, password)
-  }
-}
-
-class ArangoDBSession(session: ArangoSession, db: String) {
-  protected def restful[Request, Response](name: String,
-                                           request: Request,
-                                           errorHandler: HttpResponse => Response = session.server.defaultErrorHandler[Response])
-                                          (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    session.server.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), errorHandler)
-  }
-
-  protected def call[Response](name: String,
-                               method: Method,
-                               errorHandler: HttpResponse => Response = session.server.defaultErrorHandler[Response])
-                              (implicit decoder: Decoder[Response]): Future[Response] = {
-    session.server.call[Response](s"/_db/$db/_api/$name", method, Some(session.token), errorHandler)
+    session.instance.call[Response](s"/_db/$db/_api/$name", method, Some(session.token), params, errorHandler)
   }
 
   def collections(excludeSystem: Boolean = true): Future[Collections] = {
-    call[Collections](s"collection?excludeSystem=$excludeSystem", Method.Get)
+    call[Collections](s"collection", Method.Get, params = Map(
+      "excludeSystem" -> excludeSystem.toString
+    ))
   }
 
   def createCollection(name: String,
@@ -152,7 +60,9 @@ class ArangoDBSession(session: ArangoSession, db: String) {
   }
 
   def loadCollection(name: String, count: Boolean = true): Future[CollectionLoad] = {
-    call[CollectionLoad](s"collection/$name/load?count=$count", Method.Put)
+    call[CollectionLoad](s"collection/$name/load", Method.Put, params = Map(
+      "count" -> count.toString
+    ))
   }
 
   def unloadCollection(name: String): Future[CollectionLoad] = {
@@ -180,7 +90,9 @@ class ArangoDBSession(session: ArangoSession, db: String) {
   }
 
   def dropCollection(name: String, isSystem: Boolean = false): Future[DropCollectionResponse] = {
-    call[DropCollectionResponse](s"collection/$name?isSystem=$isSystem", Method.Delete)
+    call[DropCollectionResponse](s"collection/$name", Method.Delete, params = Map(
+      "isSystem" -> isSystem.toString
+    ))
   }
 
   def cursor(query: String, count: Boolean, batchSize: Int): Future[QueryResponse] = {
@@ -198,124 +110,10 @@ class ArangoDBSession(session: ArangoSession, db: String) {
                         returnNew: Boolean = false,
                         silent: Boolean = false)
                        (implicit encoder: Encoder[T], decoder: Decoder[CreateDocument[T]]): Future[CreateDocument[T]] = {
-    restful[T, CreateDocument[T]](s"document/$collection?waitForSync=$waitForSync&returnNew=$returnNew&silent=$silent", document)
+    restful[T, CreateDocument[T]](s"document/$collection", document, params = Map(
+      "waitForSync" -> waitForSync.toString,
+      "returnNew" -> returnNew.toString,
+      "silent" -> silent.toString
+    ))
   }
-
-  case class CreateDocument[T](_id: Option[String],
-                               _key: Option[String],
-                               _rev: Option[String],
-                               `new`: Option[T])
-
-  case class CreateCollectionRequest(name: String,
-                                     journalSize: Option[Long],
-                                     replicationFactor: Int,
-                                     keyOptions: KeyOptions,
-                                     waitForSync: Boolean,
-                                     doCompact: Boolean,
-                                     isVolatile: Boolean,
-                                     shardKeys: Option[Array[String]],
-                                     numberOfShards: Int,
-                                     isSystem: Boolean,
-                                     `type`: Int,
-                                     indexBuckets: Int)
-
-  case class KeyOptions(allowUserKeys: Option[Boolean] = None,
-                        `type`: Option[String] = None,
-                        increment: Option[Int] = None,
-                        offset: Option[Int] = None)
-
-  case class Collections(result: List[Collection])
-
-  case class Collection(id: String,
-                        name: String,
-                        isSystem: Boolean,
-                        status: Int,
-                        `type`: Int)
-
-  case class CreateCollectionResponse(id: String,
-                                      name: String,
-                                      waitForSync: Boolean,
-                                      isVolatile: Boolean,
-                                      isSystem: Boolean,
-                                      status: Int,
-                                      `type`: Int,
-                                      error: Boolean,
-                                      code: Int)
-
-  case class CollectionLoad(id: String,
-                            name: String,
-                            count: Option[Int],
-                            status: Int,
-                            `type`: Int,
-                            isSystem: Boolean)
-
-  case class CollectionInformation(id: String,
-                                   name: String,
-                                   status: Int,
-                                   `type`: Int,
-                                   isSystem: Boolean)
-
-  case class CollectionProperties(waitForSync: Boolean,
-                                  doCompact: Boolean,
-                                  journalSize: Int,
-                                  keyOptions: KeyOptions,
-                                  isVolatile: Boolean,
-                                  numberOfShards: Option[Int],
-                                  shardKeys: Option[List[String]],
-                                  replicationFactor: Option[Int])
-
-  case class CollectionCount(id: String,
-                             name: String,
-                             isSystem: Boolean,
-                             doCompact: Boolean,
-                             isVolatile: Boolean,
-                             journalSize: Long,
-                             keyOptions: KeyOptions,
-                             waitForSync: Boolean,
-                             indexBuckets: Int,
-                             count: Int,
-                             status: Int,
-                             `type`: Int,
-                             error: Boolean,
-                             code: Int)
-
-  case class CollectionRevision(id: String,
-                                name: String,
-                                isSystem: Boolean,
-                                status: Int,
-                                `type`: Int,
-                                revision: String,
-                                error: Boolean,
-                                code: Int)
-
-  case class TruncateCollectionResponse(id: String,
-                                        name: String,
-                                        isSystem: Boolean,
-                                        status: Int,
-                                        `type`: Int,
-                                        error: Boolean,
-                                        code: Int)
-
-  case class DropCollectionResponse(id: String,
-                                    error: Boolean,
-                                    code: Int)
-
-  case class QueryRequest(query: String, count: Boolean, batchSize: Int)
-
-  case class QueryResponse(result: List[Json],
-                           hasMore: Boolean,
-                           count: Int,
-                           cached: Boolean,
-                           extra: QueryResponseExtras,
-                           error: Boolean,
-                           code: Int)
-
-  case class QueryResponseExtras(stats: QueryResponseStats, warnings: List[String])
-
-  case class QueryResponseStats(writesExecuted: Int,
-                                writesIgnored: Int,
-                                scannedFull: Int,
-                                scannedIndex: Int,
-                                filtered: Int,
-                                executionTime: Double)
 }

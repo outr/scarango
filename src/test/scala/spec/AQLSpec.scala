@@ -24,8 +24,8 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       }
       "close the session" in {
         session.map { s =>
-          s.server.dispose()
-          s.server.isDisposed should be(true)
+          s.instance.dispose()
+          s.instance.isDisposed should be(true)
         }
       }
     }

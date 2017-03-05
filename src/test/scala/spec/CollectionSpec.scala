@@ -13,7 +13,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.error should be(false)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -25,7 +25,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.`new` should be(Some(User("John Doe", 30)))
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -39,7 +39,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.status should be(3)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -51,7 +51,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.waitForSync should be(false)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -66,7 +66,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.count should be(1)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -81,7 +81,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.revision shouldNot be("0")
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -94,7 +94,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           collectionNames should be(Set("test"))
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -106,7 +106,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.error should be(false)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }
@@ -118,7 +118,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
           response.error should be(false)
         }
         future.onComplete { _ =>
-          session.server.dispose()
+          session.instance.dispose()
         }
         future
       }

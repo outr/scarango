@@ -43,7 +43,7 @@ object Macros {
         val future = ArangoSession.default.flatMap { session =>
           val result = session.parse(query)
           result.onComplete { _ =>
-            session.server.dispose()
+            session.instance.dispose()
           }
           result
         }
