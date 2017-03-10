@@ -1,8 +1,11 @@
 package spec
 
 import com.outr.arango.{ArangoCollection, ArangoDB, ArangoSession}
+import io.circe.Encoder
 import org.scalatest.{AsyncWordSpec, Matchers}
+import io.circe._
 import io.circe.generic.auto._
+import io.circe.generic.semiauto.deriveEncoder
 
 import scala.concurrent.Future
 
@@ -10,6 +13,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
   private var session: ArangoSession = _
   private var db: ArangoDB = _
   private var test: ArangoCollection = _
+
+  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
 
   "Collections" should {
     "create the session" in {
@@ -26,6 +31,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "insert a document" in {
+      import io.circe.syntax._
+      println(User("John Doe", 30).asJson.spaces2)
       test.document.create(User("John Doe", 30), returnNew = true).map { response =>
         response.`new` should be(Some(User("John Doe", 30)))
       }
@@ -83,4 +90,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
   }
 }
 
-case class User(name: String, age: Int)
+case class User(name: String,
+                age: Int,
+                _key: Option[String] = None,
+                _id: Option[String] = None,
+                _rev: Option[String] = None)
