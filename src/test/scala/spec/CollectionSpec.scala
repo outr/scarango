@@ -32,9 +32,14 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     }
     "insert a document" in {
       import io.circe.syntax._
-      println(User("John Doe", 30).asJson.spaces2)
       test.document.create(User("John Doe", 30), returnNew = true).map { response =>
-        response.`new` should be(Some(User("John Doe", 30)))
+        response.`new` shouldNot be(None)
+        val user = response.`new`.head
+        user.name should be("John Doe")
+        user.age should be(30)
+        user._id shouldNot be(None)
+        user._key shouldNot be(None)
+        user._rev shouldNot be(None)
       }
     }
     "get collection information" in {

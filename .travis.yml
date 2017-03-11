@@ -4,6 +4,11 @@ scala:
   - 2.12.1
 jdk:
   - oraclejdk8
+before_script:
+  - chmod 777 ./travis/setup_arangodb.sh
+  - ./travis/setup_arangodb.sh
+after_script:
+  - killall -9 arangod_x86_64
 script:
   - sbt clean +test
 cache:

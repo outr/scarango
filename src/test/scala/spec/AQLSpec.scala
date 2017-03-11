@@ -13,7 +13,8 @@ class AQLSpec extends AsyncWordSpec with Matchers {
   private var db: ArangoDB = _
   private var users: ArangoCollection = _
 
-//  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
 
   "AQL" when {
     "doing simple parser check" should {
@@ -61,13 +62,18 @@ class AQLSpec extends AsyncWordSpec with Matchers {
           result._id shouldNot be(None)
         }
       }
-//      "handle a simple query" in {
-//        val query = aql"FOR user IN users RETURN user"
-//        db.cursor[User](query).map { response =>
-//          println(response.result.headOption)
-//          response.result.size should be(1)
-//        }
-//      }
+      "handle a simple query" in {
+        val query = aql"FOR user IN users RETURN user"
+        db.cursor[User](query).map { response =>
+          response.result.size should be(1)
+          val user = response.result.head
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
+        }
+      }
     }
     "cleanup" should {
       "drop the users collection" in {

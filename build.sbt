@@ -13,7 +13,7 @@ val circeVersion = "0.7.0"
 
 libraryDependencies ++= Seq(
 	"com.outr" %% "scribe" % "1.4.1",
-	"io.youi" %% "youi-client" % "0.2.2",
+	"io.youi" %% "youi-client" % "0.2.3-SNAPSHOT",
   "org.powerscala" %% "powerscala-io" % "2.0.5",
 	"org.scalactic" %% "scalactic" % "3.0.1",
 	"org.scalatest" %% "scalatest" % "3.0.1" % "test"
