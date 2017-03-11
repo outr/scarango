@@ -1,6 +1,7 @@
 package com.outr.arango.rest
 
-case class QueryResponse[T](result: List[T],
+case class QueryResponse[T](id: Option[String],
+                            result: List[T],
                             hasMore: Boolean,
                             count: Option[Int],
                             cached: Boolean,

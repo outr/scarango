@@ -65,6 +65,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       "handle a simple query" in {
         val query = aql"FOR user IN users RETURN user"
         db.cursor[User](query).map { response =>
+          response.id should be(None)
           response.result.size should be(1)
           val user = response.result.head
           user.name should be("John Doe")
@@ -72,6 +73,26 @@ class AQLSpec extends AsyncWordSpec with Matchers {
           user._id shouldNot be(None)
           user._key shouldNot be(None)
           user._rev shouldNot be(None)
+        }
+      }
+      "insert another user" in {
+        users.document.create(User("Jane Doe", 20)).map { result =>
+          result._id shouldNot be(None)
+        }
+      }
+      "handle a two page cursor call" in {
+        val query = aql"FOR user IN users RETURN user"
+        db.cursor[User](query, count = true, batchSize = Some(1)).map { response =>
+          response.result.size should be(1)
+          response.count should be(Some(2))
+          response.id shouldNot be(None)
+
+          response.id.get
+        }.flatMap { id =>
+          db.cursor.get[User](id).map { response =>
+            response.result.size should be(1)
+            response.count should be(Some(2))
+          }
         }
       }
     }
