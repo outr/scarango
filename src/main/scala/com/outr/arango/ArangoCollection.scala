@@ -105,3 +105,8 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
     ))
   }
 }
+
+object ArangoCollection {
+  val Document: Int = 2
+  val Edges: Int = 3
+}

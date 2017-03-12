@@ -25,4 +25,6 @@ class ArangoDB(val session: ArangoSession, db: String) {
   def collection(name: String): ArangoCollection = new ArangoCollection(this, name)
 
   lazy val cursor: ArangoCursor = new ArangoCursor(this)
+
+  lazy val graph: ArangoGraphs = new ArangoGraphs(this)
 }
