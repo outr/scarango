@@ -22,11 +22,12 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                                    request: Request,
                                                    token: Option[String],
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: HttpResponse => Response = defaultErrorHandler[Response])
+                                                   errorHandler: HttpResponse => Response = defaultErrorHandler[Response],
+                                                   method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     val url = baseURL.withPath(path).withParams(params)
-    client.restful[Request, Response](url, request, headers, errorHandler)
+    client.restful[Request, Response](url, request, headers, errorHandler, method)
   }
 
   protected[arango] def call[Response](path: String,

@@ -25,8 +25,12 @@ case class CreateGraphRequest(name: String,
 case class GraphOptions(smartGraphAttribute: Option[String],
                         numberOfShards: Option[Int])
 
-case class CreateGraphResponse(error: Boolean,
-                               graph: GraphEntry,
-                               code: Int)
+case class GraphResponse(error: Boolean,
+                         graph: GraphEntry,
+                         code: Int)
+
+case class GraphCollectionList(error: Boolean, collections: List[String], code: Int)
 
 case class GraphDeleted(error: Boolean, removed: Boolean, code: Int)
+
+case class AddVertexRequest(collection: String)
