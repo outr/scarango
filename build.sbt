@@ -10,7 +10,6 @@ fork := true
 
 val circeVersion = "0.7.0"
 
-
 libraryDependencies ++= Seq(
 	"com.outr" %% "scribe" % "1.4.1",
 	"io.youi" %% "youi-client" % "0.2.3-SNAPSHOT",

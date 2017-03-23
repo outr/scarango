@@ -1,8 +1,10 @@
 package com.outr.arango
 
 import com.outr.arango.rest._
+import io.circe.{Decoder, Encoder}
 import io.youi.http.Method
 import io.circe.generic.auto._
+import io.circe.generic.semiauto._
 
 import scala.concurrent.Future
 
@@ -45,14 +47,34 @@ class ArangoGraph(val name: String, val db: ArangoDB) {
 
   def edge(name: String): ArangoEdge = new ArangoEdge(name, this)
 
-  def delete(dropCollections: Boolean): Future[GraphDeleted] = {
-    db.call[GraphDeleted](s"gharial/$name", Method.Delete, Map("dropCollections" -> dropCollections.toString))
+  def delete(dropCollections: Boolean): Future[DeleteResponse] = {
+    db.call[DeleteResponse](s"gharial/$name", Method.Delete, Map("dropCollections" -> dropCollections.toString))
   }
 }
 
 class ArangoVertex(name: String, graph: ArangoGraph) {
   def create(): Future[GraphResponse] = {
     graph.db.restful[AddVertexRequest, GraphResponse](s"gharial/${graph.name}/vertex", AddVertexRequest(name))
+  }
+
+  def insert[T](document: T, waitForSync: Option[Boolean] = None)(implicit encoder: Encoder[T]): Future[VertexInsert] = {
+    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name", document, params = waitForSync.map(b => Map("waitForSync" -> b.toString)).getOrElse(Map.empty))
+  }
+
+  def apply[T](key: String)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
+    graph.db.call[VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", Method.Get)
+  }
+
+  def modify[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
+    graph.db.restful[T, VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch)
+  }
+
+  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
+    graph.db.restful[T, VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Put)
+  }
+
+  def delete(key: String): Future[DeleteResponse] = {
+    graph.db.call[DeleteResponse](s"gharial/${graph.name}/vertex/$name/$key", Method.Delete)
   }
 
   def delete(): Future[GraphResponse] = {
@@ -66,6 +88,10 @@ class ArangoEdge(name: String, graph: ArangoGraph) {
   }
 
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {
+    // TODO: remove these one Circe fixes named-arg problem (method = Method.Put causes this)
+    implicit val edgeDefinitionEncoder = deriveEncoder[EdgeDefinition]
+    implicit val graphResponseDecoder = deriveDecoder[GraphResponse]
+
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge/$name", EdgeDefinition(name, from, to), method = Method.Put)
   }
 

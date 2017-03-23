@@ -31,6 +31,12 @@ case class GraphResponse(error: Boolean,
 
 case class GraphCollectionList(error: Boolean, collections: List[String], code: Int)
 
-case class GraphDeleted(error: Boolean, removed: Boolean, code: Int)
+case class DeleteResponse(error: Boolean, removed: Boolean, code: Int)
 
 case class AddVertexRequest(collection: String)
+
+case class VertexInsert(error: Boolean, vertex: VertexInsert, code: Int)
+
+case class VertexInfo(_id: String, _key: String, _rev: String)
+
+case class VertexResult[T](error: Boolean, vertex: Option[T], code: Int)
