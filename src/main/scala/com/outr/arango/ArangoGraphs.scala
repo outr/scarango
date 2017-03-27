@@ -87,6 +87,10 @@ class ArangoEdge(name: String, graph: ArangoGraph) {
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge", EdgeDefinition(name, from, to))
   }
 
+  def insert[T <: Edge](edge: T)(implicit encoder: Encoder[T]): Future[EdgeResult] = {
+    graph.db.restful[T, EdgeResult](s"gharial/${graph.name}/edge/$name", edge)
+  }
+
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {
     // TODO: remove these one Circe fixes named-arg problem (method = Method.Put causes this)
     implicit val edgeDefinitionEncoder = deriveEncoder[EdgeDefinition]

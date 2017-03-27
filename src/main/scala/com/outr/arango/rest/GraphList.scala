@@ -37,6 +37,14 @@ case class AddVertexRequest(collection: String)
 
 case class VertexInsert(error: Boolean, vertex: VertexInsert, code: Int)
 
-case class VertexInfo(_id: String, _key: String, _rev: String)
+case class CreateInfo(_id: String, _key: String, _rev: String)
 
 case class VertexResult[T](error: Boolean, vertex: Option[T], code: Int)
+
+case class EdgeResult(error: Boolean, edge: CreateInfo, code: Int)
+
+trait Edge {
+  def `type`: String
+  def _from: String
+  def _to: String
+}
