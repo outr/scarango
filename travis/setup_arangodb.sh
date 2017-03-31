@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
-VERSION=devel
+VERSION=3.1.16
 NAME=ArangoDB-$VERSION
 
 if [ ! -d "$DIR/$NAME" ]; then
@@ -23,20 +23,6 @@ ARANGOD="${ARANGODB_DIR}/bin/arangod_x86_64"
 
 # create database directory
 mkdir ${TMP_DIR}
-
-
-builddatestr=`${ARANGOD} --version |grep build-date |sed "s;.*: ;;" `
-builddatesec=`date +"%s" -d "$builddatestr"`
-now=`date +"%s"`
-
-delta=$((${now} - ${builddatesec}))
-
-if test "${delta}" -gt "$((60 * 60 * 24 * 7))"; then
-    echo "this development build of arangodb is to old"
-    exit 1
-fi
-
-
 
 echo "Starting ArangoDB '${ARANGOD}'"
 
