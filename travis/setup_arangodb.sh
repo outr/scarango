@@ -32,8 +32,7 @@ ${ARANGOD} \
     --server.endpoint tcp://127.0.0.1:8529 \
     --javascript.app-path ${ARANGODB_DIR}/js/apps \
     --javascript.startup-directory ${ARANGODB_DIR}/js \
-    --database.maximal-journal-size 1048576 \
-    --server.authentication false &
+    --database.maximal-journal-size 1048576
 
 sleep 2
 
