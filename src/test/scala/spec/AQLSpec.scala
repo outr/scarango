@@ -52,6 +52,11 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       }
     }
     "querying" should {
+      "verify the collection doesn't already exist" in {
+        users.exists().map { result =>
+          result should be(None)
+        }
+      }
       "create the users collection" in {
         users.create(waitForSync = true).map { response =>
           response.error should be(false)

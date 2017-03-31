@@ -6,6 +6,7 @@ import io.circe.{Decoder, Encoder}
 import io.youi.http.{HttpResponse, Method}
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoCollection(val db: ArangoDB, val collection: String) {
   lazy val document: ArangoDocument = new ArangoDocument(this)
@@ -81,6 +82,11 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
 
   def information(): Future[CollectionInformation] = {
     call[CollectionInformation](Some(""), Method.Get)
+  }
+
+  def exists(): Future[Option[CollectionInformation]] = information().map(Option.apply).recover {
+    case exc: ArangoException if exc.error.is(ArangoCode.ArangoCollectionNotFound) => None
+    case t => throw t
   }
 
   def properties(): Future[CollectionProperties] = {

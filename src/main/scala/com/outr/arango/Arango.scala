@@ -3,8 +3,9 @@ package com.outr.arango
 import com.outr.arango.rest.{AuthenticationRequest, AuthenticationResponse}
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
+import io.circe.parser.decode
 import io.youi.client.HttpClient
-import io.youi.http.{Headers, HttpResponse, Method}
+import io.youi.http.{Headers, HttpResponse, Method, StringContent}
 import io.youi.net.URL
 
 import scala.concurrent.Future
@@ -15,7 +16,11 @@ class Arango(baseURL: URL = Arango.defaultURL) {
   private val client = new HttpClient
 
   protected[arango] def defaultErrorHandler[Response]: HttpResponse => Response = (response: HttpResponse) => {
-    throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
+    val content = response.content.get.asInstanceOf[StringContent].value
+    decode[ArangoError](content) match {
+      case Left(_) => throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
+      case Right(error) => throw new ArangoException(error, response.status.message)
+    }
   }
 
   protected[arango] def restful[Request, Response](path: String,
