@@ -69,7 +69,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
           title = "The Matrix",
           released = 1999,
           tagline = "Welcome to the Real World"
-        ), waitForSync = true, returnNew = true).map { result =>
+        ), returnNew = true).map { result =>
           result.`new` shouldNot be(None)
           theMatrix1 = result.`new`.get
           theMatrix1._key should be("TheMatrix")
@@ -84,7 +84,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
           _key = "Keanu",
           name = "Keanu Reeves",
           born = 1964
-        ), waitForSync = true, returnNew = true).map { result =>
+        ), returnNew = true).map { result =>
           result.`new` shouldNot be(None)
           keanu = result.`new`.get
           keanu._key should be("Keanu")

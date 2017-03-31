@@ -14,13 +14,13 @@ class ArangoDocument(collection: ArangoCollection) {
 
   def create[T](document: T,
                 waitForSync: Option[Boolean] = None,
-                returnNew: Option[Boolean] = None,
-                silent: Option[Boolean] = None)
+                returnNew: Boolean = false,
+                silent: Boolean = false)
                (implicit encoder: Encoder[T], decoder: Decoder[CreateDocument[T]]): Future[CreateDocument[T]] = {
     collection.db.restful[T, CreateDocument[T]](s"document/${collection.collection}", document, params = List(
       waitForSync.map("waitForSync" -> _.toString),
-      returnNew.map("returnNew" -> _.toString),
-      silent.map("silent" -> _.toString)
+      Some("returnNew" -> returnNew.toString),
+      Some("silent" -> silent.toString)
     ).flatten.toMap)
   }
 }

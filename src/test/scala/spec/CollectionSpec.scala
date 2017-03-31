@@ -31,7 +31,6 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "insert a document" in {
-      import io.circe.syntax._
       test.document.create(User("John Doe", 30), returnNew = true).map { response =>
         response.`new` shouldNot be(None)
         val user = response.`new`.head
@@ -73,7 +72,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "list all collections" in {
       test.list().map { response =>
         val collectionNames = response.result.map(_.name).toSet
-        collectionNames should be(Set("test"))
+        collectionNames should contain("test")
       }
     }
     "truncate the collection" in {
