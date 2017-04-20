@@ -339,5 +339,5 @@ object ArangoCode {
 case class ArangoCode private(code: Int, title: String, message: String) {
   ArangoCode.codeMap += code -> this
 
-  override def toString: String = s"ArangoCode(code: $code, title: $title, message: $message)"
+  override def toString: String = s"code: $code, title: $title, message: $message"
 }

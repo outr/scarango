@@ -35,7 +35,7 @@ case class DeleteResponse(error: Boolean, removed: Boolean, code: Int)
 
 case class AddVertexRequest(collection: String)
 
-case class VertexInsert(error: Boolean, vertex: VertexInsert, code: Int)
+case class VertexInsert(error: Boolean, vertex: CreateInfo, code: Int)
 
 case class CreateInfo(_id: String, _key: String, _rev: String)
 

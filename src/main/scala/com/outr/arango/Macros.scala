@@ -50,7 +50,7 @@ object Macros {
 
         val result = Await.result(future, 30.seconds)
         if (result.error) {
-          c.abort(c.enclosingPosition, s"Error #${result.code}. Bad syntax for AQL query: $query.")
+          c.abort(c.enclosingPosition, s"Error: ${result.errorMessage.get} (${result.errorCode}). Bad syntax for AQL query: $query.")
         }
         c.Expr[Query](q"""com.outr.arango.Query($query, $argsMap)""")
       }

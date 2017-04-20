@@ -67,6 +67,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val query = FOR ("u") IN "users" FILTER ("u.id" === QueryArg.int(id), "u.name" === QueryArg.string(name)) RETURN "u"
         query shouldNot be(null)
       }*/
+      // TODO: simplified querying: User.filter(_.id === 123 && _.name === name)
     }
     "querying" should {
       "verify the collection doesn't already exist" in {
