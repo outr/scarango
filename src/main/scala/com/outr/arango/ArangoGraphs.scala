@@ -96,14 +96,16 @@ class ArangoEdge(val name: String, graph: ArangoGraph) {
   }
 
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {
-    // TODO: remove these one Circe fixes named-arg problem (method = Method.Put causes this)
+    // TODO: remove these once Circe fixes named-arg problem (method = Method.Put causes this)
     implicit val edgeDefinitionEncoder = deriveEncoder[EdgeDefinition]
     implicit val graphResponseDecoder = deriveDecoder[GraphResponse]
 
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge/$name", EdgeDefinition(name, from, to), method = Method.Put)
   }
 
-  def delete(): Future[GraphResponse] = {
-    graph.db.call[GraphResponse](s"gharial/${graph.name}/edge/$name", Method.Delete)
+  def delete(dropCollection: Boolean = true): Future[GraphResponse] = {
+    graph.db.call[GraphResponse](s"gharial/${graph.name}/edge/$name", Method.Delete, Map(
+      "dropCollection" -> dropCollection.toString)
+    )
   }
 }

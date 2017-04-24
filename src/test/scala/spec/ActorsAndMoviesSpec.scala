@@ -17,6 +17,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
   implicit val actorDecoder: Decoder[Actor] = deriveDecoder[Actor]
   implicit val actsInEncoder: Encoder[ActsIn] = deriveEncoder[ActsIn]
   implicit val actsInDecoder: Decoder[ActsIn] = deriveDecoder[ActsIn]
+  implicit val movieAndActorsDecoder: Decoder[MovieAndActors] = deriveDecoder[MovieAndActors]
 
   private var session: ArangoSession = _
   private var db: ArangoDB = _
@@ -176,23 +177,24 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
           response.count should be(Some(5))
         }
       }
-//      "find all movies and actors that acted in them" in {
-//        val query = aql"FOR m IN movies RETURN merge(m, { actors: FOR a IN 'inbound' movies actsIn RETURN a })"
-//        db.cursor[MovieAndActors](query, count = true).map { response =>
-//          response.error should be(false)
-//          response.count should be(Some(1))
-//          val movie = response.result.head
-//          movie._key should be("TheMatrix")
-//          movie.actors.length should be(5)
-//        }
-//      }
-    }
-    "cleanup" should {
-      "drop the actsIn collection" in {
-        actsIn.delete().map { response =>
+      "find all movies and actors that acted in them" in {
+        val query =
+          aql"""
+               FOR movie
+               IN movies
+               LET cast = (FOR actor IN INBOUND movie._id actsIn RETURN actor)
+               RETURN MERGE(movie, { actors: cast })
+             """
+        db.cursor[MovieAndActors](query, count = true).map { response =>
           response.error should be(false)
+          response.count should be(Some(1))
+          val movie = response.result.head
+          movie._key should be("TheMatrix")
+          movie.actors.length should be(5)
         }
       }
+    }
+    "cleanup" should {
       "drop the movies collection" in {
         movies.delete().map { response =>
           response.error should be(false)
@@ -200,6 +202,11 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
       }
       "drop the actors collection" in {
         actors.delete().map { response =>
+          response.error should be(false)
+        }
+      }
+      "drop the actsIn collection" in {
+        actsIn.delete().map { response =>
           response.error should be(false)
         }
       }
