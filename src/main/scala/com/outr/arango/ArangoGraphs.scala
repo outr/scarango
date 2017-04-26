@@ -52,7 +52,7 @@ class ArangoGraph(val name: String, val db: ArangoDB) {
   }
 }
 
-class ArangoVertex(val name: String, graph: ArangoGraph) {
+class ArangoVertex(val name: String, val graph: ArangoGraph) {
   def create(): Future[GraphResponse] = {
     graph.db.restful[AddVertexRequest, GraphResponse](s"gharial/${graph.name}/vertex", AddVertexRequest(name))
   }
@@ -82,7 +82,7 @@ class ArangoVertex(val name: String, graph: ArangoGraph) {
   }
 }
 
-class ArangoEdge(val name: String, graph: ArangoGraph) {
+class ArangoEdge(val name: String, val graph: ArangoGraph) {
   def create(from: List[String], to: List[String]): Future[GraphResponse] = {
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge", EdgeDefinition(name, from, to))
   }
