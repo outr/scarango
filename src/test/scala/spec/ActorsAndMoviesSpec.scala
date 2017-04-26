@@ -55,7 +55,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
       "create the session and database" in {
         ArangoSession.default.flatMap { s =>
           session = s
-          db = session.db("_system")
+          db = session.db()
           graph = db.graph("hollywood")
           graph.create().flatMap { result =>
             actors = graph.vertex("actors")

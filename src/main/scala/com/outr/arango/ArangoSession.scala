@@ -27,7 +27,7 @@ class ArangoSession(val instance: Arango, val token: String) {
     instance.call[Response](s"/_api/$name", method, Some(token), params, errorHandler)
   }
 
-  def db(name: String): ArangoDB = new ArangoDB(this, name)
+  def db(name: String = Arango.defaultDatabase): ArangoDB = new ArangoDB(this, name)
 
   def parse(query: String): Future[ParseResult] = {
     implicit val decoder: Decoder[ParseResult] = deriveDecoder[ParseResult]

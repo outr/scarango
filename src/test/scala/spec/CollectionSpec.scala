@@ -20,7 +20,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     "create the session" in {
       ArangoSession.default.map { s =>
         session = s
-        db = session.db("_system")
+        db = session.db()
         test = db.collection("test")
         s.token shouldNot be("")
       }

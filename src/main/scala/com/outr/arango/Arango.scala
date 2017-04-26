@@ -62,6 +62,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 }
 
 object Arango {
+  var defaultDatabase: String = Option(System.getenv("ARANGO_DB")).getOrElse("_system")
   var defaultURL: URL = URL(Option(System.getenv("ARANGO_URL")).getOrElse("http://localhost:8529"))
   var defaultUsername: String = Option(System.getenv("ARANGO_USERNAME")).getOrElse("root")
   var defaultPassword: String = Option(System.getenv("ARANGO_PASSWORD")).getOrElse("root")

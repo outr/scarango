@@ -22,7 +22,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       "create the session" in {
         ArangoSession.default.map { s =>
           session = s
-          db = session.db("_system")
+          db = session.db()
           users = db.collection("users")
           s.token shouldNot be("")
         }

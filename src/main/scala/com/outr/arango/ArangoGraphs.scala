@@ -7,6 +7,7 @@ import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoGraphs(db: ArangoDB) {
   def list(): Future[GraphList] = {
@@ -33,6 +34,11 @@ class ArangoGraph(val name: String, val db: ArangoDB) {
 
   def get(): Future[GraphResponse] = {
     db.call[GraphResponse](s"gharial/$name", Method.Get)
+  }
+
+  def exists(): Future[Option[GraphResponse]] = get().map(Option.apply).recover {
+    case exc: ArangoException if exc.error.is(ArangoCode.GraphNotFound) => None
+    case t => throw t
   }
 
   def listVertex(): Future[GraphCollectionList] = {
