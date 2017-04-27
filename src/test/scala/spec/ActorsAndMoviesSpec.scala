@@ -236,6 +236,6 @@ case class ActsIn(`type`: String,
                   year: Int,
                   _id: Option[String] = None,
                   _key: Option[String] = None,
-                  _rev: Option[String] = None) extends Edge
+                  _rev: Option[String] = None) extends Edge with DocumentOption
 
 case class MovieAndActors(title: String, released: Int, tagline: String, _key: String, _id: String, _rev: String, actors: List[Actor])

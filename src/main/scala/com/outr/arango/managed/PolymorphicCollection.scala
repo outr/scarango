@@ -8,7 +8,7 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 import scala.language.experimental.macros
 
 class PolymorphicCollection[T <: PolymorphicDocumentOption]
-                                    (val graph: Graph, name: String, val types: List[PolymorphicType[T]])
+                                    (graph: Graph, name: String, val types: List[PolymorphicType[T]])
                                     extends Collection[T](graph, name) {
   private lazy val typeMap: Map[String, PolymorphicType[T]] = types.map(t => t.value -> t).toMap
   override protected implicit val encoder: Encoder[T] = new Encoder[T] {
