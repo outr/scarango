@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.managed.{Collection, PolymorphicCollection, PolymorphicDocumentOption, PolymorphicType}
+import com.outr.arango.managed.{VertexCollection, PolymorphicVertexCollection, PolymorphicDocumentOption, PolymorphicType}
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await
@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @compileTimeOnly("Enable macro paradise to expand compile-time macros")
 object Macros {
-  def collection[T <: DocumentOption](c: blackbox.Context)(name: c.Expr[String])(implicit t: c.WeakTypeTag[T]): c.Expr[Collection[T]] = {
+  def vertex[T <: DocumentOption](c: blackbox.Context)(name: c.Expr[String])(implicit t: c.WeakTypeTag[T]): c.Expr[VertexCollection[T]] = {
     import c.universe._
 
     val graph = c.prefix.tree
@@ -21,7 +21,7 @@ object Macros {
          import io.circe.generic.semiauto._
          import com.outr.arango.rest
 
-         new Collection[$t]($graph, $name) {
+         new VertexCollection[$t]($graph, $name) {
            override protected implicit val encoder: Encoder[$t] = deriveEncoder[$t]
            override protected implicit val decoder: Decoder[$t] = deriveDecoder[$t]
            override protected def updateDocument(document: $t, info: rest.CreateInfo): $t = {
@@ -29,7 +29,7 @@ object Macros {
            }
          }
        """
-    c.Expr[Collection[T]](collection)
+    c.Expr[VertexCollection[T]](collection)
   }
 
   def polymorphicType[T <: PolymorphicDocumentOption, P <: T](c: blackbox.Context)(value: c.Expr[String])(implicit t: c.WeakTypeTag[T], p: c.WeakTypeTag[P]): c.Expr[PolymorphicType[T]] = {
@@ -56,7 +56,7 @@ object Macros {
                                                                     (name: c.Expr[String])
                                                                     (implicit t: c.WeakTypeTag[T],
                                                                               p1: c.WeakTypeTag[P1],
-                                                                              p2: c.WeakTypeTag[P2]): c.Expr[PolymorphicCollection[T]] = {
+                                                                              p2: c.WeakTypeTag[P2]): c.Expr[PolymorphicVertexCollection[T]] = {
     import c.universe._
 
     val graph = c.prefix.tree
@@ -76,9 +76,9 @@ object Macros {
     val p2Type = polymorphicType[T, P2](c)(c.Expr[String](q"$p2Name"))
     val instance =
       q"""
-         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type))
+         new PolymorphicVertexCollection[$t]($graph, $name, List($p1Type, $p2Type))
        """
-    c.Expr[PolymorphicCollection[T]](instance)
+    c.Expr[PolymorphicVertexCollection[T]](instance)
   }
 
   def polymorphic3[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T](c: blackbox.Context)
@@ -86,7 +86,7 @@ object Macros {
                                                                              (implicit t: c.WeakTypeTag[T],
                                                                               p1: c.WeakTypeTag[P1],
                                                                               p2: c.WeakTypeTag[P2],
-                                                                              p3: c.WeakTypeTag[P3]): c.Expr[PolymorphicCollection[T]] = {
+                                                                              p3: c.WeakTypeTag[P3]): c.Expr[PolymorphicVertexCollection[T]] = {
     import c.universe._
 
     val graph = c.prefix.tree
@@ -108,9 +108,9 @@ object Macros {
     val p3Type = polymorphicType[T, P3](c)(c.Expr[String](q"$p3Name"))
     val instance =
       q"""
-         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type))
+         new PolymorphicVertexCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type))
        """
-    c.Expr[PolymorphicCollection[T]](instance)
+    c.Expr[PolymorphicVertexCollection[T]](instance)
   }
 
   def polymorphic4[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T, P4 <: T](c: blackbox.Context)
@@ -119,7 +119,7 @@ object Macros {
                                                                                                 p1: c.WeakTypeTag[P1],
                                                                                                 p2: c.WeakTypeTag[P2],
                                                                                                 p3: c.WeakTypeTag[P3],
-                                                                                                p4: c.WeakTypeTag[P4]): c.Expr[PolymorphicCollection[T]] = {
+                                                                                                p4: c.WeakTypeTag[P4]): c.Expr[PolymorphicVertexCollection[T]] = {
     import c.universe._
 
     val graph = c.prefix.tree
@@ -143,9 +143,9 @@ object Macros {
     val p4Type = polymorphicType[T, P4](c)(c.Expr[String](q"$p4Name"))
     val instance =
       q"""
-         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type, $p4Type))
+         new PolymorphicVertexCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type, $p4Type))
        """
-    c.Expr[PolymorphicCollection[T]](instance)
+    c.Expr[PolymorphicVertexCollection[T]](instance)
   }
 
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {

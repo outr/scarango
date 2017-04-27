@@ -84,8 +84,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "query all Content back" in {
-      val query = aql"FOR c IN content RETURN c"
-      ExampleGraph.content.cursor(query).map { response =>
+      ExampleGraph.content.all().map { response =>
         response.error should be(false)
         response.count should be(Some(3))
         val map = response.result.map(c => c.name -> c).toMap
@@ -102,8 +101,8 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
   }
 
   object ExampleGraph extends Graph("example") {
-    val fruit: Collection[Fruit] = collection[Fruit]("fruit")
-    val content: PolymorphicCollection[Content] = polymorphic3[Content, Image, Video, Audio]("content")
+    val fruit: VertexCollection[Fruit] = vertex[Fruit]("fruit")
+    val content: PolymorphicVertexCollection[Content] = polymorphic3[Content, Image, Video, Audio]("content")
   }
 
   case class Fruit(name: String,

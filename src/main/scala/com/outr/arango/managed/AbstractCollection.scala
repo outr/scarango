@@ -60,6 +60,7 @@ trait AbstractCollection[T <: DocumentOption] {
     }
   }
   def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]]
+  def all(batchSize: Int = 100): Future[QueryResponse[T]] = cursor(Query(s"FOR x IN $name RETURN x", Map.empty))
 
   protected def insertInternal(document: T): Future[CreateInfo]
   protected def replaceInternal(document: T): Future[Unit]

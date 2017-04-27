@@ -6,8 +6,8 @@ import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-abstract class Collection[T <: DocumentOption](override val graph: Graph,
-                                               override val name: String) extends AbstractCollection[T] {
+abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
+                                                     override val name: String) extends AbstractCollection[T] {
   private lazy val vertex: ArangoVertex = graph.instance.vertex(name)
 
   override def create(): Future[GraphResponse] = vertex.create()
