@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import com.outr.arango.managed.Collection
+
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -9,6 +11,27 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @compileTimeOnly("Enable macro paradise to expand compile-time macros")
 object Macros {
+  def collection[T <: DocumentOption](c: blackbox.Context)(name: c.Expr[String])(implicit t: c.WeakTypeTag[T]): c.Expr[Collection[T]] = {
+    import c.universe._
+
+    val graph = c.prefix.tree
+    val collection =
+      q"""
+         import io.circe.{Decoder, Encoder}
+         import io.circe.generic.semiauto._
+         import com.outr.arango.rest
+
+         new Collection[$t]($graph, $name) {
+           override protected implicit val encoder: Encoder[$t] = deriveEncoder[$t]
+           override protected implicit val decoder: Decoder[$t] = deriveDecoder[$t]
+           override protected def updateDocument(document: $t, info: rest.CreateInfo): $t = {
+             document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
+           }
+         }
+       """
+    c.Expr[Collection[T]](collection)
+  }
+
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {
     import c.universe._
 

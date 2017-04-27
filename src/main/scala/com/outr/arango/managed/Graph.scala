@@ -1,11 +1,12 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession}
+import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Macros}
 import io.youi.net.URL
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.experimental.macros
 
 class Graph(name: String,
             db: String = "_system",
@@ -33,6 +34,8 @@ class Graph(name: String,
       case None => Future.successful(true)
     }
   }
+
+  def collection[T <: DocumentOption](name: String): Collection[T] = macro Macros.collection[T]
 
   /**
     * Deletes the graph.
