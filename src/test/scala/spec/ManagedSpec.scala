@@ -63,10 +63,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
 
   object ExampleGraph extends Graph("example") {
     val fruit: Collection[Fruit] = collection[Fruit]("fruit")
-    val content: PolymorphicCollection[Content] = polymorphic[Content]("content")
-      .withType[ImageContent]("image")
-      .withType[VideoContent]("video")
-      .withType[AudioContent]("audio")
+    val content: PolymorphicCollection[Content] = polymorphic3[Content, Image, Video, Audio]("content")
   }
 
   case class Fruit(name: String,
@@ -78,27 +75,27 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     def name: String
   }
 
-  case class ImageContent(name: String,
-                          width: Int,
-                          height: Int,
-                          _key: Option[String] = None,
-                          _id: Option[String] = None,
-                          _rev: Option[String] = None,
-                          _type: String = "image") extends Content
+  case class Image(name: String,
+                   width: Int,
+                   height: Int,
+                   _key: Option[String] = None,
+                   _id: Option[String] = None,
+                   _rev: Option[String] = None,
+                   _type: String = "image") extends Content
 
-  case class VideoContent(name: String,
-                          width: Int,
-                          height: Int,
-                          length: Double,
-                          _key: Option[String] = None,
-                          _id: Option[String] = None,
-                          _rev: Option[String] = None,
-                          _type: String = "video") extends Content
+  case class Video(name: String,
+                   width: Int,
+                   height: Int,
+                   length: Double,
+                   _key: Option[String] = None,
+                   _id: Option[String] = None,
+                   _rev: Option[String] = None,
+                   _type: String = "video") extends Content
 
-  case class AudioContent(name: String,
-                          length: Double,
-                          _key: Option[String] = None,
-                          _id: Option[String] = None,
-                          _rev: Option[String] = None,
-                          _type: String = "audio") extends Content
+  case class Audio(name: String,
+                   length: Double,
+                   _key: Option[String] = None,
+                   _id: Option[String] = None,
+                   _rev: Option[String] = None,
+                   _type: String = "audio") extends Content
 }

@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.managed.{Collection, PolymorphicDocumentOption, PolymorphicType}
+import com.outr.arango.managed.{Collection, PolymorphicCollection, PolymorphicDocumentOption, PolymorphicType}
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await
@@ -32,24 +32,120 @@ object Macros {
     c.Expr[Collection[T]](collection)
   }
 
-  def withType[P <: PolymorphicDocumentOption](c: blackbox.Context)(value: c.Expr[String])(implicit p: c.WeakTypeTag[P]): c.Tree = {
+  def polymorphicType[T <: PolymorphicDocumentOption, P <: T](c: blackbox.Context)(value: c.Expr[String])(implicit t: c.WeakTypeTag[T], p: c.WeakTypeTag[P]): c.Expr[PolymorphicType[T]] = {
     import c.universe._
 
-    val collection = c.prefix.tree
-    val t = collection.tpe.typeArgs.head
-
-    scribe.info(s"Deriving encoder for $p")
-    q"""
+    val instance =
+      q"""
        import io.circe.{Decoder, Encoder}
        import io.circe.generic.semiauto._
-       import com.outr.arango.rest
 
-       val updateDocument = (document: $p, info: rest.CreateInfo) => {
-         document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
-       }
-       val polymorphicType = PolymorphicType[$p]($value, deriveEncoder[$p], deriveDecoder[$p], updateDocument).asInstanceOf[PolymorphicType[$t]]
-       new PolymorphicCollection($collection.graph, $collection.name, $collection.types ::: List(polymorphicType))
-    """
+       new PolymorphicType[$p] {
+         override def value = $value
+         override def encoder = deriveEncoder[$p]
+         override def decoder = deriveDecoder[$p]
+         override def updateDocument(document: $p, info: rest.CreateInfo) = {
+           document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
+         }
+       }.asInstanceOf[PolymorphicType[$t]]
+     """
+    c.Expr[PolymorphicType[T]](instance)
+  }
+
+  def polymorphic2[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T](c: blackbox.Context)
+                                                                    (name: c.Expr[String])
+                                                                    (implicit t: c.WeakTypeTag[T],
+                                                                              p1: c.WeakTypeTag[P1],
+                                                                              p2: c.WeakTypeTag[P2]): c.Expr[PolymorphicCollection[T]] = {
+    import c.universe._
+
+    val graph = c.prefix.tree
+
+    def tag2Name[C](tag: c.WeakTypeTag[C]): String = {
+      var s = tag.tpe.toString
+      val index = s.lastIndexOf('.')
+      if (index != -1) {
+        s = s.substring(index + 1)
+      }
+      s.charAt(0).toLower + s.substring(1)
+    }
+
+    val p1Name = tag2Name(p1)
+    val p2Name = tag2Name(p2)
+    val p1Type = polymorphicType[T, P1](c)(c.Expr[String](q"$p1Name"))
+    val p2Type = polymorphicType[T, P2](c)(c.Expr[String](q"$p2Name"))
+    val instance =
+      q"""
+         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type))
+       """
+    c.Expr[PolymorphicCollection[T]](instance)
+  }
+
+  def polymorphic3[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T](c: blackbox.Context)
+                                                                             (name: c.Expr[String])
+                                                                             (implicit t: c.WeakTypeTag[T],
+                                                                              p1: c.WeakTypeTag[P1],
+                                                                              p2: c.WeakTypeTag[P2],
+                                                                              p3: c.WeakTypeTag[P3]): c.Expr[PolymorphicCollection[T]] = {
+    import c.universe._
+
+    val graph = c.prefix.tree
+
+    def tag2Name[C](tag: c.WeakTypeTag[C]): String = {
+      var s = tag.tpe.toString
+      val index = s.lastIndexOf('.')
+      if (index != -1) {
+        s = s.substring(index + 1)
+      }
+      s.charAt(0).toLower + s.substring(1)
+    }
+
+    val p1Name = tag2Name(p1)
+    val p2Name = tag2Name(p2)
+    val p3Name = tag2Name(p3)
+    val p1Type = polymorphicType[T, P1](c)(c.Expr[String](q"$p1Name"))
+    val p2Type = polymorphicType[T, P2](c)(c.Expr[String](q"$p2Name"))
+    val p3Type = polymorphicType[T, P3](c)(c.Expr[String](q"$p3Name"))
+    val instance =
+      q"""
+         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type))
+       """
+    c.Expr[PolymorphicCollection[T]](instance)
+  }
+
+  def polymorphic4[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T, P4 <: T](c: blackbox.Context)
+                                                                                      (name: c.Expr[String])
+                                                                                      (implicit t: c.WeakTypeTag[T],
+                                                                                                p1: c.WeakTypeTag[P1],
+                                                                                                p2: c.WeakTypeTag[P2],
+                                                                                                p3: c.WeakTypeTag[P3],
+                                                                                                p4: c.WeakTypeTag[P4]): c.Expr[PolymorphicCollection[T]] = {
+    import c.universe._
+
+    val graph = c.prefix.tree
+
+    def tag2Name[C](tag: c.WeakTypeTag[C]): String = {
+      var s = tag.tpe.toString
+      val index = s.lastIndexOf('.')
+      if (index != -1) {
+        s = s.substring(index + 1)
+      }
+      s.charAt(0).toLower + s.substring(1)
+    }
+
+    val p1Name = tag2Name(p1)
+    val p2Name = tag2Name(p2)
+    val p3Name = tag2Name(p3)
+    val p4Name = tag2Name(p4)
+    val p1Type = polymorphicType[T, P1](c)(c.Expr[String](q"$p1Name"))
+    val p2Type = polymorphicType[T, P2](c)(c.Expr[String](q"$p2Name"))
+    val p3Type = polymorphicType[T, P3](c)(c.Expr[String](q"$p3Name"))
+    val p4Type = polymorphicType[T, P4](c)(c.Expr[String](q"$p4Name"))
+    val instance =
+      q"""
+         new PolymorphicCollection[$t]($graph, $name, List($p1Type, $p2Type, $p3Type, $p4Type))
+       """
+    c.Expr[PolymorphicCollection[T]](instance)
   }
 
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {

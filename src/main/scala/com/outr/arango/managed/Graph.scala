@@ -37,7 +37,13 @@ class Graph(name: String,
 
   def collection[T <: DocumentOption](name: String): Collection[T] = macro Macros.collection[T]
 
-  def polymorphic[T <: PolymorphicDocumentOption](name: String): PolymorphicCollection[T] = new PolymorphicCollection[T](this, name)
+  def polymorphic[T <: PolymorphicDocumentOption](name: String, types: PolymorphicType[T]*): PolymorphicCollection[T] = new PolymorphicCollection[T](this, name, types.toList)
+
+  def polymorphic2[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T](name: String): PolymorphicCollection[T] = macro Macros.polymorphic2[T, P1, P2]
+  def polymorphic3[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T](name: String): PolymorphicCollection[T] = macro Macros.polymorphic3[T, P1, P2, P3]
+  def polymorphic4[T <: PolymorphicDocumentOption, P1 <: T, P2 <: T, P3 <: T, P4 <: T](name: String): PolymorphicCollection[T] = macro Macros.polymorphic4[T, P1, P2, P3, P4]
+
+  def polymorphicType[T <: PolymorphicDocumentOption, P <: T](value: String): PolymorphicType[T] = macro Macros.polymorphicType[T, P]
 
   /**
     * Deletes the graph.
