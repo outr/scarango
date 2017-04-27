@@ -15,7 +15,15 @@ class PolymorphicCollection[T <: PolymorphicDocumentOption]
     override def apply(a: T): Json = typeMap(a._type).encoder(a)
   }
   override protected implicit val decoder: Decoder[T] = new Decoder[T] {
-    override def apply(c: HCursor): Result[T] = typeMap(c.field("_type").as[String].getOrElse(throw new RuntimeException(s"_type not found in polymorphic document"))).decoder(c)
+    override def apply(c: HCursor): Result[T] = {
+      val decoder = for {
+        t <- Decoder[String].prepare(_.downField("_type"))
+        d <- typeMap.get(t).fold(
+          Decoder.failedWithMessage[T]("_type not found in polymorphic document")
+        )(_.decoder)
+      } yield d
+      decoder(c)
+    }
   }
 
   override protected def updateDocument(document: T, info: CreateInfo): T = typeMap(document._type).updateDocument(document, info)

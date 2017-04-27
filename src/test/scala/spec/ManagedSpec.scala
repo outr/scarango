@@ -54,6 +54,46 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         response.result.map(_.name).toSet should be(Set("Apple", "Banana", "Cherry"))
       }
     }
+    "create the Content collection" in {
+      ExampleGraph.content.create().map { response =>
+        response.error should be(false)
+      }
+    }
+    "insert an Image into polymorphic Collection" in {
+      ExampleGraph.content.insert(Image("butterfly", 640, 480)).map { c =>
+        c.name should be("butterfly")
+        c._id shouldNot be(None)
+        c._key shouldNot be(None)
+        c._rev shouldNot be(None)
+      }
+    }
+    "insert a Video into polymorphic Collection" in {
+      ExampleGraph.content.insert(Video("bunny", 1920, 1080, 60.0)).map { c =>
+        c.name should be("bunny")
+        c._id shouldNot be(None)
+        c._key shouldNot be(None)
+        c._rev shouldNot be(None)
+      }
+    }
+    "insert a Audio into polymorphic Collection" in {
+      ExampleGraph.content.insert(Audio("owl", 15.3)).map { c =>
+        c.name should be("owl")
+        c._id shouldNot be(None)
+        c._key shouldNot be(None)
+        c._rev shouldNot be(None)
+      }
+    }
+    "query all Content back" in {
+      val query = aql"FOR c IN content RETURN c"
+      ExampleGraph.content.cursor(query).map { response =>
+        response.error should be(false)
+        response.count should be(Some(3))
+        val map = response.result.map(c => c.name -> c).toMap
+        map("butterfly") shouldBe a[Image]
+        map("bunny") shouldBe a[Video]
+        map("owl") shouldBe a[Audio]
+      }
+    }
     "delete the graph" in {
       ExampleGraph.delete().map { b =>
         b should be(true)
