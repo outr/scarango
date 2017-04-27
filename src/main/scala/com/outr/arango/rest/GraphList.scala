@@ -41,7 +41,9 @@ case class CreateInfo(_id: String, _key: String, _rev: String)
 
 case class VertexResult[T](error: Boolean, vertex: Option[T], code: Int)
 
-case class EdgeResult(error: Boolean, edge: CreateInfo, code: Int)
+case class EdgeInsert(error: Boolean, edge: CreateInfo, code: Int)
+
+case class EdgeResult[T](error: Boolean, edge: Option[T], code: Int)
 
 trait Edge {
   def `type`: String

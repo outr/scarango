@@ -59,7 +59,9 @@ trait AbstractCollection[T <: DocumentOption] {
       case None => Future.failed(new CancelledException("Delete cancelled."))
     }
   }
-  def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]]
+  def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {
+    graph.cursor.apply[T](query, count = true, batchSize = Some(batchSize))
+  }
   def all(batchSize: Int = 100): Future[QueryResponse[T]] = cursor(Query(s"FOR x IN $name RETURN x", Map.empty))
 
   protected def insertInternal(document: T): Future[CreateInfo]

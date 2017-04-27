@@ -97,8 +97,12 @@ class ArangoEdge(val name: String, val graph: ArangoGraph) {
 
   def create(from: ArangoVertex, to: ArangoVertex): Future[GraphResponse] = create(from.name, to.name)
 
-  def insert[T <: Edge](edge: T)(implicit encoder: Encoder[T]): Future[EdgeResult] = {
-    graph.db.restful[T, EdgeResult](s"gharial/${graph.name}/edge/$name", edge)
+  def insert[T <: Edge](edge: T)(implicit encoder: Encoder[T]): Future[EdgeInsert] = {
+    graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name", edge)
+  }
+
+  def apply[T](key: String)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[EdgeResult[T]] = {
+    graph.db.call[EdgeResult[T]](s"gharial/${graph.name}/edge/$name/$key", Method.Get)
   }
 
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {
@@ -109,7 +113,15 @@ class ArangoEdge(val name: String, val graph: ArangoGraph) {
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge/$name", EdgeDefinition(name, from, to), method = Method.Put)
   }
 
-  def delete(dropCollection: Boolean = true): Future[GraphResponse] = {
+  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[EdgeResult[T]] = {
+    graph.db.restful[T, EdgeResult[T]](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Put)
+  }
+
+  def delete(key: String): Future[DeleteResponse] = {
+    graph.db.call[DeleteResponse](s"gharial/${graph.name}/edge/$name/$key", Method.Delete)
+  }
+
+  def delete(dropCollection: Boolean): Future[GraphResponse] = {
     graph.db.call[GraphResponse](s"gharial/${graph.name}/edge/$name", Method.Delete, Map(
       "dropCollection" -> dropCollection.toString)
     )

@@ -26,8 +26,4 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
   override protected def deleteInternal(document: T): Future[Boolean] = {
     vertex.delete(document._key.get).map(!_.error)
   }
-
-  override def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {
-    graph.cursor.apply[T](query, count = true, batchSize = Some(batchSize))
-  }
 }

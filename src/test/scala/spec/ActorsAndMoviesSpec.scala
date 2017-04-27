@@ -206,7 +206,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
         }
       }
       "drop the actsIn collection" in {
-        actsIn.delete().map { response =>
+        actsIn.delete(dropCollection = true).map { response =>
           response.error should be(false)
         }
       }
