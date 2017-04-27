@@ -14,8 +14,8 @@ libraryDependencies ++= Seq(
 	"com.outr" %% "reactify" % "1.5.3",
 	"io.youi" %% "youi-client" % "0.3.1",
   "org.powerscala" %% "powerscala-io" % "2.0.5",
-	"org.scalactic" %% "scalactic" % "3.0.1",
-	"org.scalatest" %% "scalatest" % "3.0.1" % "test"
+	"org.scalactic" %% "scalactic" % "3.0.3",
+	"org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 
 libraryDependencies ++= Seq(
