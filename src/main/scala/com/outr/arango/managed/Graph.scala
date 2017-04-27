@@ -37,6 +37,8 @@ class Graph(name: String,
 
   def collection[T <: DocumentOption](name: String): Collection[T] = macro Macros.collection[T]
 
+  def polymorphic[T <: PolymorphicDocumentOption](name: String): PolymorphicCollection[T] = new PolymorphicCollection[T](this, name)
+
   /**
     * Deletes the graph.
     *

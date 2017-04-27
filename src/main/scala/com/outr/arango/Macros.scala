@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.managed.Collection
+import com.outr.arango.managed.{Collection, PolymorphicDocumentOption, PolymorphicType}
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await
@@ -30,6 +30,26 @@ object Macros {
          }
        """
     c.Expr[Collection[T]](collection)
+  }
+
+  def withType[P <: PolymorphicDocumentOption](c: blackbox.Context)(value: c.Expr[String])(implicit p: c.WeakTypeTag[P]): c.Tree = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    val t = collection.tpe.typeArgs.head
+
+    scribe.info(s"Deriving encoder for $p")
+    q"""
+       import io.circe.{Decoder, Encoder}
+       import io.circe.generic.semiauto._
+       import com.outr.arango.rest
+
+       val updateDocument = (document: $p, info: rest.CreateInfo) => {
+         document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
+       }
+       val polymorphicType = PolymorphicType[$p]($value, deriveEncoder[$p], deriveDecoder[$p], updateDocument).asInstanceOf[PolymorphicType[$t]]
+       new PolymorphicCollection($collection.graph, $collection.name, $collection.types ::: List(polymorphicType))
+    """
   }
 
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {

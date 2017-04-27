@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango._
-import com.outr.arango.managed.{Collection, Graph}
+import com.outr.arango.managed._
 import com.outr.arango.DocumentOption
 import org.scalatest.{AsyncWordSpec, Matchers}
 
@@ -63,10 +63,42 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
 
   object ExampleGraph extends Graph("example") {
     val fruit: Collection[Fruit] = collection[Fruit]("fruit")
+    val content: PolymorphicCollection[Content] = polymorphic[Content]("content")
+      .withType[ImageContent]("image")
+      .withType[VideoContent]("video")
+      .withType[AudioContent]("audio")
   }
 
   case class Fruit(name: String,
                    _key: Option[String] = None,
                    _id: Option[String] = None,
                    _rev: Option[String] = None) extends DocumentOption
+
+  trait Content extends PolymorphicDocumentOption {
+    def name: String
+  }
+
+  case class ImageContent(name: String,
+                          width: Int,
+                          height: Int,
+                          _key: Option[String] = None,
+                          _id: Option[String] = None,
+                          _rev: Option[String] = None,
+                          _type: String = "image") extends Content
+
+  case class VideoContent(name: String,
+                          width: Int,
+                          height: Int,
+                          length: Double,
+                          _key: Option[String] = None,
+                          _id: Option[String] = None,
+                          _rev: Option[String] = None,
+                          _type: String = "video") extends Content
+
+  case class AudioContent(name: String,
+                          length: Double,
+                          _key: Option[String] = None,
+                          _id: Option[String] = None,
+                          _rev: Option[String] = None,
+                          _type: String = "audio") extends Content
 }

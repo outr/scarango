@@ -11,6 +11,6 @@ ArangoDB client written in Scala
 * [ ] DSL for creating AQL queries
 * [ ] Higher level abstraction of Document
     * [X] Triggers (Before and After)
-    * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
     * [ ] Polymorphic Querying capabilities
+    * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
     * [ ] Convenience functionality for adding edges
