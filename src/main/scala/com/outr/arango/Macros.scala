@@ -1,6 +1,7 @@
 package com.outr.arango
 
-import com.outr.arango.managed.{VertexCollection, PolymorphicVertexCollection, PolymorphicDocumentOption, PolymorphicType}
+import com.outr.arango.managed._
+import com.outr.arango.rest.Edge
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await
@@ -22,14 +23,35 @@ object Macros {
          import com.outr.arango.rest
 
          new VertexCollection[$t]($graph, $name) {
-           override protected implicit val encoder: Encoder[$t] = deriveEncoder[$t]
-           override protected implicit val decoder: Decoder[$t] = deriveDecoder[$t]
+           override implicit val encoder: Encoder[$t] = deriveEncoder[$t]
+           override implicit val decoder: Decoder[$t] = deriveDecoder[$t]
            override protected def updateDocument(document: $t, info: rest.CreateInfo): $t = {
              document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
            }
          }
        """
     c.Expr[VertexCollection[T]](collection)
+  }
+
+  def edge[T <: Edge with DocumentOption](c: blackbox.Context)(name: c.Expr[String], links: c.Expr[(String, String)]*)(implicit t: c.WeakTypeTag[T]): c.Expr[EdgeCollection[T]] = {
+    import c.universe._
+
+    val graph = c.prefix.tree
+    val collection =
+      q"""
+         import io.circe.{Decoder, Encoder}
+         import io.circe.generic.semiauto._
+         import com.outr.arango.rest
+
+         new EdgeCollection[$t]($graph, $name, List(..$links).map(_._1), List(..$links).map(_._2)) {
+           override implicit val encoder: Encoder[$t] = deriveEncoder[$t]
+           override implicit val decoder: Decoder[$t] = deriveDecoder[$t]
+           override protected def updateDocument(document: $t, info: rest.CreateInfo): $t = {
+             document.copy(_key = Option(info._key), _id = Option(info._id), _rev = Option(info._rev))
+           }
+         }
+       """
+    c.Expr[EdgeCollection[T]](collection)
   }
 
   def polymorphicType[T <: PolymorphicDocumentOption, P <: T](c: blackbox.Context)(value: c.Expr[String])(implicit t: c.WeakTypeTag[T], p: c.WeakTypeTag[P]): c.Expr[PolymorphicType[T]] = {

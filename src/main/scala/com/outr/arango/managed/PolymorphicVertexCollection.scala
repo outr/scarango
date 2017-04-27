@@ -11,10 +11,10 @@ class PolymorphicVertexCollection[T <: PolymorphicDocumentOption]
                                     (graph: Graph, name: String, val types: List[PolymorphicType[T]])
                                     extends VertexCollection[T](graph, name) {
   private lazy val typeMap: Map[String, PolymorphicType[T]] = types.map(t => t.value -> t).toMap
-  override protected implicit val encoder: Encoder[T] = new Encoder[T] {
+  override implicit val encoder: Encoder[T] = new Encoder[T] {
     override def apply(a: T): Json = typeMap(a._type).encoder(a)
   }
-  override protected implicit val decoder: Decoder[T] = new Decoder[T] {
+  override implicit val decoder: Decoder[T] = new Decoder[T] {
     override def apply(c: HCursor): Result[T] = {
       val decoder = for {
         t <- Decoder[String].prepare(_.downField("_type"))

@@ -12,8 +12,8 @@ trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
   def name: String
 
-  protected implicit val encoder: Encoder[T]
-  protected implicit val decoder: Decoder[T]
+  implicit val encoder: Encoder[T]
+  implicit val decoder: Decoder[T]
   protected def updateDocument(document: T, info: CreateInfo): T
 
   lazy val inserting: TransformableChannel[T] = TransformableChannel[T]
@@ -26,6 +26,7 @@ trait AbstractCollection[T <: DocumentOption] {
   def create(): Future[GraphResponse]
   def delete(): Future[GraphResponse]
   def byKey(key: String): Future[T]
+
   final def insert(document: T): Future[T] = {
     inserting.transform(document) match {
       case Some(modified) => {

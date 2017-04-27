@@ -1,5 +1,6 @@
 package com.outr.arango.managed
 
+import com.outr.arango.rest.Edge
 import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Macros}
 import io.youi.net.URL
 
@@ -36,6 +37,7 @@ class Graph(name: String,
   }
 
   def vertex[T <: DocumentOption](name: String): VertexCollection[T] = macro Macros.vertex[T]
+  def edge[T <: Edge with DocumentOption](name: String, links: (String, String)*): EdgeCollection[T] = macro Macros.edge[T]
 
   def polymorphic[T <: PolymorphicDocumentOption](name: String, types: PolymorphicType[T]*): PolymorphicVertexCollection[T] = new PolymorphicVertexCollection[T](this, name, types.toList)
 
