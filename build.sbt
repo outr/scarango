@@ -1,6 +1,6 @@
 name := "arangodb-scala"
 organization := "com.outr"
-version := "0.2.0-SNAPSHOT"
+version := "0.2.0"
 scalaVersion := "2.12.1"
 crossScalaVersions := List("2.12.1", "2.11.8")
 scalacOptions ++= Seq("-unchecked", "-deprecation")
