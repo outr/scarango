@@ -1,25 +1,55 @@
+import sbt.Keys.libraryDependencies
+
 name := "scarango"
-organization := "com.outr"
-version := "0.2.0"
-scalaVersion := "2.12.1"
-crossScalaVersions := List("2.12.1", "2.11.8")
-scalacOptions ++= Seq("-unchecked", "-deprecation")
-resolvers += Resolver.sonatypeRepo("releases")
-fork := true
+organization in ThisBuild := "com.outr"
+version in ThisBuild := "0.2.0"
+scalaVersion in ThisBuild := "2.12.1"
+crossScalaVersions in ThisBuild := List("2.12.1", "2.11.8")
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
+resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 
 val circeVersion = "0.7.1"
+val powerScalaVersion = "2.0.5"
+val reactifyVersion = "1.5.3"
+val scalacticVersion = "3.0.3"
+val scalaTestVersion = "3.0.3"
+val scribeVersion = "1.4.2"
+val youIVersion = "0.3.1"
 
-libraryDependencies ++= Seq(
-	"com.outr" %% "scribe" % "1.4.2",
-	"com.outr" %% "reactify" % "1.5.3",
-	"io.youi" %% "youi-client" % "0.3.1",
-  "org.powerscala" %% "powerscala-io" % "2.0.5",
-	"org.scalactic" %% "scalactic" % "3.0.3",
-	"org.scalatest" %% "scalatest" % "3.0.3" % "test"
-)
+lazy val root = project.in(file("."))
+  .aggregate(
+    coreJS, coreJVM, driver
+  )
+  .settings(
+    publish := {},
+    publishLocal := {}
+  )
 
-libraryDependencies ++= Seq(
-	"io.circe" %% "circe-core",
-	"io.circe" %% "circe-generic",
-	"io.circe" %% "circe-parser"
-).map(_ % circeVersion)
+lazy val core = crossProject.in(file("core"))
+  .settings(
+    name := "scarango-core",
+    description := "Core objects shared without driver-specific dependencies."
+  )
+
+lazy val coreJS = core.js
+lazy val coreJVM = core.jvm
+
+lazy val driver = project.in(file("driver"))
+  .settings(
+    name := "scarango-driver",
+    fork := true,
+    libraryDependencies ++= Seq(
+      "com.outr" %% "scribe" % scribeVersion,
+      "com.outr" %% "reactify" % reactifyVersion,
+      "io.youi" %% "youi-client" % youIVersion,
+      "org.powerscala" %% "powerscala-io" % powerScalaVersion,
+      "org.scalactic" %% "scalactic" % scalacticVersion,
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    ),
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core",
+      "io.circe" %% "circe-generic",
+      "io.circe" %% "circe-parser"
+    ).map(_ % circeVersion)
+  )
+  .dependsOn(coreJVM)
