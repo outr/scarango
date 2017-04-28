@@ -1,7 +1,6 @@
 package com.outr.arango.managed
 
-import com.outr.arango.rest.Edge
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Macros}
+import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros}
 import io.youi.net.URL
 
 import scala.concurrent.duration._

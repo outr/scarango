@@ -1,9 +1,7 @@
 package spec
 
-import com.outr.arango._
+import com.outr.arango.{DocumentOption, Edge, _}
 import com.outr.arango.managed._
-import com.outr.arango.DocumentOption
-import com.outr.arango.rest.Edge
 import io.circe.Decoder
 import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe.generic.semiauto._

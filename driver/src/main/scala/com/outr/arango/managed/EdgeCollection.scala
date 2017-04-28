@@ -1,7 +1,7 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{ArangoEdge, DocumentOption}
-import com.outr.arango.rest.{CreateInfo, Edge, GraphResponse}
+import com.outr.arango.{ArangoEdge, DocumentOption, Edge}
+import com.outr.arango.rest.{CreateInfo, GraphResponse}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

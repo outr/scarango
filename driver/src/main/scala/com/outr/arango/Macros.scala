@@ -1,7 +1,6 @@
 package com.outr.arango
 
 import com.outr.arango.managed._
-import com.outr.arango.rest.Edge
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Await

@@ -1,8 +1,6 @@
 package spec
 
-import com.outr.arango._
-import com.outr.arango.rest.Edge
-import com.outr.arango.{ArangoDB, ArangoEdge, ArangoGraph, ArangoSession, ArangoVertex}
+import com.outr.arango.{ArangoDB, ArangoEdge, ArangoGraph, ArangoSession, ArangoVertex, Edge, _}
 import org.scalatest.{Assertion, AsyncWordSpec, Matchers}
 
 import scala.concurrent.Future
