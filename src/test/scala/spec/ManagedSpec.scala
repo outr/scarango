@@ -7,6 +7,7 @@ import com.outr.arango.rest.Edge
 import io.circe.Decoder
 import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe.generic.semiauto._
+import io.circe.generic.auto._
 
 class ManagedSpec extends AsyncWordSpec with Matchers {
   var apple: Fruit = _
@@ -151,6 +152,53 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         cf.fruit.map(_.name).toSet should be(Set("Apple", "Banana"))
       }
     }
+    "create the Order collection" in {
+      ExampleGraph.orders.create().map { response =>
+        response.error should be(false)
+      }
+    }
+    "insert first order" in {
+      ExampleGraph.orders.insert(Order(BigDecimal("100.10"), Status.New, _key = Some("order1"))).map { o =>
+        o._id should be(Some("orders/order1"))
+      }
+    }
+    "insert second order" in {
+      ExampleGraph.orders.insert(Order(BigDecimal("12.00"), Status.Paid, _key = Some("order2"))).map { o =>
+        o._id should be(Some("orders/order2"))
+      }
+    }
+    "insert third order" in {
+      ExampleGraph.orders.insert(Order(BigDecimal("123.45"), Status.Failure, _key = Some("order3"))).map { o =>
+        o._id should be(Some("orders/order3"))
+      }
+    }
+    "check the first order" in {
+      ExampleGraph.orders.byKey("order1").map { o =>
+        o.amount should be(BigDecimal("100.10"))
+        o.status should be(Status.New)
+        o.status shouldNot be(Status.Paid)
+        o.status shouldNot be(Status.Failure)
+        o._key should be(Some("order1"))
+      }
+    }
+    "check the second order" in {
+      ExampleGraph.orders.byKey("order2").map { o =>
+        o.amount should be(BigDecimal("12.00"))
+        o.status should be(Status.Paid)
+        o.status shouldNot be(Status.New)
+        o.status shouldNot be(Status.Failure)
+        o._key should be(Some("order2"))
+      }
+    }
+    "check the third order" in {
+      ExampleGraph.orders.byKey("order3").map { o =>
+        o.amount should be(BigDecimal("123.45"))
+        o.status should be(Status.Failure)
+        o.status shouldNot be(Status.New)
+        o.status shouldNot be(Status.Paid)
+        o._key should be(Some("order3"))
+      }
+    }
     "delete the graph" in {
       ExampleGraph.delete().map { b =>
         b should be(true)
@@ -162,6 +210,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     val fruit: VertexCollection[Fruit] = vertex[Fruit]("fruit")
     val content: PolymorphicVertexCollection[Content] = polymorphic3[Content, Image, Video, Audio]("content")
     val hasFruit: EdgeCollection[HasFruit] = edge[HasFruit]("hasFruit", "content" -> "fruit")
+    val orders: VertexCollection[Order] = vertex[Order]("orders")
   }
 
   case class Fruit(name: String,
@@ -218,4 +267,14 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
   }
 
   case class ContentFruit(content: Content, fruit: List[Fruit])
+
+  case class Order(amount: BigDecimal, status: Status, _key: Option[String] = None, _id: Option[String] = None, _rev: Option[String] = None) extends DocumentOption
+
+  sealed trait Status
+
+  object Status {
+    case object New extends Status
+    case object Paid extends Status
+    case object Failure extends Status
+  }
 }
