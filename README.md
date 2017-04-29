@@ -140,9 +140,9 @@ will give us a `List[Fruit]` of the results of the query.
 
 ### Further Reading
 
-## Versions
-
 For more examples using managed graphs take a look at the `ManagedSpec` (https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/ManagedSpec.scala).
+
+## Versions
 
 ### Features for 2.0.0 (Future)
 
