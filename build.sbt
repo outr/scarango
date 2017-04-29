@@ -9,7 +9,6 @@ scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 
 val circeVersion = "0.7.1"
-val powerScalaVersion = "2.0.5"
 val reactifyVersion = "1.5.3"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
@@ -42,7 +41,6 @@ lazy val driver = project.in(file("driver"))
       "com.outr" %% "scribe" % scribeVersion,
       "com.outr" %% "reactify" % reactifyVersion,
       "io.youi" %% "youi-client" % youIVersion,
-      "org.powerscala" %% "powerscala-io" % powerScalaVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),

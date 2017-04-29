@@ -11,6 +11,10 @@ after_script:
   - killall -9 arangod_x86_64
 script:
   - sbt clean +test
+  - sbt coverage driver/test
+  - sbt coverageReport
+  - sbt coverageAggregate
+  - sbt codacyCoverage
 cache:
   directories:
     - $HOME/.ivy2/cache
