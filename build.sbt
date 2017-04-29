@@ -2,7 +2,7 @@ import sbt.Keys.libraryDependencies
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.2.0"
+version in ThisBuild := "0.3.0"
 scalaVersion in ThisBuild := "2.12.1"
 crossScalaVersions in ThisBuild := List("2.12.1", "2.11.8")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
