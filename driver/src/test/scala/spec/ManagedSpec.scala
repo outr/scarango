@@ -166,7 +166,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "insert third order" in {
-      ExampleGraph.orders.insert(Order(BigDecimal("123.45"), Status.Failure, _key = Some("order3"))).map { o =>
+      ExampleGraph.orders.insert(Order(BigDecimal("123.45"), Status.Failure("Bad Credit Card"), _key = Some("order3"))).map { o =>
         o._id should be(Some("orders/order3"))
       }
     }
@@ -191,7 +191,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     "check the third order" in {
       ExampleGraph.orders.byKey("order3").map { o =>
         o.amount should be(BigDecimal("123.45"))
-        o.status should be(Status.Failure)
+        o.status should be(Status.Failure("Bad Credit Card"))
         o.status shouldNot be(Status.New)
         o.status shouldNot be(Status.Paid)
         o._key should be(Some("order3"))
@@ -273,6 +273,6 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
   object Status {
     case object New extends Status
     case object Paid extends Status
-    case object Failure extends Status
+    case class Failure(reason: String) extends Status
   }
 }
