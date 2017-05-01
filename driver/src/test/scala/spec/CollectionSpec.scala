@@ -1,6 +1,6 @@
 package spec
 
-import com.outr.arango.{ArangoCollection, ArangoDB, ArangoSession}
+import com.outr.arango.{ArangoCode, ArangoCollection, ArangoDB, ArangoException, ArangoSession}
 import io.circe.Encoder
 import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe._
@@ -16,6 +16,8 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
 
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
 
+  private var nameIndexId: Option[String] = None
+
   "Collections" should {
     "create the session" in {
       ArangoSession.default.map { s =>
@@ -30,6 +32,12 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         response.error should be(false)
       }
     }
+    "create a unique index on `name`" in {
+      test.index.persistent.create(List("name"), unique = true, sparse = true).map { response =>
+        nameIndexId = response.id.map(s => s.substring(s.indexOf('/') + 1))
+        response.error should be(false)
+      }
+    }
     "insert a document" in {
       test.document.create(User("John Doe", 30), returnNew = true).map { response =>
         response.`new` shouldNot be(None)
@@ -39,6 +47,11 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         user._id shouldNot be(None)
         user._key shouldNot be(None)
         user._rev shouldNot be(None)
+      }
+    }
+    "fail to insert a duplicate named user" in {
+      test.document.create(User("John Doe", 30), returnNew = true).failed.map {
+        case exc: ArangoException => exc.error.errorCode should be(ArangoCode.ArangoUniqueConstraintViolated)
       }
     }
     "get collection information" in {
@@ -77,6 +90,11 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
     }
     "truncate the collection" in {
       test.truncate().map { response =>
+        response.error should be(false)
+      }
+    }
+    "delete the unique index on `name`" in {
+      test.index.delete(nameIndexId.get).map { response =>
         response.error should be(false)
       }
     }

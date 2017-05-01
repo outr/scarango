@@ -1,6 +1,6 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{DocumentOption, Query}
+import com.outr.arango.{ArangoCollection, ArangoIndexing, DocumentOption, Query}
 import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
 import io.circe.{Decoder, Encoder}
 import reactify.{Channel, TransformableChannel}
@@ -11,6 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
   def name: String
+  protected lazy val collection: ArangoCollection = graph.instance.db.collection(name)
 
   implicit val encoder: Encoder[T]
   implicit val decoder: Decoder[T]
@@ -26,6 +27,8 @@ trait AbstractCollection[T <: DocumentOption] {
   def create(): Future[GraphResponse]
   def delete(): Future[GraphResponse]
   def byKey(key: String): Future[T]
+
+  def index: ArangoIndexing = collection.index
 
   final def insert(document: T): Future[T] = {
     inserting.transform(document) match {

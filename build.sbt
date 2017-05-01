@@ -2,9 +2,9 @@ import sbt.Keys.libraryDependencies
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.3.0"
-scalaVersion in ThisBuild := "2.12.1"
-crossScalaVersions in ThisBuild := List("2.12.1", "2.11.8")
+version in ThisBuild := "0.3.1-SNAPSHOT"
+scalaVersion in ThisBuild := "2.12.2"
+crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 

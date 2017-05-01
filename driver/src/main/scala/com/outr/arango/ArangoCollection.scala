@@ -36,6 +36,8 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
     db.call[Response](path, method, params, errorHandler)
   }
 
+  lazy val index: ArangoIndexing = new ArangoIndexing(this)
+
   def list(excludeSystem: Boolean = true): Future[Collections] = {
     call[Collections](None, Method.Get, params = Map(
       "excludeSystem" -> excludeSystem.toString
