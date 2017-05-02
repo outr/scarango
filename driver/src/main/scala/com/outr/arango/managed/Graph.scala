@@ -1,6 +1,7 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros}
+import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros, Query}
+import io.circe.Decoder
 import io.youi.net.URL
 
 import scala.concurrent.duration._
@@ -57,4 +58,5 @@ class Graph(name: String,
   }
 
   def cursor: ArangoCursor = instance.db.cursor
+  def call[T](query: Query)(implicit decoder: Decoder[T]): Future[T] = instance.db.call[T](query)
 }

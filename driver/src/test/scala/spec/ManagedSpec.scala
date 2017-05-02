@@ -197,6 +197,12 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         o._key should be(Some("order3"))
       }
     }
+    "delete all orders via AQL query" in {
+      val query = aql"RETURN LENGTH(FOR o IN orders REMOVE o IN orders RETURN o)"
+      ExampleGraph.call[Int](query).map { count =>
+        count should be(3)
+      }
+    }
     "delete the graph" in {
       ExampleGraph.delete().map { b =>
         b should be(true)
