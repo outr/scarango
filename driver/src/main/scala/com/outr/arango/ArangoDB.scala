@@ -28,10 +28,33 @@ class ArangoDB(val session: ArangoSession, db: String) {
 
   lazy val cursor: ArangoCursor = new ArangoCursor(this)
 
+  /**
+    * Convenience method that calls `cursor` expecting exactly one result back. An assertion error will fire if the
+    * results contains more or less than one result.
+    *
+    * @param query the query to execute
+    * @param decoder decoder for T
+    * @tparam T the type of the result
+    * @return Future[T]
+    */
   def call[T](query: Query)(implicit decoder: Decoder[T]): Future[T] = {
     cursor[T](query, count = true).map { response =>
       assert(response.count.contains(1), s"Response did not include exactly one result: ${response.count}.")
       response.result.head
+    }
+  }
+
+  /**
+    * Convenience method that calls `cursor` expecting no results. An assertion error will be occur if the results count
+    * is not exactly zero.
+    *
+    * @param query the query to execute
+    * @return true if the query returned with no errors
+    */
+  def execute(query: Query): Future[Boolean] = {
+    cursor[Unit](query, count = true).map { response =>
+      assert(response.count.contains(0), s"Response count was not zero: ${response.count}.")
+      !response.error
     }
   }
 

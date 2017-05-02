@@ -66,6 +66,17 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         response.result.map(_.name).toSet should be(Set("Apple", "Banana", "Cherry"))
       }
     }
+    "update Cherry to Mango" in {
+      val query = aql"""FOR f IN fruit FILTER f._key == ${cherry._key.get} UPDATE f._key WITH { name: "Mango" } IN fruit"""
+      ExampleGraph.execute(query).map { success =>
+        success should be(true)
+      }
+    }
+    "query Mango back by key" in {
+      ExampleGraph.fruit.byKey(cherry._key.get).map { f =>
+        f.name should be("Mango")
+      }
+    }
     "create the Content collection" in {
       ExampleGraph.content.create().map { response =>
         response.error should be(false)

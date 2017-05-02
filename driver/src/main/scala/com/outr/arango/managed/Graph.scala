@@ -59,4 +59,5 @@ class Graph(name: String,
 
   def cursor: ArangoCursor = instance.db.cursor
   def call[T](query: Query)(implicit decoder: Decoder[T]): Future[T] = instance.db.call[T](query)
+  def execute(query: Query): Future[Boolean] = instance.db.execute(query)
 }
