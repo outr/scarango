@@ -154,6 +154,12 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 
+### Features for 0.4.0 (In-Progress)
+
+* [X] Support for passing collection as reference in AQL interpolation
+* [X] AQL `execute` and `call` convenience methods for no results or exactly one result
+* [X] Complete Indexing support
+
 ### Features for 0.3.0 (Release 2017.04.28)
 
 * [X] Renaming of project from arangodb-scala to scarango
