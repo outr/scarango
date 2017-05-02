@@ -45,6 +45,18 @@ class ArangoDB(val session: ArangoSession, db: String) {
   }
 
   /**
+    * Convenience method that calls `cursor` grabbing the first result returning None if there are no results.
+    *
+    * @param query the query to execute
+    * @param decoder decoder for T
+    * @tparam T the type of the result
+    * @return optional T if there is at least one result
+    */
+  def first[T](query: Query)(implicit decoder: Decoder[T]): Future[Option[T]] = {
+    cursor[T](query, batchSize = Some(1)).map(_.result.headOption)
+  }
+
+  /**
     * Convenience method that calls `cursor` expecting no results. An assertion error will be occur if the results count
     * is not exactly zero.
     *

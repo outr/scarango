@@ -157,7 +157,9 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 ### Features for 0.4.0 (In-Progress)
 
 * [X] Support for passing collection as reference in AQL interpolation
-* [X] AQL `execute` and `call` convenience methods for no results or exactly one result
+* [X] AQL `execute` convenience method for no results
+* [X] AQL `call` convenience method for exactly one result
+* [X] AQL `first` convenience method for optional first result
 * [X] Complete Indexing support
 
 ### Features for 0.3.0 (Release 2017.04.28)
