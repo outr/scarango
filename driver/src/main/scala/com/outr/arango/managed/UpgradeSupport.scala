@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * Overrides `Graph.init` to run upgrades immediately after other initialization occurs.
   */
 trait UpgradeSupport extends Graph {
-  private var upgrades = Map.empty[Int, () => Future[Unit]]
+  private var upgrades = Map.empty[Int, Boolean => Future[Unit]]
 
   /**
     * A MapCollection must be defined for UpgradeSupport to retain the database version.
@@ -30,9 +30,19 @@ trait UpgradeSupport extends Graph {
 
   /**
     * Registers an upgrade for a specific version. Version numbers should start at 1 as 0 represents the initial state.
+    *
+    * @param runOnNewDatabase if false the upgrade will be skipped if the upgrade is invoked on a new database. This is
+    *                         useful for database migration functionality that presumes data in a specific state but is
+    *                         not applicable on a new instance. Defaults to true.
     */
-  def register(version: Int)(f: => Future[Unit]): Unit = synchronized {
-    upgrades += version -> (() => f)
+  def register(version: Int, runOnNewDatabase: Boolean = true)(f: => Future[Unit]): Unit = synchronized {
+    upgrades += version -> ((newDatabase: Boolean) => {
+      if (!newDatabase || runOnNewDatabase) {
+        f
+      } else {
+        Future.successful(())
+      }
+    })
   }
 
   /**
@@ -41,9 +51,10 @@ trait UpgradeSupport extends Graph {
   def upgrade(): Future[Unit] = version.flatMap { v =>
     var f = Future.successful(())
     val latest = latestVersion
+    val newDatabase = v == 0
     (v + 1 to latest).foreach { upgradeTo =>
       val upgrade = upgrades.getOrElse(upgradeTo, throw new RuntimeException(s"Attempting to upgrade to $upgradeTo, but no upgrade found!"))
-      f = f.flatMap(_ => upgrade().map(_ => store.map += UpgradeSupport.Key -> Value(upgradeTo)))
+      f = f.flatMap(_ => upgrade(newDatabase).map(_ => store.map += UpgradeSupport.Key -> Value(upgradeTo)))
     }
     f.foreach { _ =>
       scribe.info(s"Successfully upgraded from $v to $latest.")
