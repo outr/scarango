@@ -23,11 +23,6 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         b should be(true)
       }
     }
-    "create the Fruit collection" in {
-      fruit.create().map { response =>
-        response.error should be(false)
-      }
-    }
     "insert Apple" in {
       fruit.insert(Fruit("Apple", Some("Apple"))).map { f =>
         apple = f
@@ -79,11 +74,6 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         f.name should be("Mango")
       }
     }
-    "create the Content collection" in {
-      content.create().map { response =>
-        response.error should be(false)
-      }
-    }
     "insert an Image into polymorphic Collection" in {
       content.insert(Image("butterfly", 640, 480)).map { c =>
         butterfly = c
@@ -121,11 +111,6 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         map("owl") shouldBe a[Audio]
       }
     }
-    "create the HasFruit edge collection" in {
-      hasFruit.create().map { response =>
-        response.error should be(false)
-      }
-    }
     "create edge for Bunny and Apple" in {
       hasFruit.insert(HasFruit(bunny, apple)).map { e =>
         e._from should be(bunny._id.get)
@@ -161,11 +146,6 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         val cf = results.result.head
         cf.content.name should be("bunny")
         cf.fruit.map(_.name).toSet should be(Set("Apple", "Banana"))
-      }
-    }
-    "create the Order collection" in {
-      orders.create().map { response =>
-        response.error should be(false)
       }
     }
     "insert first order" in {

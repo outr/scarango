@@ -1,5 +1,7 @@
 package com.outr.arango.managed
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros, Query}
 import io.circe.Decoder
 import io.youi.net.URL
@@ -22,18 +24,45 @@ class Graph(name: String,
 
   private[managed] lazy val instance: ArangoGraph = Await.result[ArangoGraph](graphFuture, timeout)
 
+  private[managed] var managedCollections = List.empty[AbstractCollection[_]]
+  def collections: List[AbstractCollection[_]] = managedCollections
+
+  private val initCalled = new AtomicBoolean(false)
+
   /**
-    * Initializes this graph instance, database, and session creating the graph if it doesn't already exist.
+    * Initializes this graph instance, database, and session creating the graph and collections if it doesn't already
+    * exist (if createGraph and createCollections is true). This can be invoked multiple times without risk of duplicate
+    * functionality.
     *
-    * @param autoCreate automatically creates the graph if it doesn't already exist if set to true. Defaults to true.
+    * @param createGraph automatically creates the graph if it doesn't already exist if set to true. Defaults to true.
+    * @param createCollections automatically creates the collections if they don't already exist if set to true.
+    *                          Defaults to true.
     * @return true if the operation completed without error
     */
-  def init(autoCreate: Boolean = true): Future[Boolean] = graphFuture.flatMap { graph =>
-    graph.exists().flatMap {
-      case Some(response) => Future.successful(!response.error)
-      case None if autoCreate => graph.create().map(!_.error)
-      case None => Future.successful(true)
+  def init(createGraph: Boolean = true,
+           createCollections: Boolean = true): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
+    graphFuture.flatMap { graph =>
+      val graphSuccessFuture = graph.exists().flatMap {
+        case Some(response) => Future.successful(!response.error)
+        case None if createGraph => graph.create().map(!_.error)
+        case None => Future.successful(true)
+      }
+      graphSuccessFuture.flatMap { graphSuccess =>
+        if (graphSuccess) {
+          Future.sequence(managedCollections.map { c =>
+            c.collection.exists().flatMap {
+              case Some(_) => Future.successful(true)
+              case None if createCollections => c.create().map(!_.error)
+              case None => Future.successful(true)
+            }
+          }).map(_.forall(b => b))
+        } else {
+          Future.successful(false)
+        }
+      }
     }
+  } else {
+    Future.successful(true)
   }
 
   def vertex[T <: DocumentOption](name: String): VertexCollection[T] = macro Macros.vertex[T]

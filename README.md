@@ -163,7 +163,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Complete Indexing support
 * [X] Additional functionality for key/value collection (Map implementation)
 * [X] Upsert functionality convenience functionality
-* [ ] Graph knowledge of all collections and support to easily create all collections
+* [X] Graph knowledge of all collections and `Graph.init` can optionally create all missing collections
 * [ ] Trigger based `modified` updates
 * [ ] Database Upgrade infrastructure
 

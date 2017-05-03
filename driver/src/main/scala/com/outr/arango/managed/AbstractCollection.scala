@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
   def name: String
-  protected lazy val collection: ArangoCollection = graph.instance.db.collection(name)
+  protected[managed] lazy val collection: ArangoCollection = graph.instance.db.collection(name)
 
   implicit val encoder: Encoder[T]
   implicit val decoder: Decoder[T]
@@ -25,6 +25,10 @@ trait AbstractCollection[T <: DocumentOption] {
   lazy val upserted: Channel[T] = Channel[T]
   lazy val deleting: TransformableChannel[T] = TransformableChannel[T]
   lazy val deleted: Channel[T] = Channel[T]
+
+  graph.synchronized {
+    graph.managedCollections = graph.managedCollections ::: List(this)
+  }
 
   def create(): Future[GraphResponse]
   def delete(): Future[GraphResponse]
