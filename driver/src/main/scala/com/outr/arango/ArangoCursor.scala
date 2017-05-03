@@ -6,6 +6,7 @@ import io.circe.generic.auto._
 import io.youi.http.Method
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoCursor(arangoDB: ArangoDB) {
   def apply[T](query: Query,
@@ -37,6 +38,17 @@ class ArangoCursor(arangoDB: ArangoDB) {
       options = options
     )
     arangoDB.restful[QueryRequest, QueryResponse[T]]("cursor", request)
+  }
+
+  def paged[T](query: Query,
+               batchSize: Int = 100,
+               cache: Option[Boolean] = None,
+               memoryLimit: Option[Long] = None,
+               ttl: Option[Int] = None,
+               options: QueryRequestOptions = QueryRequestOptions())
+              (implicit decoder: Decoder[T]): Future[QueryResponsePagination[T]] = {
+    val count = true
+    apply[T](query, count, Some(batchSize), cache, memoryLimit, ttl, options).map(r => QueryResponsePagination[T](this, r))
   }
 
   def get[T](id: String)

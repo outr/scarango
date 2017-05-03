@@ -7,6 +7,8 @@ import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
 
+import scala.concurrent.Future
+
 class ManagedSpec extends AsyncWordSpec with Matchers {
   var apple: Fruit = _
   var banana: Fruit = _
@@ -113,12 +115,18 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     }
     "query all Content back" in {
       content.all().map { response =>
-        response.error should be(false)
-        response.count should be(Some(3))
-        val map = response.result.map(c => c.name -> c).toMap
+        response.total should be(3)
+        val map = response.results.map(c => c.name -> c).toMap
         map("butterfly") shouldBe a[Image]
         map("bunny") shouldBe a[Video]
         map("owl") shouldBe a[Audio]
+      }
+    }
+    "create iterator to verify QueryResponsePagination and QueryResponseIterator" in {
+      Future {
+        val iterator = content.iterator(content.allQuery, batchSize = 1)
+        val items = iterator.toVector
+        items.map(_.name).toSet should be(Set("butterfly", "bunny", "owl"))
       }
     }
     "create edge for Bunny and Apple" in {

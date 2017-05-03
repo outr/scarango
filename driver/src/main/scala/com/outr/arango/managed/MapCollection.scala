@@ -101,9 +101,7 @@ class ArangoMap(collection: MapCollection,
   }
 
   override def iterator: Iterator[(String, Value)] = {
-    val results = Await.result(collection.all(maxResults), timeout)
-    // TODO: support pagination
-    results.result.map(kv => kv._key.get -> kv.value).iterator
+    collection.iterator(collection.allQuery).map(kv => kv._key.get -> kv.value)
   }
 }
 

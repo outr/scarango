@@ -166,6 +166,8 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Graph knowledge of all collections and `Graph.init` can optionally create all missing collections
 * [X] Trigger based `modified` updates
 * [X] Database Upgrade infrastructure
+* [X] QueryResponsePagination to easily page through results
+* [X] QueryResponseIterator to cleanly iterate over every result without loading everything into memory
 
 ### Features for 0.3.0 (Release 2017.04.28)
 

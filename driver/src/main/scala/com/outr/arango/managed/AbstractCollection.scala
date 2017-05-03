@@ -5,8 +5,9 @@ import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
 import io.circe.{Decoder, Encoder}
 import reactify.{Channel, TransformableChannel}
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.language.experimental.macros
 
 trait AbstractCollection[T <: DocumentOption] {
@@ -89,8 +90,15 @@ trait AbstractCollection[T <: DocumentOption] {
   def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {
     graph.cursor.apply[T](query, count = true, batchSize = Some(batchSize))
   }
-  // TODO: support for proper pagination
-  def all(batchSize: Int = 100): Future[QueryResponse[T]] = cursor(Query(s"FOR x IN $name RETURN x", Map.empty))
+  def paged(query: Query, batchSize: Int = 100): Future[QueryResponsePagination[T]] = {
+    graph.cursor.paged[T](query, batchSize)
+  }
+  def iterator(query: Query, batchSize: Int = 100, timeout: FiniteDuration = 10.seconds): Iterator[T] = {
+    val pagination = Await.result(paged(query, batchSize), timeout)
+    new QueryResponseIterator[T](pagination, timeout)
+  }
+  lazy val allQuery: Query = Query(s"FOR x IN $name RETURN x", Map.empty)
+  def all(batchSize: Int = 100): Future[QueryResponsePagination[T]] = paged(allQuery)
 
   protected def insertInternal(document: T): Future[CreateInfo]
   protected def replaceInternal(document: T): Future[Unit]
