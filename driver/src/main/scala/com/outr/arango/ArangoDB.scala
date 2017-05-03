@@ -10,7 +10,7 @@ class ArangoDB(val session: ArangoSession, db: String) {
   protected[arango] def restful[Request, Response](name: String,
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: HttpResponse => Response = session.instance.defaultErrorHandler[Response],
+                                                   errorHandler: Option[HttpResponse => Response] = None,
                                                    method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     session.instance.restful[Request, Response](s"/_db/$db/_api/$name", request, Some(session.token), params, errorHandler, method)
@@ -19,7 +19,7 @@ class ArangoDB(val session: ArangoSession, db: String) {
   protected[arango] def call[Response](name: String,
                                        method: Method,
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: HttpResponse => Response = session.instance.defaultErrorHandler[Response])
+                                       errorHandler: Option[HttpResponse => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     session.instance.call[Response](s"/_db/$db/_api/$name", method, Some(session.token), params, errorHandler)
   }

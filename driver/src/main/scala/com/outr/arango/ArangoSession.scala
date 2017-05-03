@@ -14,7 +14,7 @@ class ArangoSession(val instance: Arango, val token: String) {
   protected def restful[Request, Response](name: String,
                                            request: Request,
                                            params: Map[String, String] = Map.empty,
-                                           errorHandler: HttpResponse => Response = instance.defaultErrorHandler[Response])
+                                           errorHandler: Option[HttpResponse => Response] = None)
                                           (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     instance.restful[Request, Response](s"/_api/$name", request, Some(token), params, errorHandler)
   }
@@ -22,7 +22,7 @@ class ArangoSession(val instance: Arango, val token: String) {
   protected def call[Response](name: String,
                                method: Method,
                                params: Map[String, String] = Map.empty,
-                               errorHandler: HttpResponse => Response = instance.defaultErrorHandler[Response])
+                               errorHandler: Option[HttpResponse => Response] = None)
                               (implicit decoder: Decoder[Response]): Future[Response] = {
     instance.call[Response](s"/_api/$name", method, Some(token), params, errorHandler)
   }
@@ -32,7 +32,7 @@ class ArangoSession(val instance: Arango, val token: String) {
   def parse(query: String): Future[ParseResult] = {
     implicit val decoder: Decoder[ParseResult] = deriveDecoder[ParseResult]
 
-    restful[ParseRequest, ParseResult]("query", ParseRequest(query), errorHandler = (response) => {
+    restful[ParseRequest, ParseResult]("query", ParseRequest(query), errorHandler = Some((response) => {
       val responseJson = response.content.getOrElse(throw new RuntimeException(s"No content received in response.")) match {
         case content: StringContent => content.value
         case content => throw new RuntimeException(s"$content not supported")
@@ -50,7 +50,7 @@ class ArangoSession(val instance: Arango, val token: String) {
           ast = Nil
         )
       }
-    })
+    }))
   }
 }
 

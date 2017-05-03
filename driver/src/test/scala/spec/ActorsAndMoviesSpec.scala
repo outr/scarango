@@ -77,7 +77,7 @@ class ActorsAndMoviesSpec extends AsyncWordSpec with Matchers {
         }
       }
       "create the actsIn edge collection" in {
-        actsIn.create(actors, movies).map { response =>
+        actsIn.create(actors, movies, waitForSync = true).map { response =>
           response.error should be(false)
         }
       }

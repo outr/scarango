@@ -1,12 +1,13 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{ArangoCollection, ArangoIndexing, DocumentOption, Query}
+import com.outr.arango._
 import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
 import io.circe.{Decoder, Encoder}
 import reactify.{Channel, TransformableChannel}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.experimental.macros
 
 trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
@@ -30,52 +31,59 @@ trait AbstractCollection[T <: DocumentOption] {
     graph.managedCollections = graph.managedCollections ::: List(this)
   }
 
-  def create(): Future[GraphResponse]
+  def create(waitForSync: Boolean = false): Future[GraphResponse]
   def delete(): Future[GraphResponse]
   def get(key: String): Future[Option[T]]
   final def apply(key: String): Future[T] = get(key).map(_.getOrElse(throw new RuntimeException(s"Key not found: $key.")))
 
   def index: ArangoIndexing = collection.index
 
-  final def insert(document: T): Future[T] = {
-    inserting.transform(document) match {
-      case Some(modified) => {
-        insertInternal(modified).map(updateDocument(document, _)).map { value =>
-          inserted := value
-          value
+  def insert(document: T): Future[T] = macro Macros.insert[T]
+  def upsert(document: T): Future[T] = macro Macros.upsert[T]
+  def replace(document: T): Future[T] = macro Macros.replace[T]
+  def delete(document: T): Future[Boolean] = macro Macros.delete[T]
+
+  object managed {
+    def insert(document: T): Future[T] = {
+      inserting.transform(document) match {
+        case Some(modified) => {
+          insertInternal(modified).map(updateDocument(document, _)).map { value =>
+            inserted := value
+            value
+          }
         }
+        case None => Future.failed(new CancelledException("Insert cancelled."))
       }
-      case None => Future.failed(new CancelledException("Insert cancelled."))
     }
-  }
-  final def upsert(document: T): Future[T] = {
-    upserting.transform(document) match {
-      case Some(modified) => {
-        collection.document.upsert(modified)
-      }
-      case None => Future.failed(new CancelledException("Upsert cancelled."))
-    }
-  }
-  final def replace(document: T): Future[T] = {
-    replacing.transform(document) match {
-      case Some(modified) => {
-        replaceInternal(modified).map(_ => modified).map { value =>
-          replaced := value
-          value
+    def upsert(document: T): Future[T] = {
+      upserting.transform(document) match {
+        case Some(modified) => {
+          collection.document.upsert(modified)
         }
+        case None => Future.failed(new CancelledException("Upsert cancelled."))
       }
-      case None => Future.failed(new CancelledException("Replace cancelled."))
     }
-  }
-  final def delete(document: T): Future[Boolean] = {
-    deleting.transform(document) match {
-      case Some(modified) => {
-        deleteInternal(modified).map { success =>
-          deleted := modified
-          success
+    def replace(document: T): Future[T] = {
+      replacing.transform(document) match {
+        case Some(modified) => {
+          replaceInternal(modified).map(_ => modified).map { value =>
+            replaced := value
+            value
+          }
         }
+        case None => Future.failed(new CancelledException("Replace cancelled."))
       }
-      case None => Future.failed(new CancelledException("Delete cancelled."))
+    }
+    def delete(document: T): Future[Boolean] = {
+      deleting.transform(document) match {
+        case Some(modified) => {
+          deleteInternal(modified).map { success =>
+            deleted := modified
+            success
+          }
+        }
+        case None => Future.failed(new CancelledException("Delete cancelled."))
+      }
     }
   }
   def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {

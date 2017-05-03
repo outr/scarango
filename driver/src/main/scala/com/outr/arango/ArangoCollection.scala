@@ -15,7 +15,7 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
   protected[arango] def restful[Request, Response](name: Option[String],
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: HttpResponse => Response = db.session.instance.defaultErrorHandler[Response])
+                                                   errorHandler: Option[HttpResponse => Response] = None)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val path = name match {
       case Some(n) if n.isEmpty => s"collection/$collection"
@@ -28,7 +28,7 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
   protected[arango] def call[Response](name: Option[String],
                                        method: Method,
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: HttpResponse => Response = db.session.instance.defaultErrorHandler[Response])
+                                       errorHandler: Option[HttpResponse => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     val path = name match {
       case Some(n) => s"collection/$collection/$n"

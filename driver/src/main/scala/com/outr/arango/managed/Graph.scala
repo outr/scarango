@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros, Query}
 import io.circe.Decoder
 import io.youi.net.URL
+import reactify.Channel
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -27,6 +28,8 @@ class Graph(name: String,
   private[managed] var managedCollections = List.empty[AbstractCollection[_]]
   def collections: List[AbstractCollection[_]] = managedCollections
 
+  val initialized: Channel[Boolean] = Channel[Boolean]
+
   private val initCalled = new AtomicBoolean(false)
 
   /**
@@ -41,26 +44,33 @@ class Graph(name: String,
     */
   def init(createGraph: Boolean = true,
            createCollections: Boolean = true): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
-    graphFuture.flatMap { graph =>
-      val graphSuccessFuture = graph.exists().flatMap {
+    var future = graphFuture.flatMap { graph =>
+      graph.exists().flatMap {
         case Some(response) => Future.successful(!response.error)
         case None if createGraph => graph.create().map(!_.error)
         case None => Future.successful(true)
       }
-      graphSuccessFuture.flatMap { graphSuccess =>
-        if (graphSuccess) {
-          Future.sequence(managedCollections.map { c =>
-            c.collection.exists().flatMap {
+    }
+    if (createCollections) {
+      collections.foreach { collection =>
+        future = future.flatMap { b =>
+          if (b) {
+            collection.collection.exists().flatMap {
               case Some(_) => Future.successful(true)
-              case None if createCollections => c.create().map(!_.error)
-              case None => Future.successful(true)
+              case None => {
+                collection.create(waitForSync = true).map { response =>
+                  !response.error
+                }
+              }
             }
-          }).map(_.forall(b => b))
-        } else {
-          Future.successful(false)
+          } else {
+            Future.successful(false)
+          }
         }
       }
     }
+    future.foreach(initialized := _)
+    future
   } else {
     Future.successful(true)
   }

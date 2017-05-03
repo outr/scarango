@@ -12,7 +12,7 @@ abstract class EdgeCollection[T <: Edge with DocumentOption](override val graph:
                                                              to: List[String]) extends AbstractCollection[T] {
   private lazy val edge: ArangoEdge = graph.instance.edge(name)
 
-  override def create(): Future[GraphResponse] = edge.create(from, to)
+  override def create(waitForSync: Boolean = false): Future[GraphResponse] = edge.create(from, to, waitForSync)
   override def delete(): Future[GraphResponse] = edge.delete(dropCollection = true)
 
   override def get(key: String): Future[Option[T]] = edge[T](key).map(_.edge)

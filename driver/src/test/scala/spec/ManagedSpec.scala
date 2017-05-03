@@ -169,6 +169,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         o.status should be(Status.New)
         o.status shouldNot be(Status.Paid)
         o.status shouldNot be(Status.Failure)
+        o.modified shouldNot be(0L)
         o._key should be(Some("order1"))
       }
     }
@@ -178,6 +179,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         o.status should be(Status.Paid)
         o.status shouldNot be(Status.New)
         o.status shouldNot be(Status.Failure)
+        o.modified shouldNot be(0L)
         o._key should be(Some("order2"))
       }
     }
@@ -187,6 +189,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         o.status should be(Status.Failure("Bad Credit Card"))
         o.status shouldNot be(Status.New)
         o.status shouldNot be(Status.Paid)
+        o.modified shouldNot be(0L)
         o._key should be(Some("order3"))
       }
     }
@@ -265,7 +268,12 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
 
   case class ContentFruit(content: Content, fruit: List[Fruit])
 
-  case class Order(amount: BigDecimal, status: Status, _key: Option[String] = None, _id: Option[String] = None, _rev: Option[String] = None) extends DocumentOption
+  case class Order(amount: BigDecimal,
+                   status: Status,
+                   modified: Long = 0L,
+                   _key: Option[String] = None,
+                   _id: Option[String] = None,
+                   _rev: Option[String] = None) extends DocumentOption with Modifiable
 
   sealed trait Status
 

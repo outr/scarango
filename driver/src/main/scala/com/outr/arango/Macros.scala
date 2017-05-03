@@ -3,7 +3,7 @@ package com.outr.arango
 import com.outr.arango.managed._
 
 import scala.annotation.compileTimeOnly
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -11,6 +11,46 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @compileTimeOnly("Enable macro paradise to expand compile-time macros")
 object Macros {
+  def insert[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[T]](
+      q"""
+         val updated = com.outr.arango.Modifiable.updateIfModifiable($document)
+         $collection.managed.insert(updated)
+       """)
+  }
+
+  def upsert[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[T]](
+      q"""
+         val updated = com.outr.arango.Modifiable.updateIfModifiable($document)
+         $collection.managed.upsert(updated)
+       """)
+  }
+
+  def replace[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[T]](
+      q"""
+         val updated = com.outr.arango.Modifiable.updateIfModifiable($document)
+         $collection.managed.replace(updated)
+       """)
+  }
+
+  def delete[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[T]](q"managed.delete($collection)")
+  }
+
   def vertex[T <: DocumentOption](c: blackbox.Context)(name: c.Expr[String])(implicit t: c.WeakTypeTag[T]): c.Expr[VertexCollection[T]] = {
     import c.universe._
 

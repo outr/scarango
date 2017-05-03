@@ -25,12 +25,12 @@ class ArangoMap(collection: MapCollection,
                 timeout: FiniteDuration = 10.seconds,
                 maxResults: Int = 100) extends mutable.Map[String, Value] {
   override def +=(kv: (String, Value)): ArangoMap.this.type = {
-    Await.result(collection.upsert(KeyValuePair(kv._2, Some(kv._1))), timeout)
+    Await.result(collection.managed.upsert(KeyValuePair(kv._2, Some(kv._1))), timeout)
     this
   }
 
   override def -=(key: String): ArangoMap.this.type = {
-    val success = Await.result(collection.delete(KeyValuePair(Value(""), Some(key))), timeout)
+    val success = Await.result(collection.managed.delete(KeyValuePair(Value(""), Some(key))), timeout)
     assert(success, s"Deletion of $key failed.")
     this
   }

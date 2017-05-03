@@ -59,12 +59,16 @@ class ArangoGraph(val name: String, val db: ArangoDB) {
 }
 
 class ArangoVertex(val name: String, val graph: ArangoGraph) {
-  def create(): Future[GraphResponse] = {
-    graph.db.restful[AddVertexRequest, GraphResponse](s"gharial/${graph.name}/vertex", AddVertexRequest(name))
+  def create(waitForSync: Boolean = false): Future[GraphResponse] = {
+    graph.db.restful[AddVertexRequest, GraphResponse](s"gharial/${graph.name}/vertex", AddVertexRequest(name), Map("waitForSync" -> waitForSync.toString))
   }
 
   def insert[T](document: T, waitForSync: Option[Boolean] = None)(implicit encoder: Encoder[T]): Future[VertexInsert] = {
-    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name", document, params = waitForSync.map(b => Map("waitForSync" -> b.toString)).getOrElse(Map.empty))
+    graph.db.restful[T, VertexInsert](
+      s"gharial/${graph.name}/vertex/$name",
+      document,
+      params = waitForSync.map(b => Map("waitForSync" -> b.toString)).getOrElse(Map.empty)
+    )
   }
 
   def apply[T](key: String)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
@@ -89,13 +93,13 @@ class ArangoVertex(val name: String, val graph: ArangoGraph) {
 }
 
 class ArangoEdge(val name: String, val graph: ArangoGraph) {
-  def create(from: List[String], to: List[String]): Future[GraphResponse] = {
-    graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge", EdgeDefinition(name, from, to))
+  def create(from: List[String], to: List[String], waitForSync: Boolean): Future[GraphResponse] = {
+    graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge", EdgeDefinition(name, from, to), Map("waitForSync" -> waitForSync.toString))
   }
 
-  def create(from: String, to: String): Future[GraphResponse] = create(List(from), List(to))
+  def create(from: String, to: String, waitForSync: Boolean): Future[GraphResponse] = create(List(from), List(to), waitForSync)
 
-  def create(from: ArangoVertex, to: ArangoVertex): Future[GraphResponse] = create(from.name, to.name)
+  def create(from: ArangoVertex, to: ArangoVertex, waitForSync: Boolean): Future[GraphResponse] = create(from.name, to.name, waitForSync)
 
   def insert[T <: Edge](edge: T)(implicit encoder: Encoder[T]): Future[EdgeInsert] = {
     graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name", edge)

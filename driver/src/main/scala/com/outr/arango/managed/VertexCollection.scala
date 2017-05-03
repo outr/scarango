@@ -10,7 +10,7 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
                                                      override val name: String) extends AbstractCollection[T] {
   private lazy val vertex: ArangoVertex = graph.instance.vertex(name)
 
-  override def create(): Future[GraphResponse] = vertex.create()
+  override def create(waitForSync: Boolean = false): Future[GraphResponse] = vertex.create(waitForSync)
   override def delete(): Future[GraphResponse] = vertex.delete()
 
   override def get(key: String): Future[Option[T]] = vertex[T](key).map(_.vertex)

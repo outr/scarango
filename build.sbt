@@ -27,7 +27,8 @@ lazy val root = project.in(file("."))
 lazy val core = crossProject.in(file("core"))
   .settings(
     name := "scarango-core",
-    description := "Core objects shared without driver-specific dependencies."
+    description := "Core objects shared without driver-specific dependencies.",
+    libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
   )
 
 lazy val coreJS = core.js
@@ -36,7 +37,8 @@ lazy val coreJVM = core.jvm
 lazy val driver = project.in(file("driver"))
   .settings(
     name := "scarango-driver",
-    fork := true,
+    fork := false,
+    parallelExecution in Test := false,
     libraryDependencies ++= Seq(
       "com.outr" %% "scribe" % scribeVersion,
       "com.outr" %% "reactify" % reactifyVersion,
