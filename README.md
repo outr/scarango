@@ -165,7 +165,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Upsert functionality convenience functionality
 * [X] Graph knowledge of all collections and `Graph.init` can optionally create all missing collections
 * [X] Trigger based `modified` updates
-* [ ] Database Upgrade infrastructure
+* [X] Database Upgrade infrastructure
 
 ### Features for 0.3.0 (Release 2017.04.28)
 

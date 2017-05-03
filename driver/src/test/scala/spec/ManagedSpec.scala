@@ -23,6 +23,11 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         b should be(true)
       }
     }
+    "verify the upgrade ran" in {
+      version.map { v =>
+        v should be(1)
+      }
+    }
     "insert Apple" in {
       fruit.insert(Fruit("Apple", Some("Apple"))).map { f =>
         apple = f
@@ -30,6 +35,11 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         f._key should be(Some("Apple"))
         f._rev shouldNot be(None)
         f.name should be("Apple")
+      }
+    }
+    "fail to insert a duplicate named Apple" in {
+      fruit.insert(Fruit("Apple")).failed.map {
+        case exc: ArangoException => exc.error.errorCode should be(ArangoCode.ArangoUniqueConstraintViolated)
       }
     }
     "insert Banana" in {
@@ -206,11 +216,17 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     }
   }
 
-  object Database extends Graph("example") {
+  object Database extends Graph("example") with UpgradeSupport {
+    override val store: MapCollection = new MapCollection(this, "store")
+
     val fruit: VertexCollection[Fruit] = vertex[Fruit]("fruit")
     val content: PolymorphicVertexCollection[Content] = polymorphic3[Content, Image, Video, Audio]("content")
     val hasFruit: EdgeCollection[HasFruit] = edge[HasFruit]("hasFruit", "content" -> "fruit")
     val orders: VertexCollection[Order] = vertex[Order]("orders")
+
+    register(1) {
+      fruit.index.persistent.create(List("name"), unique = true, sparse = true).map(_ => ())
+    }
   }
 
   case class Fruit(name: String,

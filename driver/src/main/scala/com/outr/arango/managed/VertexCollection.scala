@@ -13,7 +13,9 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
   override def create(waitForSync: Boolean = false): Future[GraphResponse] = vertex.create(waitForSync)
   override def delete(): Future[GraphResponse] = vertex.delete()
 
-  override def get(key: String): Future[Option[T]] = vertex[T](key).map(_.vertex)
+  override def get(key: String): Future[Option[T]] = vertex[T](key).map(_.vertex).recover {
+    case t: ArangoException if t.error.errorCode == ArangoCode.ArangoDocumentNotFound => None
+  }
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     vertex.insert[T](document, waitForSync = Some(true)).map(_.vertex)

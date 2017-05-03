@@ -37,7 +37,7 @@ lazy val coreJVM = core.jvm
 lazy val driver = project.in(file("driver"))
   .settings(
     name := "scarango-driver",
-    fork := false,
+    fork := true,
     parallelExecution in Test := false,
     libraryDependencies ++= Seq(
       "com.outr" %% "scribe" % scribeVersion,

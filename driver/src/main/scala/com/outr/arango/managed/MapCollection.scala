@@ -7,7 +7,8 @@ import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 
 import scala.collection.mutable
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class MapCollection(graph: Graph, name: String) extends VertexCollection[KeyValuePair](graph, name) {
@@ -36,7 +37,37 @@ class ArangoMap(collection: MapCollection,
   }
 
   override def get(key: String): Option[Value] = {
-    Await.result(collection.get(key), timeout).map(_.value)
+    Await.result(future.get(key), timeout)
+  }
+
+  object future {
+    def get(key: String): Future[Option[Value]] = collection.get(key).map(_.map(_.value))
+    def apply(key: String): Future[Value] = get(key).map(_.get)
+
+    def string(key: String): Future[String] = apply(key).map {
+      case StringValue(s) => s
+      case v => throw new RuntimeException(s"Expected String value for $key but got $v.")
+    }
+    def stringOption(key: String): Future[Option[String]] = get(key).map(_.map {
+      case StringValue(s) => s
+      case v => throw new RuntimeException(s"Expected String value for $key but got $v.")
+    })
+    def int(key: String): Future[Int] = apply(key).map {
+      case IntValue(i) => i
+      case v => throw new RuntimeException(s"Expected Int value for $key but got $v.")
+    }
+    def intOption(key: String): Future[Option[Int]] = get(key).map(_.map {
+      case IntValue(i) => i
+      case v => throw new RuntimeException(s"Expected Int value for $key but got $v.")
+    })
+    def double(key: String): Future[Double] = apply(key).map {
+      case DoubleValue(d) => d
+      case v => throw new RuntimeException(s"Expected Double value for $key but got $v.")
+    }
+    def doubleOption(key: String): Future[Option[Double]] = get(key).map(_.map {
+      case DoubleValue(d) => d
+      case v => throw new RuntimeException(s"Expected Double value for $key but got $v.")
+    })
   }
 
   def string(key: String): String = apply(key) match {

@@ -1,6 +1,6 @@
 package com.outr.arango.managed
 
-import com.outr.arango.{ArangoEdge, DocumentOption, Edge}
+import com.outr.arango.{ArangoCode, ArangoEdge, ArangoException, DocumentOption, Edge}
 import com.outr.arango.rest.{CreateInfo, GraphResponse}
 
 import scala.concurrent.Future
@@ -15,7 +15,9 @@ abstract class EdgeCollection[T <: Edge with DocumentOption](override val graph:
   override def create(waitForSync: Boolean = false): Future[GraphResponse] = edge.create(from, to, waitForSync)
   override def delete(): Future[GraphResponse] = edge.delete(dropCollection = true)
 
-  override def get(key: String): Future[Option[T]] = edge[T](key).map(_.edge)
+  override def get(key: String): Future[Option[T]] = edge[T](key).map(_.edge).recover {
+    case t: ArangoException if t.error.errorCode == ArangoCode.ArangoDocumentNotFound => None
+  }
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     edge.insert[T](document).map(_.edge)
