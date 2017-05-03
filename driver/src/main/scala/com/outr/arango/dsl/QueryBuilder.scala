@@ -1,6 +1,6 @@
 package com.outr.arango.dsl
 
-import com.outr.arango.QueryArg
+import com.outr.arango.Value
 
 case class QueryBuilder(parts: List[QueryPart]) extends QueryPart {
   private def withParts(parts: QueryPart*): QueryBuilder = QueryBuilder(this.parts ::: parts.toList)
@@ -46,8 +46,8 @@ sealed trait Expression extends QueryPart
 
 case class StaticExpression(aql: String) extends QueryPart
 
-case class ArgExpression(arg: QueryArg) extends QueryPart {
+case class ArgExpression(arg: Value) extends QueryPart {
   override def aql: String = QueryBuilder.nextArgName()
 
-  override def args: List[QueryArg] = List(arg)
+  override def args: List[Value] = List(arg)
 }

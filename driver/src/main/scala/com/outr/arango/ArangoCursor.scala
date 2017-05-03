@@ -19,9 +19,9 @@ class ArangoCursor(arangoDB: ArangoDB) {
     val bindVars = Json.obj(query.args.map {
       case (key, value) => {
         val argValue: Json = value match {
-          case QueryArg.string(s) => Json.fromString(s)
-          case QueryArg.double(d) => Json.fromDoubleOrNull(d)
-          case QueryArg.int(i) => Json.fromInt(i)
+          case StringValue(s) => Json.fromString(s)
+          case IntValue(i) => Json.fromInt(i)
+          case DoubleValue(d) => Json.fromDoubleOrNull(d)
         }
         key -> argValue
       }

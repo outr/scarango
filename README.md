@@ -161,6 +161,9 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] AQL `call` convenience method for exactly one result
 * [X] AQL `first` convenience method for optional first result
 * [X] Complete Indexing support
+* [ ] Trigger based `modified` updates
+* [ ] Additional functionality for key/value collection (Map implementation)
+* [ ] Database Upgrade infrastructure
 
 ### Features for 0.3.0 (Release 2017.04.28)
 

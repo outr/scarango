@@ -49,7 +49,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val name = "John Doe"
         val query = aql"FOR u IN users FILTER u.id == $id && u.name == $name RETURN u"
         query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
-        query.args should be(Map("arg1" -> QueryArg.int(123), "arg2" -> QueryArg.string("John Doe")))
+        query.args should be(Map("arg1" -> Value(123), "arg2" -> Value("John Doe")))
       }
     }
     "dsl" should {

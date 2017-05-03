@@ -1,8 +1,8 @@
 package com.outr.arango.dsl
 
-import com.outr.arango.QueryArg
+import com.outr.arango.Value
 
 trait QueryPart {
   def aql: String
-  def args: List[QueryArg] = List.empty
+  def args: List[Value] = List.empty
 }

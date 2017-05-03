@@ -177,7 +177,7 @@ object Macros {
         val parts = rawParts map { case t @ Literal(Constant(const: String)) => (const, t.pos) }
 
         val b = new StringBuilder
-        var argsMap = Map.empty[String, c.Expr[QueryArg]]
+        var argsMap = Map.empty[String, c.Expr[Value]]
         parts.zipWithIndex.foreach {
           case ((raw, _), index) => {
             if (index > 0) {
@@ -186,19 +186,19 @@ object Macros {
               val value = args(index - 1)
               val vt = value.actualType
               val queryArg = if (vt <:< typeOf[String]) {
-                c.Expr[QueryArg](q"com.outr.arango.QueryArg.string($value)")
+                c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[Int]) {
-                c.Expr[QueryArg](q"com.outr.arango.QueryArg.int($value)")
+                c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[Double]) {
-                c.Expr[QueryArg](q"com.outr.arango.QueryArg.double($value)")
+                c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
                 special = true
-                c.Expr[QueryArg](q"com.outr.arango.QueryArg.string($value.name)")
+                c.Expr[Value](q"com.outr.arango.Value($value.name)")
               } else if (vt <:< typeOf[com.outr.arango.managed.EdgeCollection[_]]) {
                 special = true
-                c.Expr[QueryArg](q"com.outr.arango.QueryArg.string($value.name)")
+                c.Expr[Value](q"com.outr.arango.Value($value.name)")
               } else {
-                c.abort(c.enclosingPosition, s"Unsupported QueryArg: $vt.")
+                c.abort(c.enclosingPosition, s"Unsupported Value: $vt.")
               }
               if (special) {
                 argName = s"@$argName"
