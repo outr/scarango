@@ -15,7 +15,7 @@ abstract class EdgeCollection[T <: Edge with DocumentOption](override val graph:
   override def create(): Future[GraphResponse] = edge.create(from, to)
   override def delete(): Future[GraphResponse] = edge.delete(dropCollection = true)
 
-  override def byKey(key: String): Future[T] = edge[T](key).map(_.edge.get)
+  override def get(key: String): Future[Option[T]] = edge[T](key).map(_.edge)
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     edge.insert[T](document).map(_.edge)

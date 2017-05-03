@@ -21,12 +21,15 @@ trait AbstractCollection[T <: DocumentOption] {
   lazy val inserted: Channel[T] = Channel[T]
   lazy val replacing: TransformableChannel[T] = TransformableChannel[T]
   lazy val replaced: Channel[T] = Channel[T]
+  lazy val upserting: TransformableChannel[T] = TransformableChannel[T]
+  lazy val upserted: Channel[T] = Channel[T]
   lazy val deleting: TransformableChannel[T] = TransformableChannel[T]
   lazy val deleted: Channel[T] = Channel[T]
 
   def create(): Future[GraphResponse]
   def delete(): Future[GraphResponse]
-  def byKey(key: String): Future[T]
+  def get(key: String): Future[Option[T]]
+  final def apply(key: String): Future[T] = get(key).map(_.getOrElse(throw new RuntimeException(s"Key not found: $key.")))
 
   def index: ArangoIndexing = collection.index
 
@@ -39,6 +42,14 @@ trait AbstractCollection[T <: DocumentOption] {
         }
       }
       case None => Future.failed(new CancelledException("Insert cancelled."))
+    }
+  }
+  final def upsert(document: T): Future[T] = {
+    upserting.transform(document) match {
+      case Some(modified) => {
+        collection.document.upsert(modified)
+      }
+      case None => Future.failed(new CancelledException("Upsert cancelled."))
     }
   }
   final def replace(document: T): Future[T] = {
@@ -66,6 +77,7 @@ trait AbstractCollection[T <: DocumentOption] {
   def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {
     graph.cursor.apply[T](query, count = true, batchSize = Some(batchSize))
   }
+  // TODO: support for proper pagination
   def all(batchSize: Int = 100): Future[QueryResponse[T]] = cursor(Query(s"FOR x IN $name RETURN x", Map.empty))
 
   protected def insertInternal(document: T): Future[CreateInfo]

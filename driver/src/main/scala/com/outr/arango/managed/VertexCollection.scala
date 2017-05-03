@@ -13,7 +13,7 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
   override def create(): Future[GraphResponse] = vertex.create()
   override def delete(): Future[GraphResponse] = vertex.delete()
 
-  override def byKey(key: String): Future[T] = vertex[T](key).map(_.vertex.get)
+  override def get(key: String): Future[Option[T]] = vertex[T](key).map(_.vertex)
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     vertex.insert[T](document, waitForSync = Some(true)).map(_.vertex)

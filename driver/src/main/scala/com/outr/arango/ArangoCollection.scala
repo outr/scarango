@@ -10,6 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoCollection(val db: ArangoDB, val collection: String) {
   lazy val document: ArangoDocument = new ArangoDocument(this)
+  lazy val index: ArangoIndexing = new ArangoIndexing(this)
 
   protected[arango] def restful[Request, Response](name: Option[String],
                                                    request: Request,
@@ -35,8 +36,6 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
     }
     db.call[Response](path, method, params, errorHandler)
   }
-
-  lazy val index: ArangoIndexing = new ArangoIndexing(this)
 
   def list(excludeSystem: Boolean = true): Future[Collections] = {
     call[Collections](None, Method.Get, params = Map(

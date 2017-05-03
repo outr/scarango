@@ -1,7 +1,9 @@
 package com.outr.arango
 
 import com.outr.arango.rest.CreateDocument
-import io.circe.{Decoder, Encoder}
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
 import io.youi.http.Method
 
 import scala.concurrent.Future
@@ -22,5 +24,20 @@ class ArangoDocument(collection: ArangoCollection) {
       Some("returnNew" -> returnNew.toString),
       Some("silent" -> silent.toString)
     ).flatten.toMap)
+  }
+
+  def upsert[T <: DocumentOption](document: T)
+               (implicit encoder: Encoder[T], decoder: Decoder[T]): Future[T] = {
+    val json = document.asJson
+    val jsonString = Printer.spaces2.pretty(json)
+    val queryString =
+      s"""
+         |UPSERT { _key: @key }
+         |INSERT $jsonString
+         |UPDATE $jsonString IN ${collection.collection}
+         |RETURN NEW
+       """.stripMargin
+    val query = Query(queryString, Map("key" -> Value(document._key.get)))
+    collection.db.call[T](query)
   }
 }

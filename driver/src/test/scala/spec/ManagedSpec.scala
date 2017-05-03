@@ -56,7 +56,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "query Apple back by key" in {
-      fruit.byKey("Apple").map { f =>
+      fruit.apply("Apple").map { f =>
         f.name should be("Apple")
       }
     }
@@ -75,7 +75,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "query Mango back by key" in {
-      fruit.byKey(cherry._key.get).map { f =>
+      fruit.apply(cherry._key.get).map { f =>
         f.name should be("Mango")
       }
     }
@@ -184,7 +184,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the first order" in {
-      orders.byKey("order1").map { o =>
+      orders.apply("order1").map { o =>
         o.amount should be(BigDecimal("100.10"))
         o.status should be(Status.New)
         o.status shouldNot be(Status.Paid)
@@ -193,7 +193,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the second order" in {
-      orders.byKey("order2").map { o =>
+      orders.apply("order2").map { o =>
         o.amount should be(BigDecimal("12.00"))
         o.status should be(Status.Paid)
         o.status shouldNot be(Status.New)
@@ -202,7 +202,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the third order" in {
-      orders.byKey("order3").map { o =>
+      orders.apply("order3").map { o =>
         o.amount should be(BigDecimal("123.45"))
         o.status should be(Status.Failure("Bad Credit Card"))
         o.status shouldNot be(Status.New)
