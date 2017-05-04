@@ -33,7 +33,5 @@ abstract class EdgeCollection[T <: Edge with DocumentOption](override val graph:
     edge.replace[T](document._key.get, document).map(_ => ())
   }
 
-  override protected def deleteInternal(document: T): Future[Boolean] = {
-    edge.delete(document._key.get).map(!_.error)
-  }
+  override protected def deleteInternal(key: String): Future[Boolean] = edge.delete(key).map(_.removed)
 }

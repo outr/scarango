@@ -27,8 +27,8 @@ trait AbstractCollection[T <: DocumentOption] {
   lazy val updated: Channel[Modification] = Channel[Modification]
   lazy val replacing: TransformableChannel[T] = TransformableChannel[T]
   lazy val replaced: Channel[T] = Channel[T]
-  lazy val deleting: TransformableChannel[T] = TransformableChannel[T]
-  lazy val deleted: Channel[T] = Channel[T]
+  lazy val deleting: TransformableChannel[String] = TransformableChannel[String]
+  lazy val deleted: Channel[String] = Channel[String]
 
   graph.synchronized {
     graph.managedCollections = graph.managedCollections ::: List(this)
@@ -46,7 +46,17 @@ trait AbstractCollection[T <: DocumentOption] {
   def update[M](key: String, modification: M)
                (implicit encoder: Encoder[M]): Future[CreateInfo] = macro Macros.update[T, M]
   def replace(document: T): Future[T] = macro Macros.replace[T]
-  def delete(document: T): Future[Boolean] = macro Macros.delete[T]
+  def delete(key: String): Future[Boolean] = {
+    deleting.transform(key) match {
+      case Some(modified) => {
+        deleteInternal(modified).map { success =>
+          deleted := modified
+          success
+        }
+      }
+      case None => Future.failed(new CancelledException("Delete cancelled."))
+    }
+  }
 
   object managed {
     def insert(document: T): Future[T] = {
@@ -91,17 +101,6 @@ trait AbstractCollection[T <: DocumentOption] {
         case None => Future.failed(new CancelledException("Replace cancelled."))
       }
     }
-    def delete(document: T): Future[Boolean] = {
-      deleting.transform(document) match {
-        case Some(modified) => {
-          deleteInternal(modified).map { success =>
-            deleted := modified
-            success
-          }
-        }
-        case None => Future.failed(new CancelledException("Delete cancelled."))
-      }
-    }
   }
   def cursor(query: Query, batchSize: Int = 100): Future[QueryResponse[T]] = {
     graph.cursor.apply[T](query, count = true, batchSize = Some(batchSize))
@@ -121,7 +120,7 @@ trait AbstractCollection[T <: DocumentOption] {
   protected def insertInternal(document: T): Future[CreateInfo]
   protected def updateInternal[M](key: String, modification: M)(implicit encoder: Encoder[M]): Future[CreateInfo]
   protected def replaceInternal(document: T): Future[Unit]
-  protected def deleteInternal(document: T): Future[Boolean]
+  protected def deleteInternal(key: String): Future[Boolean]
 }
 
 case class Modification(key: String, update: AnyRef)

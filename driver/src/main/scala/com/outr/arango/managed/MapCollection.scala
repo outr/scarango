@@ -31,7 +31,7 @@ class ArangoMap(collection: MapCollection,
   }
 
   override def -=(key: String): ArangoMap.this.type = {
-    val success = Await.result(collection.managed.delete(KeyValuePair(Value(""), Some(key))), timeout)
+    val success = Await.result(collection.delete(key), timeout)
     assert(success, s"Deletion of $key failed.")
     this
   }

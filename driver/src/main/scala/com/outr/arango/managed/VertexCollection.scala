@@ -31,7 +31,5 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
     vertex.replace[T](document._key.get, document).map(_ => ())
   }
 
-  override protected def deleteInternal(document: T): Future[Boolean] = {
-    vertex.delete(document._key.get).map(!_.error)
-  }
+  override protected def deleteInternal(key: String): Future[Boolean] = vertex.delete(key).map(_.removed)
 }

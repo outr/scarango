@@ -60,13 +60,6 @@ object Macros {
        """)
   }
 
-  def delete[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
-    import c.universe._
-
-    val collection = c.prefix.tree
-    c.Expr[Future[T]](q"managed.delete($collection)")
-  }
-
   def vertex[T <: DocumentOption](c: blackbox.Context)(name: c.Expr[String])(implicit t: c.WeakTypeTag[T]): c.Expr[VertexCollection[T]] = {
     import c.universe._
 
