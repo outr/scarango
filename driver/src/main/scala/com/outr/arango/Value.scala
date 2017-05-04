@@ -15,4 +15,5 @@ object Value {
   def apply(value: Int): Value = IntValue(value)
   def apply(value: Long): Value = LongValue(value)
   def apply(value: Double): Value = DoubleValue(value)
+  case object Null extends Value
 }

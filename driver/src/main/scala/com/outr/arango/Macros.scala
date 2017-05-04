@@ -242,6 +242,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[Double]) {
                 c.Expr[Value](q"com.outr.arango.Value($value)")
+              } else if (vt <:< typeOf[Null]) {
+                c.Expr[Value](q"com.outr.arango.Value.Null")
               } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
                 special = true
                 c.Expr[Value](q"com.outr.arango.Value($value.name)")

@@ -20,6 +20,7 @@ class ArangoCursor(arangoDB: ArangoDB) {
     val bindVars = Json.obj(query.args.map {
       case (key, value) => {
         val argValue: Json = value match {
+          case Value.Null => Json.Null
           case StringValue(s) => Json.fromString(s)
           case IntValue(i) => Json.fromInt(i)
           case LongValue(l) => Json.fromLong(l)
