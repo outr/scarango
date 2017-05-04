@@ -22,6 +22,7 @@ class ArangoCursor(arangoDB: ArangoDB) {
         val argValue: Json = value match {
           case StringValue(s) => Json.fromString(s)
           case IntValue(i) => Json.fromInt(i)
+          case LongValue(l) => Json.fromLong(l)
           case DoubleValue(d) => Json.fromDoubleOrNull(d)
         }
         key -> argValue

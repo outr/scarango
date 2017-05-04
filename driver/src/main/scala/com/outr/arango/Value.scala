@@ -6,10 +6,13 @@ case class StringValue(value: String) extends Value
 
 case class IntValue(value: Int) extends Value
 
+case class LongValue(value: Long) extends Value
+
 case class DoubleValue(value: Double) extends Value
 
 object Value {
   def apply(value: String): Value = StringValue(value)
   def apply(value: Int): Value = IntValue(value)
+  def apply(value: Long): Value = LongValue(value)
   def apply(value: Double): Value = DoubleValue(value)
 }

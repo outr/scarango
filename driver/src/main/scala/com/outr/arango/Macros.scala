@@ -238,6 +238,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[Int]) {
                 c.Expr[Value](q"com.outr.arango.Value($value)")
+              } else if (vt <:< typeOf[Long]) {
+                c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[Double]) {
                 c.Expr[Value](q"com.outr.arango.Value($value)")
               } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
