@@ -21,10 +21,12 @@ trait AbstractCollection[T <: DocumentOption] {
 
   lazy val inserting: TransformableChannel[T] = TransformableChannel[T]
   lazy val inserted: Channel[T] = Channel[T]
-  lazy val replacing: TransformableChannel[T] = TransformableChannel[T]
-  lazy val replaced: Channel[T] = Channel[T]
   lazy val upserting: TransformableChannel[T] = TransformableChannel[T]
   lazy val upserted: Channel[T] = Channel[T]
+  lazy val updating: TransformableChannel[Modification] = TransformableChannel[Modification]
+  lazy val updated: Channel[Modification] = Channel[Modification]
+  lazy val replacing: TransformableChannel[T] = TransformableChannel[T]
+  lazy val replaced: Channel[T] = Channel[T]
   lazy val deleting: TransformableChannel[T] = TransformableChannel[T]
   lazy val deleted: Channel[T] = Channel[T]
 
@@ -41,6 +43,8 @@ trait AbstractCollection[T <: DocumentOption] {
 
   def insert(document: T): Future[T] = macro Macros.insert[T]
   def upsert(document: T): Future[T] = macro Macros.upsert[T]
+  def update[M](key: String, modification: M)
+               (implicit encoder: Encoder[M]): Future[CreateInfo] = macro Macros.update[T, M]
   def replace(document: T): Future[T] = macro Macros.replace[T]
   def delete(document: T): Future[Boolean] = macro Macros.delete[T]
 
@@ -62,6 +66,18 @@ trait AbstractCollection[T <: DocumentOption] {
           collection.document.upsert(modified)
         }
         case None => Future.failed(new CancelledException("Upsert cancelled."))
+      }
+    }
+    def update[M](key: String, modification: M)
+                 (implicit encoder: Encoder[M]): Future[CreateInfo] = {
+      updating.transform(Modification(key, modification.asInstanceOf[AnyRef])) match {
+        case Some(modified) => {
+          updateInternal(modified.key, modified.update.asInstanceOf[M]).map { value =>
+            updated := modified
+            value
+          }
+        }
+        case None => Future.failed(new CancelledException("Update cancelled."))
       }
     }
     def replace(document: T): Future[T] = {
@@ -103,6 +119,9 @@ trait AbstractCollection[T <: DocumentOption] {
   def all(batchSize: Int = 100): Future[QueryResponsePagination[T]] = paged(allQuery)
 
   protected def insertInternal(document: T): Future[CreateInfo]
+  protected def updateInternal[M](key: String, modification: M)(implicit encoder: Encoder[M]): Future[CreateInfo]
   protected def replaceInternal(document: T): Future[Unit]
   protected def deleteInternal(document: T): Future[Boolean]
 }
+
+case class Modification(key: String, update: AnyRef)

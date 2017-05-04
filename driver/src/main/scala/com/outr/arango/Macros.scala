@@ -1,6 +1,8 @@
 package com.outr.arango
 
 import com.outr.arango.managed._
+import com.outr.arango.rest.CreateInfo
+import io.circe.Encoder
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.{Await, Future}
@@ -31,6 +33,20 @@ object Macros {
          val updated = com.outr.arango.Modifiable.updateIfModifiable($document)
          $collection.managed.upsert(updated)
        """)
+  }
+
+  def update[T <: DocumentOption, M](c: blackbox.Context)
+                                    (key: c.Expr[String], modification: c.Expr[M])
+                                    (encoder: c.Expr[Encoder[M]])
+                                    (implicit t: c.WeakTypeTag[T], m: c.WeakTypeTag[M]): c.Expr[Future[CreateInfo]] = {
+    import c.universe._
+    val collection = c.prefix.tree
+    c.Expr[Future[CreateInfo]](
+      q"""
+         val updated = com.outr.arango.Modifiable.updateIfModifiable($modification)
+         $collection.managed.update($key, updated)
+       """
+    )
   }
 
   def replace[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {

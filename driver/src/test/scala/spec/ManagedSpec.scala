@@ -86,6 +86,16 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         f.name should be("Mango")
       }
     }
+    "update Mango to Peach using `update`" in {
+      Database.fruit.update(cherry._key.get, FruitName("Peach")).map { f =>
+        f._key should be(cherry._key.get)
+      }
+    }
+    "query Peach back by key" in {
+      fruit.apply(cherry._key.get).map { f =>
+        f.name should be("Peach")
+      }
+    }
     "insert an Image into polymorphic Collection" in {
       content.insert(Image("butterfly", 640, 480)).map { c =>
         butterfly = c
@@ -241,6 +251,8 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
                    _key: Option[String] = None,
                    _id: Option[String] = None,
                    _rev: Option[String] = None) extends DocumentOption
+
+  case class FruitName(name: String)
 
   trait Content extends PolymorphicDocumentOption {
     def name: String

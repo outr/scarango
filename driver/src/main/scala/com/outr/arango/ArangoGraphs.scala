@@ -75,8 +75,8 @@ class ArangoVertex(val name: String, val graph: ArangoGraph) {
     graph.db.call[VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", Method.Get)
   }
 
-  def modify[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
-    graph.db.restful[T, VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch)
+  def modify[T](key: String, value: T)(implicit encoder: Encoder[T]): Future[VertexInsert] = {
+    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch)
   }
 
   def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
@@ -107,6 +107,10 @@ class ArangoEdge(val name: String, val graph: ArangoGraph) {
 
   def apply[T](key: String)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[EdgeResult[T]] = {
     graph.db.call[EdgeResult[T]](s"gharial/${graph.name}/edge/$name/$key", Method.Get)
+  }
+
+  def modify[T](key: String, value: T)(implicit encoder: Encoder[T]): Future[EdgeInsert] = {
+    graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Patch)
   }
 
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {

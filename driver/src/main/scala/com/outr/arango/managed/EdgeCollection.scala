@@ -2,6 +2,7 @@ package com.outr.arango.managed
 
 import com.outr.arango.{ArangoCode, ArangoEdge, ArangoException, DocumentOption, Edge}
 import com.outr.arango.rest.{CreateInfo, GraphResponse}
+import io.circe.Encoder
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,6 +22,11 @@ abstract class EdgeCollection[T <: Edge with DocumentOption](override val graph:
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     edge.insert[T](document).map(_.edge)
+  }
+
+  override protected def updateInternal[M](key: String, modification: M)
+                                          (implicit encoder: Encoder[M]): Future[CreateInfo] = {
+    edge.modify[M](key, modification).map(_.edge)
   }
 
   override protected def replaceInternal(document: T): Future[Unit] = {

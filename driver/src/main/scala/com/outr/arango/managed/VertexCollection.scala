@@ -2,6 +2,7 @@ package com.outr.arango.managed
 
 import com.outr.arango._
 import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
+import io.circe.Encoder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -19,6 +20,11 @@ abstract class VertexCollection[T <: DocumentOption](override val graph: Graph,
 
   override protected def insertInternal(document: T): Future[CreateInfo] = {
     vertex.insert[T](document, waitForSync = Some(true)).map(_.vertex)
+  }
+
+  override protected def updateInternal[M](key: String, modification: M)
+                                          (implicit encoder: Encoder[M]): Future[CreateInfo] = {
+    vertex.modify[M](key, modification).map(_.vertex)
   }
 
   override protected def replaceInternal(document: T): Future[Unit] = {
