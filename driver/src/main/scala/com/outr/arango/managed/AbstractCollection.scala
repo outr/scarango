@@ -97,6 +97,8 @@ trait AbstractCollection[T <: DocumentOption] {
     val pagination = Await.result(paged(query, batchSize), timeout)
     new QueryResponseIterator[T](pagination, timeout)
   }
+  def call(query: Query): Future[T] = graph.call[T](query)
+  def first(query: Query): Future[Option[T]] = graph.first[T](query)
   lazy val allQuery: Query = Query(s"FOR x IN $name RETURN x", Map.empty)
   def all(batchSize: Int = 100): Future[QueryResponsePagination[T]] = paged(allQuery)
 
