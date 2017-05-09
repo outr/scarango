@@ -19,7 +19,11 @@ class Graph(name: String,
             password: String = Arango.defaultPassword,
             timeout: FiniteDuration = 15.seconds) {
   private[managed] lazy val arango: Arango = new Arango(url)
-  private[managed] lazy val sessionFuture: Future[ArangoSession] = arango.auth(username, password)
+  private[managed] lazy val sessionFuture: Future[ArangoSession] = if( username.isEmpty && password.isEmpty ) {
+    arango.noAuth()
+  } else {
+    arango.auth( username, password )
+  }
   private[managed] lazy val dbFuture: Future[ArangoDB] = sessionFuture.map(_.db(db))
   private[managed] lazy val graphFuture: Future[ArangoGraph] = dbFuture.map(_.graph(name))
 
