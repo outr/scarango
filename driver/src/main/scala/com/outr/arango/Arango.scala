@@ -65,7 +65,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 }
 
 object Arango {
-  private val config = ConfigFactory.load()
+  private val config = ConfigFactory.load(getClass.getClassLoader)
 
   var defaultDatabase: String = value("Arango.db")
   var defaultURL: URL = URL(value("Arango.url"))
