@@ -55,7 +55,20 @@ object Macros {
     val collection = c.prefix.tree
     c.Expr[Future[T]](
       q"""
-         val updated = com.outr.arango.Modifiable.updateIfModifiable($document)
+         val replacement = com.outr.arango.Replacement($document._key.get, $document)
+         val updated = com.outr.arango.Modifiable.updateIfModifiable(replacement)
+         $collection.managed.replace(updated)
+       """)
+  }
+
+  def replaceByKey[T <: DocumentOption](c: blackbox.Context)(currentKey: c.Expr[String], document: c.Expr[T]): c.Expr[Future[T]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[T]](
+      q"""
+         val replacement = com.outr.arango.Replacement($currentKey, $document)
+         val updated = com.outr.arango.Modifiable.updateIfModifiable(replacement)
          $collection.managed.replace(updated)
        """)
   }

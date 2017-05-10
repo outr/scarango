@@ -169,6 +169,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] QueryResponsePagination to easily page through results
 * [X] QueryResponseIterator to cleanly iterate over every result without loading everything into memory
 * [X] Support ArangoDB with authentication disabled
+* [X] Support AbstractCollection.replace by key to allow updating the document's key
 
 ### Features for 0.3.0 (Release 2017.04.28)
 

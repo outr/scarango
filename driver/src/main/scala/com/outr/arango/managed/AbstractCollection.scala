@@ -25,8 +25,8 @@ trait AbstractCollection[T <: DocumentOption] {
   lazy val upserted: Channel[T] = Channel[T]
   lazy val updating: TransformableChannel[Modification] = TransformableChannel[Modification]
   lazy val updated: Channel[Modification] = Channel[Modification]
-  lazy val replacing: TransformableChannel[T] = TransformableChannel[T]
-  lazy val replaced: Channel[T] = Channel[T]
+  lazy val replacing: TransformableChannel[Replacement[T]] = TransformableChannel[Replacement[T]]
+  lazy val replaced: Channel[Replacement[T]] = Channel[Replacement[T]]
   lazy val deleting: TransformableChannel[String] = TransformableChannel[String]
   lazy val deleted: Channel[String] = Channel[String]
 
@@ -46,6 +46,7 @@ trait AbstractCollection[T <: DocumentOption] {
   def update[M](key: String, modification: M)
                (implicit encoder: Encoder[M]): Future[CreateInfo] = macro Macros.update[T, M]
   def replace(document: T): Future[T] = macro Macros.replace[T]
+  def replace(currentKey: String, document: T): Future[T] = macro Macros.replaceByKey[T]
   def delete(key: String): Future[Boolean] = {
     deleting.transform(key) match {
       case Some(modified) => {
@@ -90,12 +91,12 @@ trait AbstractCollection[T <: DocumentOption] {
         case None => Future.failed(new CancelledException("Update cancelled."))
       }
     }
-    def replace(document: T): Future[T] = {
-      replacing.transform(document) match {
+    def replace(replacement: Replacement[T]): Future[T] = {
+      replacing.transform(replacement) match {
         case Some(modified) => {
-          replaceInternal(modified).map(_ => modified).map { value =>
+          replaceInternal(modified.key, modified.replacement).map(_ => modified).map { value =>
             replaced := value
-            value
+            value.replacement
           }
         }
         case None => Future.failed(new CancelledException("Replace cancelled."))
@@ -119,8 +120,10 @@ trait AbstractCollection[T <: DocumentOption] {
 
   protected def insertInternal(document: T): Future[CreateInfo]
   protected def updateInternal[M](key: String, modification: M)(implicit encoder: Encoder[M]): Future[CreateInfo]
-  protected def replaceInternal(document: T): Future[Unit]
+  protected def replaceInternal(currentKey: String, document: T): Future[Unit]
   protected def deleteInternal(key: String): Future[Boolean]
 }
 
 case class Modification(key: String, update: AnyRef)
+
+case class Replacement[T](key: String, replacement: T)
