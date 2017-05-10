@@ -148,11 +148,13 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 
 * [ ] Real-time change detection (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 * [ ] Scala.js wrapper for Foxx framework
+* [ ] Transactions
 
 ### Features for 1.0.0 (In-Progress)
 
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
+* [ ] Seamless Re-Authentication support for token timeout
 
 ### Features for 0.4.0 (In-Progress)
 
@@ -170,6 +172,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] QueryResponseIterator to cleanly iterate over every result without loading everything into memory
 * [X] Support ArangoDB with authentication disabled
 * [X] Support AbstractCollection.replace by key to allow updating the document's key
+* [X] Add support for Arango default configuration to be loaded optionally from typesafe.config
 
 ### Features for 0.3.0 (Release 2017.04.28)
 

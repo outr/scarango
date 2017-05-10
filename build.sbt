@@ -14,6 +14,7 @@ val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.2"
 val youIVersion = "0.3.1"
+val typeSafeConfigVersion = "1.3.1"
 
 lazy val root = project.in(file("."))
   .aggregate(
@@ -28,7 +29,7 @@ lazy val core = crossProject.in(file("core"))
   .settings(
     name := "scarango-core",
     description := "Core objects shared without driver-specific dependencies.",
-    libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _)
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
   )
 
 lazy val coreJS = core.js
@@ -43,6 +44,7 @@ lazy val driver = project.in(file("driver"))
       "com.outr" %% "scribe" % scribeVersion,
       "com.outr" %% "reactify" % reactifyVersion,
       "io.youi" %% "youi-client" % youIVersion,
+      "com.typesafe" % "config" % typeSafeConfigVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),

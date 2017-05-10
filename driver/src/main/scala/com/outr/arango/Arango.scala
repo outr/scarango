@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.rest.{AuthenticationRequest, AuthenticationResponse}
+import com.typesafe.config.ConfigFactory
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 import io.circe.parser.decode
@@ -64,9 +65,16 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 }
 
 object Arango {
-  var defaultDatabase: String = Option(System.getenv("ARANGO_DB")).getOrElse("_system")
-  var defaultURL: URL = URL(Option(System.getenv("ARANGO_URL")).getOrElse("http://localhost:8529"))
-  var defaultAuthentication: Boolean = Option(System.getenv("ARANGO_AUTHENTICATION")).forall(_ == "true")
-  var defaultUsername: String = Option(System.getenv("ARANGO_USERNAME")).getOrElse("root")
-  var defaultPassword: String = Option(System.getenv("ARANGO_PASSWORD")).getOrElse("root")
+  private val config = ConfigFactory.load()
+
+  var defaultDatabase: String = value("Arango.db")
+  var defaultURL: URL = URL(value("Arango.url"))
+  var defaultAuthentication: Boolean = value("Arango.authentication").toBoolean
+  var defaultUsername: String = value("Arango.username")
+  var defaultPassword: String = value("Arango.password")
+
+  private def value(path: String): String = {
+    val envName = path.toUpperCase.replace('.', '_')
+    Option(System.getenv(envName)).getOrElse(config.getString(path))
+  }
 }
