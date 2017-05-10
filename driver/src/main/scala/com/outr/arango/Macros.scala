@@ -55,7 +55,7 @@ object Macros {
     val collection = c.prefix.tree
     c.Expr[Future[T]](
       q"""
-         val replacement = com.outr.arango.Replacement($document._key.get, $document)
+         val replacement = com.outr.arango.managed.Replacement($document._key.get, $document)
          val updated = com.outr.arango.Modifiable.updateIfModifiable(replacement)
          $collection.managed.replace(updated)
        """)
@@ -67,7 +67,7 @@ object Macros {
     val collection = c.prefix.tree
     c.Expr[Future[T]](
       q"""
-         val replacement = com.outr.arango.Replacement($currentKey, $document)
+         val replacement = com.outr.arango.managed.Replacement($currentKey, $document)
          val updated = com.outr.arango.Modifiable.updateIfModifiable(replacement)
          $collection.managed.replace(updated)
        """)
