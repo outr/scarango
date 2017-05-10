@@ -10,13 +10,13 @@ import scala.concurrent.Future
 import io.circe.parser._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ArangoSession(val instance: Arango, val token: String) {
+class ArangoSession(val instance: Arango, val token: Option[String]) {
   protected def restful[Request, Response](name: String,
                                            request: Request,
                                            params: Map[String, String] = Map.empty,
                                            errorHandler: Option[HttpResponse => Response] = None)
                                           (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    instance.restful[Request, Response](s"/_api/$name", request, Some(token), params, errorHandler)
+    instance.restful[Request, Response](s"/_api/$name", request, token, params, errorHandler)
   }
 
   protected def call[Response](name: String,
@@ -24,7 +24,7 @@ class ArangoSession(val instance: Arango, val token: String) {
                                params: Map[String, String] = Map.empty,
                                errorHandler: Option[HttpResponse => Response] = None)
                               (implicit decoder: Decoder[Response]): Future[Response] = {
-    instance.call[Response](s"/_api/$name", method, Some(token), params, errorHandler)
+    instance.call[Response](s"/_api/$name", method, token, params, errorHandler)
   }
 
   def db(name: String = Arango.defaultDatabase): ArangoDB = new ArangoDB(this, name)
@@ -55,5 +55,12 @@ class ArangoSession(val instance: Arango, val token: String) {
 }
 
 object ArangoSession {
-  def default: Future[ArangoSession] = (new Arango).auth()
+  def default: Future[ArangoSession] = {
+    val arango = new Arango
+    if (Arango.defaultAuthentication) {
+      arango.auth()
+    } else {
+      arango.noAuth()
+    }
+  }
 }
