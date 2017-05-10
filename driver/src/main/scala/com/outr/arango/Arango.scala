@@ -67,14 +67,9 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 object Arango {
   private val config = ConfigFactory.load(getClass.getClassLoader)
 
-  var defaultDatabase: String = value("Arango.db")
-  var defaultURL: URL = URL(value("Arango.url"))
-  var defaultAuthentication: Boolean = value("Arango.authentication").toBoolean
-  var defaultUsername: String = value("Arango.username")
-  var defaultPassword: String = value("Arango.password")
-
-  private def value(path: String): String = {
-    val envName = path.toUpperCase.replace('.', '_')
-    Option(System.getenv(envName)).getOrElse(config.getString(path))
-  }
+  var defaultDatabase: String = config.getString("Arango.db")
+  var defaultURL: URL = URL(config.getString("Arango.url"))
+  var defaultAuthentication: Boolean = config.getBoolean("Arango.authentication")
+  var defaultUsername: String = config.getString("Arango.username")
+  var defaultPassword: String = config.getString("Arango.password")
 }
