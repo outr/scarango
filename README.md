@@ -146,7 +146,6 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 
 ### Features for 2.0.0 (Future)
 
-* [ ] Real-time change detection (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 * [ ] Scala.js wrapper for Foxx framework
 * [ ] Transactions
 
@@ -155,6 +154,10 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Seamless Re-Authentication support for token timeout
+
+### Features for 0.5.0 (Future)
+
+* [ ] Real-time change detection (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 
 ### Features for 0.4.0 (In-Progress)
 
