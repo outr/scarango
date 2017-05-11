@@ -16,7 +16,14 @@ case class ConnectedClient(serverId: String, lastServedTick: String, time: Strin
 
 case class LoggerFollow(active: Boolean, lastIncluded: Long, lastTick: Long, checkMore: Boolean, events: List[LogEvent])
 
-case class LogEvent(tick: String, `type`: Int, tid: String, database: String, cid: String, cname: String, data: Json) {
+case class LogEvent(tick: String,
+                    `type`: Int,
+                    tid: Option[String],
+                    database: String,
+                    cid: Option[String],
+                    cname: Option[String],
+                    data: Option[Json]) {
+  def collection: String = cname.getOrElse(throw new RuntimeException(s"No collection defined for $eventType."))
   lazy val eventType: EventType = EventType(`type`)
 }
 

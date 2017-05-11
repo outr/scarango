@@ -1,5 +1,6 @@
 package spec
 
+import com.outr.arango.rest.EventType
 import com.outr.arango.{ArangoCode, ArangoCollection, ArangoDB, ArangoException, ArangoSession}
 import io.circe.Encoder
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -77,6 +78,10 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         follow.active should be(true)
         follow.checkMore should be(false)
         follow.events.length should be(1)
+        val event = follow.events.head
+        event.eventType should be(EventType.DocumentUpsert)
+        event.collection should be("test")
+        event.data shouldNot be(None)
       }
     }
     "insert Baby Doe" in {
