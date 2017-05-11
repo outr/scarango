@@ -2,10 +2,11 @@ package com.outr.arango.managed
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, Credentials, DocumentOption, Edge, Macros, Query}
+import com.outr.arango.rest.LogEvent
+import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, Credentials, DocumentOption, Edge, Macros, Query, ReplicationMonitor}
 import io.circe.Decoder
 import io.youi.net.URL
-import reactify.Channel
+import reactify.{Channel, Observable}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -25,9 +26,11 @@ class Graph(name: String,
   private[managed] lazy val instance: ArangoGraph = Await.result[ArangoGraph](graphFuture, timeout)
 
   private[managed] var managedCollections = List.empty[AbstractCollection[_]]
+  private[managed] lazy val monitor: ReplicationMonitor = instance.db.replication.monitor
   def collections: List[AbstractCollection[_]] = managedCollections
 
   val initialized: Channel[Boolean] = Channel[Boolean]
+  lazy val realTime: RealTime = new RealTime(this)
 
   private val initCalled = new AtomicBoolean(false)
 

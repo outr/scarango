@@ -1,9 +1,9 @@
 package com.outr.arango.managed
 
 import com.outr.arango._
-import com.outr.arango.rest.{CreateInfo, GraphResponse, QueryResponse}
+import com.outr.arango.rest._
 import io.circe.{Decoder, Encoder}
-import reactify.{Channel, TransformableChannel}
+import reactify.{Channel, Observable, TransformableChannel}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,6 +29,8 @@ trait AbstractCollection[T <: DocumentOption] {
   lazy val replaced: Channel[Replacement[T]] = Channel[Replacement[T]]
   lazy val deleting: TransformableChannel[String] = TransformableChannel[String]
   lazy val deleted: Channel[String] = Channel[String]
+
+  lazy val triggers: Triggers[T] = new Triggers(this)
 
   graph.synchronized {
     graph.managedCollections = graph.managedCollections ::: List(this)
@@ -127,3 +129,34 @@ trait AbstractCollection[T <: DocumentOption] {
 case class Modification(key: String, update: AnyRef)
 
 case class Replacement[T](key: String, replacement: T)
+
+class Triggers[T <: DocumentOption](collection: AbstractCollection[T]) {
+  lazy val events: Observable[LogEvent] = {
+    val c = Channel[LogEvent]
+    collection.graph.realTime.events.attach { event =>
+      if (event.cname.contains(collection.name)) {
+        c := event
+      }
+    }
+    c
+  }
+
+  private def typed(eventType: EventType): Observable[T] = {
+    val c = Channel[T]
+    events.attach { event =>
+      if (event.eventType == eventType) {
+        val data = event.data.getOrElse(throw new RuntimeException(s"Data was null for DocumentUpsert!"))
+        val value = collection.decoder.decodeJson(data) match {
+          case Left(error) => throw new RuntimeException(s"JSON decoding error: $data", error)
+          case Right(result) => result
+        }
+        c := value
+      }
+    }
+    c
+  }
+
+  lazy val documentUpsert: Observable[T] = typed(EventType.DocumentUpsert)
+  lazy val edgeUpsert: Observable[T] = typed(EventType.EdgeUpsert)
+  lazy val deletion: Observable[T] = typed(EventType.Deletion)
+}
