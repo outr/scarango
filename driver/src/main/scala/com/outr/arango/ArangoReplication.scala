@@ -12,13 +12,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ArangoReplication(db: ArangoDB) {
   def state(): Future[LoggerState] = db.call[LoggerState]("replication/logger-state", Method.Get)
 
-  def follow(from: Option[String] = None,
-             to: Option[String] = None,
+  def follow(from: Option[Long] = None,
+             to: Option[Long] = None,
              chunkSize: Option[Long] = None,
              includeSystem: Boolean = true): Future[LoggerFollow] = {
     val params = List(
-      from.map("from" -> _),
-      to.map("to" -> _),
+      from.map("from" -> _.toString),
+      to.map("to" -> _.toString),
       chunkSize.map("chunkSize" -> _.toString),
       Some("includeSystem" -> includeSystem.toString)
     ).flatten.toMap

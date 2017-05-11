@@ -5,8 +5,8 @@ import io.circe.Json
 case class LoggerState(state: CurrentState, server: ServerInfo, clients: List[ConnectedClient])
 
 case class CurrentState(running: Boolean,
-                        lastLogTick: String,
-                        lastUncommittedLogTick: String,
+                        lastLogTick: Long,
+                        lastUncommittedLogTick: Long,
                         totalEvents: Long,
                         time: String)
 

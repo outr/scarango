@@ -1,17 +1,12 @@
 package spec
 
-import java.nio.file.Files
-
 import com.outr.arango.{ArangoCode, ArangoCollection, ArangoDB, ArangoException, ArangoSession}
 import io.circe.Encoder
 import org.scalatest.{AsyncWordSpec, Matchers}
-import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.deriveEncoder
-import io.youi.http.{FileContent, Status}
 
 import scala.concurrent.Future
-import scala.io.Source
 
 class CollectionSpec extends AsyncWordSpec with Matchers {
   private var session: ArangoSession = _
@@ -21,7 +16,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
 
   private var nameIndexId: Option[String] = None
-  private var lastLogTick: String = _
+  private var lastLogTick: Long = _
 
   "Collections" should {
     "create the session" in {
