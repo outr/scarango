@@ -155,11 +155,11 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Seamless Re-Authentication support for token timeout
 
-### Features for 0.5.0 (Future)
+### Features for 0.5.0 (In-Progress)
 
 * [ ] Real-time change detection (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 
-### Features for 0.4.0 (In-Progress)
+### Features for 0.4.0 (Released 2017.05.10)
 
 * [X] Support for passing collection as reference in AQL interpolation
 * [X] AQL `execute` convenience method for no results
