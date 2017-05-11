@@ -6,7 +6,7 @@ import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.youi.client.HttpClient
-import io.youi.http.{Headers, HttpResponse, Method, StringContent}
+import io.youi.http.{Headers, HttpRequest, HttpResponse, Method, RequestContent, StringContent}
 import io.youi.net.URL
 
 import scala.concurrent.Future
@@ -22,6 +22,17 @@ class Arango(baseURL: URL = Arango.defaultURL) {
       case Left(_) => throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
       case Right(error) => throw new ArangoException(error, response.status.message, request)
     }
+  }
+
+  protected[arango] def send(path: String,
+                             method: Method = Method.Get,
+                             token: Option[String] = None,
+                             params: Map[String, String] = Map.empty,
+                             content: Option[RequestContent] = None): Future[HttpResponse] = {
+    val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
+    val url = baseURL.withPath(path).withParams(params)
+    val request = HttpRequest(method, url = url, headers = headers, content = content)
+    client.send(request)
   }
 
   protected[arango] def restful[Request, Response](path: String,

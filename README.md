@@ -158,7 +158,8 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 ### Features for 0.5.0 (In-Progress)
 
 * [X] Create Credentials support for better authentication paradigm
-* [ ] Real-time change detection (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
+* [X] Support for Replication Logger (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
+* [ ] Real-time change detection
 
 ### Features for 0.4.0 (Released 2017.05.10)
 

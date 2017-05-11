@@ -6,7 +6,7 @@ import io.youi.http.{HttpResponse, Method}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ArangoDB(val session: ArangoSession, db: String) {
+class ArangoDB(val session: ArangoSession, val db: String) {
   protected[arango] def restful[Request, Response](name: String,
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
@@ -27,6 +27,7 @@ class ArangoDB(val session: ArangoSession, db: String) {
   def collection(name: String): ArangoCollection = new ArangoCollection(this, name)
 
   lazy val cursor: ArangoCursor = new ArangoCursor(this)
+  lazy val replication: ArangoReplication = new ArangoReplication(this)
 
   /**
     * Convenience method that calls `cursor` expecting exactly one result back. An assertion error will fire if the

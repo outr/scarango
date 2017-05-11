@@ -1,13 +1,17 @@
 package spec
 
+import java.nio.file.Files
+
 import com.outr.arango.{ArangoCode, ArangoCollection, ArangoDB, ArangoException, ArangoSession}
 import io.circe.Encoder
 import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto.deriveEncoder
+import io.youi.http.{FileContent, Status}
 
 import scala.concurrent.Future
+import scala.io.Source
 
 class CollectionSpec extends AsyncWordSpec with Matchers {
   private var session: ArangoSession = _
@@ -17,6 +21,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
 
   private var nameIndexId: Option[String] = None
+  private var lastLogTick: String = _
 
   "Collections" should {
     "create the session" in {
@@ -49,9 +54,52 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         user._rev shouldNot be(None)
       }
     }
+    "check replication state" in {
+      db.replication.state().map { state =>
+        state.state.lastLogTick shouldNot be("")
+        lastLogTick = state.state.lastLogTick
+        state.state.running should be(true)
+      }
+    }
     "fail to insert a duplicate named user" in {
       test.document.create(User("John Doe", 30), returnNew = true).failed.map {
         case exc: ArangoException => exc.error.errorCode should be(ArangoCode.ArangoUniqueConstraintViolated)
+      }
+    }
+    "insert Jane Doe" in {
+      test.document.create(User("Jane Doe", 28), returnNew = true).map { response =>
+        response.`new` shouldNot be(None)
+        val user = response.`new`.head
+        user.name should be("Jane Doe")
+        user.age should be(28)
+        user._id shouldNot be(None)
+        user._key shouldNot be(None)
+        user._rev shouldNot be(None)
+      }
+    }
+    "check replication follow" in {
+      db.replication.follow(from = Some(lastLogTick)).map { follow =>
+        follow.active should be(true)
+        follow.checkMore should be(false)
+        follow.events.length should be(1)
+      }
+    }
+    "insert Baby Doe" in {
+      test.document.create(User("Baby Doe", 1), returnNew = true).map { response =>
+        response.`new` shouldNot be(None)
+        val user = response.`new`.head
+        user.name should be("Baby Doe")
+        user.age should be(1)
+        user._id shouldNot be(None)
+        user._key shouldNot be(None)
+        user._rev shouldNot be(None)
+      }
+    }
+    "check replication follow again" in {
+      db.replication.follow(from = Some(lastLogTick)).map { follow =>
+        follow.active should be(true)
+        follow.checkMore should be(false)
+        follow.events.length should be(2)
       }
     }
     "get collection information" in {
@@ -71,7 +119,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         response.name should be("test")
         response.`type` should be(2)
         response.status should be(3)
-        response.count should be(1)
+        response.count should be(3)
       }
     }
     "get collection revision" in {
