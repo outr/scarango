@@ -47,14 +47,16 @@ class Arango(baseURL: URL = Arango.defaultURL) {
     client.call[Response](url, method, headers, errorHandler.getOrElse(defaultErrorHandler(path)))
   }
 
-  def auth(username: String = Arango.defaultUsername,
-           password: String = Arango.defaultPassword): Future[ArangoSession] = {
-    restful[AuthenticationRequest, AuthenticationResponse]("/_open/auth", AuthenticationRequest(username, password), None).map { response =>
+  def session(credentials: Option[Credentials] = Arango.defaultCredentials): Future[ArangoSession] = credentials match {
+    case Some(Credentials(username, password)) => restful[AuthenticationRequest, AuthenticationResponse](
+      path = "/_open/auth",
+      request = AuthenticationRequest(username, password),
+      token = None
+    ).map { response =>
       new ArangoSession(this, Option(response.jwt))
     }
+    case None => Future.successful(new ArangoSession(this, None))
   }
-
-  def noAuth(): Future[ArangoSession] = Future.successful(new ArangoSession(this, None))
 
   def isDisposed: Boolean = disposed
 
@@ -72,4 +74,10 @@ object Arango {
   var defaultAuthentication: Boolean = config.getBoolean("Arango.authentication")
   var defaultUsername: String = config.getString("Arango.username")
   var defaultPassword: String = config.getString("Arango.password")
+
+  def defaultCredentials: Option[Credentials] = if (defaultAuthentication) {
+    Some(Credentials(defaultUsername, defaultPassword))
+  } else {
+    None
+  }
 }

@@ -2,7 +2,7 @@ package com.outr.arango.managed
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, DocumentOption, Edge, Macros, Query}
+import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, Credentials, DocumentOption, Edge, Macros, Query}
 import io.circe.Decoder
 import io.youi.net.URL
 import reactify.Channel
@@ -15,11 +15,10 @@ import scala.language.experimental.macros
 class Graph(name: String,
             db: String = "_system",
             url: URL = Arango.defaultURL,
-            username: String = Arango.defaultUsername,
-            password: String = Arango.defaultPassword,
+            credentials: Option[Credentials] = Arango.defaultCredentials,
             timeout: FiniteDuration = 15.seconds) {
   private[managed] lazy val arango: Arango = new Arango(url)
-  private[managed] lazy val sessionFuture: Future[ArangoSession] = arango.auth(username, password)
+  private[managed] lazy val sessionFuture: Future[ArangoSession] = arango.session(credentials)
   private[managed] lazy val dbFuture: Future[ArangoDB] = sessionFuture.map(_.db(db))
   private[managed] lazy val graphFuture: Future[ArangoGraph] = dbFuture.map(_.graph(name))
 

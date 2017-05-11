@@ -7,6 +7,7 @@ scalaVersion in ThisBuild := "2.12.2"
 crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
+resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
 
 val circeVersion = "0.8.0"
 val reactifyVersion = "1.5.3"

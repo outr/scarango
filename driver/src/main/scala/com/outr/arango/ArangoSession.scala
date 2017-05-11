@@ -57,10 +57,6 @@ class ArangoSession(val instance: Arango, val token: Option[String]) {
 object ArangoSession {
   def default: Future[ArangoSession] = {
     val arango = new Arango
-    if (Arango.defaultAuthentication) {
-      arango.auth()
-    } else {
-      arango.noAuth()
-    }
+    arango.session(Arango.defaultCredentials)
   }
 }
