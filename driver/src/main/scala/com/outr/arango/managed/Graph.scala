@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.experimental.macros
 
 class Graph(name: String,
-            db: String = "_system",
+            db: String = Arango.defaultDatabase,
             url: URL = Arango.defaultURL,
             credentials: Option[Credentials] = Arango.defaultCredentials,
             timeout: FiniteDuration = 15.seconds) {
