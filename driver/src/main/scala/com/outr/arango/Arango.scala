@@ -47,6 +47,8 @@ class Arango(baseURL: URL = Arango.defaultURL) {
     client.call[Response](url, method, headers, errorHandler.getOrElse(defaultErrorHandler(path)))
   }
 
+  def noAuth(): Future[ArangoSession ] = Future.successful( new ArangoSession(this, "null"))
+
   def auth(username: String = Arango.defaultUsername,
            password: String = Arango.defaultPassword): Future[ArangoSession] = {
     restful[AuthenticationRequest, AuthenticationResponse]("/_open/auth", AuthenticationRequest(username, password), None).map { response =>
