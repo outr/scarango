@@ -141,10 +141,10 @@ class Triggers[T <: DocumentOption](collection: AbstractCollection[T]) {
     c
   }
 
-  private def typed(eventType: EventType): Observable[T] = {
+  private def typed(eventTypes: EventType*): Observable[T] = {
     val c = Channel[T]
     events.attach { event =>
-      if (event.eventType == eventType) {
+      if (eventTypes.contains(event.eventType)) {
         val data = event.data.getOrElse(throw new RuntimeException(s"Data was null for DocumentUpsert!"))
         val value = collection.decoder.decodeJson(data) match {
           case Left(error) => throw new RuntimeException(s"JSON decoding error: $data", error)
@@ -156,7 +156,6 @@ class Triggers[T <: DocumentOption](collection: AbstractCollection[T]) {
     c
   }
 
-  lazy val documentUpsert: Observable[T] = typed(EventType.DocumentUpsert)
-  lazy val edgeUpsert: Observable[T] = typed(EventType.EdgeUpsert)
+  lazy val upsert: Observable[T] = typed(EventType.DocumentUpsert, EventType.EdgeUpsert)
   lazy val deletion: Observable[T] = typed(EventType.Deletion)
 }

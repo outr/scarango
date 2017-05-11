@@ -86,4 +86,11 @@ class ReplicationMonitor(replication: ArangoReplication) extends Observable[LogE
   } else {
     false
   }
+
+  def updateSynchronous(): Unit = synchronized {
+    update()
+    while(running.get()) {
+      Thread.sleep(10L)
+    }
+  }
 }

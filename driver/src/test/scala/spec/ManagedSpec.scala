@@ -4,9 +4,13 @@ import com.outr.arango.{DocumentOption, Edge, _}
 import com.outr.arango.managed._
 import io.circe.Decoder
 import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.concurrent.Eventually._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
+import org.scalatest.time.{Millis, Span}
 
+import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 
 class ManagedSpec extends AsyncWordSpec with Matchers {
@@ -16,6 +20,8 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
   var butterfly: Content = _
   var bunny: Content = _
   var owl: Content = _
+
+  val fruitUpserted: ListBuffer[Fruit] = ListBuffer.empty[Fruit]
 
   "Managed Graph" should {
     import Database._
@@ -30,9 +36,31 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         v should be(1)
       }
     }
+    "manually call realTime.update" in {
+      Future.successful {
+        realTime.update(asynchronous = false)
+        fruit.triggers.upsert.attach { f =>
+          fruitUpserted += f
+        }
+        realTime.started should be(false)
+        fruitUpserted.toList should be(Nil)
+      }
+    }
     "insert Apple" in {
       fruit.insert(Fruit("Apple", Some("Apple"))).map { f =>
         apple = f
+        f._id should be(Some("fruit/Apple"))
+        f._key should be(Some("Apple"))
+        f._rev shouldNot be(None)
+        f.name should be("Apple")
+      }
+    }
+    "verify the Apple fired the trigger" in {
+      Future {
+        realTime.update(asynchronous = false)
+
+        fruitUpserted.length should be(1)
+        val f = fruitUpserted.head
         f._id should be(Some("fruit/Apple"))
         f._key should be(Some("Apple"))
         f._rev shouldNot be(None)

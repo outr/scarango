@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class RealTime(graph: Graph) {
-  private lazy val system = ActorSystem("Graph.realTime")
+  private lazy val system = ActorSystem("Graph_realTime")
   private var cancellable: Option[Cancellable] = None
 
   lazy val events: Observable[LogEvent] = graph.monitor
@@ -17,9 +17,27 @@ class RealTime(graph: Graph) {
   def start(delay: FiniteDuration = 250.millis): Unit = synchronized {
     assert(cancellable.isEmpty, "Graph.realTime is already started.")
     cancellable = Some(system.scheduler.schedule(delay, delay) {
-      graph.monitor.update()
+      update()
     })
   }
 
-  def shutdown(): Future[Terminated] = system.terminate()
+  def update(asynchronous: Boolean = true): Unit = {
+    if (asynchronous) {
+      graph.monitor.update()
+    } else {
+      graph.monitor.updateSynchronous()
+    }
+  }
+
+  def stop(): Unit = {
+    cancellable.foreach(_.cancel())
+    cancellable = None
+  }
+
+  def started: Boolean = cancellable.nonEmpty
+
+  def shutdown(): Future[Terminated] = synchronized {
+    stop()
+    system.terminate()
+  }
 }
