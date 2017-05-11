@@ -29,6 +29,7 @@ echo "Starting ArangoDB '${ARANGOD}'"
 ${ARANGOD} \
     --database.directory ${TMP_DIR} \
     --configuration none \
+    --database.replication-applier true \
     --server.endpoint tcp://127.0.0.1:8529 \
     --javascript.app-path ${ARANGODB_DIR}/js/apps \
     --javascript.startup-directory ${ARANGODB_DIR}/js \
