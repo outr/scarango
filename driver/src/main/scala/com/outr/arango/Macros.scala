@@ -49,6 +49,17 @@ object Macros {
     )
   }
 
+  def modify[T <: DocumentOption](c: blackbox.Context)(original: c.Expr[T], modified: c.Expr[T]): c.Expr[Future[CreateInfo]] = {
+    import c.universe._
+
+    val collection = c.prefix.tree
+    c.Expr[Future[CreateInfo]](
+      q"""
+         val updated = com.outr.arango.Modifiable.updateIfModifiable($modified)
+         $collection.managed.modify($original, updated)
+       """)
+  }
+
   def replace[T <: DocumentOption](c: blackbox.Context)(document: c.Expr[T]): c.Expr[Future[T]] = {
     import c.universe._
 

@@ -160,6 +160,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Create Credentials support for better authentication paradigm
 * [X] Support for Replication Logger (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 * [X] Real-time change detection (upsert and deletion directly from the database) aka Triggers
+* [X] `AbstractCollection.modify` feature to modify a document by supplying an original and modified case class only updating with the changes
 
 ### Features for 0.4.0 (Released 2017.05.10)
 

@@ -47,6 +47,7 @@ trait AbstractCollection[T <: DocumentOption] {
   def upsert(document: T): Future[T] = macro Macros.upsert[T]
   def update[M](key: String, modification: M)
                (implicit encoder: Encoder[M]): Future[CreateInfo] = macro Macros.update[T, M]
+  def modify(original: T, modified: T): Future[CreateInfo] = macro Macros.modify[T]
   def replace(document: T): Future[T] = macro Macros.replace[T]
   def replace(currentKey: String, document: T): Future[T] = macro Macros.replaceByKey[T]
   def delete(key: String): Future[Boolean] = {
@@ -80,6 +81,12 @@ trait AbstractCollection[T <: DocumentOption] {
         }
         case None => Future.failed(new CancelledException("Upsert cancelled."))
       }
+    }
+    def modify(original: T, modified: T): Future[CreateInfo] = {
+      val originalJson = encoder(original)
+      val modifiedJson = encoder(modified)
+      val diff = JsonDiff.diff(originalJson, modifiedJson)
+      update(original._key.get, diff.changed)
     }
     def update[M](key: String, modification: M)
                  (implicit encoder: Encoder[M]): Future[CreateInfo] = {

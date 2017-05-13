@@ -144,6 +144,20 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         c._rev shouldNot be(None)
       }
     }
+    "modify a Video's length only" in {
+      content.modify(bunny, bunny.asInstanceOf[Video].copy(length = 120.0)).map { info =>
+        info._key should be(bunny._key.get)
+      }
+    }
+    "query the bunny and confirm the length changed" in {
+      content(bunny._key.get).map { c =>
+        val video = c.asInstanceOf[Video]
+        video.name should be("bunny")
+        video.width should be(1920)
+        video.height should be(1080)
+        video.length should be(120.0)
+      }
+    }
     "insert a Audio into polymorphic Collection" in {
       content.insert(Audio("owl", 15.3)).map { c =>
         owl = c
