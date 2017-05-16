@@ -161,6 +161,8 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Support for Replication Logger (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 * [X] Real-time change detection (upsert and deletion directly from the database) aka Triggers
 * [X] `AbstractCollection.modify` feature to modify a document by supplying an original and modified case class only updating with the changes
+* [X] Diff support for `modify` that properly handles null
+* [ ] Proper support for differentiating `null` and exclusion of values
 
 ### Features for 0.4.0 (Released 2017.05.10)
 

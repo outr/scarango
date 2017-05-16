@@ -85,8 +85,8 @@ trait AbstractCollection[T <: DocumentOption] {
     def modify(original: T, modified: T): Future[CreateInfo] = {
       val originalJson = encoder(original)
       val modifiedJson = encoder(modified)
-      val diff = JsonDiff.diff(originalJson, modifiedJson)
-      update(original._key.get, diff.changed)
+      val diff = Diff.diff(originalJson, modifiedJson)
+      update(original._key.get, diff)
     }
     def update[M](key: String, modification: M)
                  (implicit encoder: Encoder[M]): Future[CreateInfo] = {

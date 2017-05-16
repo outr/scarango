@@ -265,6 +265,30 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
         o._key should be(Some("order3"))
       }
     }
+    "modify the order to set a refund value" in {
+      orders.apply("order1").flatMap { o =>
+        orders.modify(o, o.copy(refunded = Some(BigDecimal(50.0)))).map { info =>
+          info._key should be(o._key.get)
+        }
+      }
+    }
+    "verify the refunded value has been applied" in {
+      orders.apply("order1").flatMap { o =>
+        o.refunded should be(Some(BigDecimal(50.0)))
+      }
+    }
+    "modify the order to remove the refund value" in {
+      orders.apply("order1").flatMap { o =>
+        orders.modify(o, o.copy(refunded = None)).map { info =>
+          info._key should be(o._key.get)
+        }
+      }
+    }
+    "verify the refunded value has been removed" in {
+      orders.apply("order1").flatMap { o =>
+        o.refunded should be(None)
+      }
+    }
     "delete all orders via AQL query" in {
       val query = aql"RETURN LENGTH(FOR o IN $orders REMOVE o IN $orders RETURN o)"
       call[Int](query).map { count =>
@@ -350,6 +374,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
 
   case class Order(amount: BigDecimal,
                    status: Status,
+                   refunded: Option[BigDecimal] = None,
                    modified: Long = 0L,
                    _key: Option[String] = None,
                    _id: Option[String] = None,

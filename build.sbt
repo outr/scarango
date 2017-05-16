@@ -15,6 +15,7 @@ val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.2"
 val youIVersion = "0.3.2-SNAPSHOT"
+val diffsonVersion = "2.2.0-SNAPSHOT"
 val typeSafeConfigVersion = "1.3.1"
 
 lazy val root = project.in(file("."))
@@ -46,6 +47,7 @@ lazy val driver = project.in(file("driver"))
       "com.outr" %% "reactify" % reactifyVersion,
       "io.youi" %% "youi-client" % youIVersion,
       "com.typesafe" % "config" % typeSafeConfigVersion,
+      "org.gnieh" %% "diffson-circe" % diffsonVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),

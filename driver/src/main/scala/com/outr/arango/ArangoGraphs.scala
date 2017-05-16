@@ -20,7 +20,7 @@ class ArangoGraphs(db: ArangoDB) {
 class ArangoGraph(val name: String, val db: ArangoDB) {
   def create(orphanCollections: List[String] = Nil,
              edgeDefinitions: List[EdgeDefinition] = Nil,
-             isSmart: Option[Boolean] = None,
+             isSmart: Boolean = false,
              smartGraphAttribute: Option[String] = None,
              numberOfShards: Option[Int] = None): Future[GraphResponse] = {
     val options = if (smartGraphAttribute.nonEmpty || numberOfShards.nonEmpty) {
@@ -28,7 +28,7 @@ class ArangoGraph(val name: String, val db: ArangoDB) {
     } else {
       None
     }
-    val request = CreateGraphRequest(name, orphanCollections, edgeDefinitions, isSmart, options)
+    val request = CreateGraphRequest(name, orphanCollections, edgeDefinitions, isSmart) //, Excludable(options))
     db.restful[CreateGraphRequest, GraphResponse]("gharial", request)
   }
 
@@ -75,8 +75,12 @@ class ArangoVertex(val name: String, val graph: ArangoGraph) {
     graph.db.call[VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", Method.Get)
   }
 
-  def modify[T](key: String, value: T)(implicit encoder: Encoder[T]): Future[VertexInsert] = {
-    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch)
+  def modify[T](key: String, value: T, waitForSync: Option[Boolean] = None, keepNull: Boolean = false)(implicit encoder: Encoder[T]): Future[VertexInsert] = {
+    val params = List(
+      waitForSync.map("waitForSync" -> _.toString),
+      Some("keepNull" -> keepNull.toString)
+    ).flatten.toMap
+    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch, params = params)
   }
 
   def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
@@ -109,8 +113,12 @@ class ArangoEdge(val name: String, val graph: ArangoGraph) {
     graph.db.call[EdgeResult[T]](s"gharial/${graph.name}/edge/$name/$key", Method.Get)
   }
 
-  def modify[T](key: String, value: T)(implicit encoder: Encoder[T]): Future[EdgeInsert] = {
-    graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Patch)
+  def modify[T](key: String, value: T, waitForSync: Option[Boolean] = None, keepNull: Boolean = false)(implicit encoder: Encoder[T]): Future[EdgeInsert] = {
+    val params = List(
+      waitForSync.map("waitForSync" -> _.toString),
+      Some("keepNull" -> keepNull.toString)
+    ).flatten.toMap
+    graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Patch, params = params)
   }
 
   def replace(from: List[String], to: List[String]): Future[GraphResponse] = {

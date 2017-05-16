@@ -2,7 +2,7 @@ package com.outr.arango
 
 import com.outr.arango.rest.{AuthenticationRequest, AuthenticationResponse}
 import com.typesafe.config.ConfigFactory
-import io.circe.{Decoder, Encoder}
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.youi.client.HttpClient
@@ -44,7 +44,21 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     val url = baseURL.withPath(path).withParams(params)
-    client.restful[Request, Response](url, request, headers, errorHandler.getOrElse(defaultErrorHandler(request)), method)
+    val processor = (json: Json) => {
+      val cursor = json.hcursor
+      var modified = json
+      if (cursor.downField("_key").as[Option[String]].getOrElse(None).isEmpty) {
+        modified = modified.mapObject(_.remove("_key"))
+      }
+      if (cursor.downField("_id").as[Option[String]].getOrElse(None).isEmpty) {
+        modified = modified.mapObject(_.remove("_id"))
+      }
+      if (cursor.downField("_rev").as[Option[String]].getOrElse(None).isEmpty) {
+        modified = modified.mapObject(_.remove("_rev"))
+      }
+      modified
+    }
+    client.restful[Request, Response](url, request, headers, errorHandler.getOrElse(defaultErrorHandler(request)), method, processor)
   }
 
   protected[arango] def call[Response](path: String,

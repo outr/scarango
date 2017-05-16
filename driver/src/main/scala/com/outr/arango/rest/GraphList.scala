@@ -19,8 +19,8 @@ case class EdgeDefinition(collection: String, from: List[String], to: List[Strin
 case class CreateGraphRequest(name: String,
                               orphanCollections: List[String] = Nil,
                               edgeDefinitions: List[EdgeDefinition] = Nil,
-                              isSmart: Option[Boolean] = None,
-                              options: Option[GraphOptions])
+                              isSmart: Boolean) //,
+//                              options: Excludable[GraphOptions])    // TODO: add back once null / exclude bug is fixed
 
 case class GraphOptions(smartGraphAttribute: Option[String],
                         numberOfShards: Option[Int])
