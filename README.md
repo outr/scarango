@@ -17,7 +17,7 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "0.4.0"
+libraryDependencies += "com.outr" %% "scarango-driver" % "0.5.0"
 ```
 
 ## Dependencies
@@ -154,15 +154,15 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Seamless Re-Authentication support for token timeout
+* [ ] Proper support for differentiating `null` and exclusion of values
 
-### Features for 0.5.0 (In-Progress)
+### Features for 0.5.0 (Released 2017.05.16)
 
 * [X] Create Credentials support for better authentication paradigm
 * [X] Support for Replication Logger (https://docs.arangodb.com/3.1/HTTP/Replications/ReplicationLogger.html)
 * [X] Real-time change detection (upsert and deletion directly from the database) aka Triggers
 * [X] `AbstractCollection.modify` feature to modify a document by supplying an original and modified case class only updating with the changes
 * [X] Diff support for `modify` that properly handles null
-* [ ] Proper support for differentiating `null` and exclusion of values
 
 ### Features for 0.4.0 (Released 2017.05.10)
 

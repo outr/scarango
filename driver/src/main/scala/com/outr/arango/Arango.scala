@@ -47,15 +47,20 @@ class Arango(baseURL: URL = Arango.defaultURL) {
     val processor = (json: Json) => {
       val cursor = json.hcursor
       var modified = json
-      if (cursor.downField("_key").as[Option[String]].getOrElse(None).isEmpty) {
-        modified = modified.mapObject(_.remove("_key"))
+
+      def removeEmpty(fieldName: String): Unit = {
+        cursor.downField(fieldName).as[Option[String]] match {
+          case Left(_) =>
+          case Right(option) => if (option.isEmpty) {
+            modified = modified.mapObject(_.remove(fieldName))
+          }
+        }
       }
-      if (cursor.downField("_id").as[Option[String]].getOrElse(None).isEmpty) {
-        modified = modified.mapObject(_.remove("_id"))
-      }
-      if (cursor.downField("_rev").as[Option[String]].getOrElse(None).isEmpty) {
-        modified = modified.mapObject(_.remove("_rev"))
-      }
+
+      removeEmpty("_key")
+      removeEmpty("_id")
+      removeEmpty("_rev")
+
       modified
     }
     client.restful[Request, Response](url, request, headers, errorHandler.getOrElse(defaultErrorHandler(request)), method, processor)
