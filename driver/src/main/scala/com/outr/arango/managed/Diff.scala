@@ -1,6 +1,6 @@
 package com.outr.arango.managed
 
-import gnieh.diffson.Pointer
+import gnieh.diffson._
 import io.circe._
 import gnieh.diffson.circe._
 
@@ -24,6 +24,15 @@ object Diff {
       case (acc, Add(Pointer(path @ _*), value)) => makePath(acc, path, value)
       case (acc, Replace(Pointer(path @ _*), value, _)) => makePath(acc, path, value)
       case (acc, Remove(Pointer(path @ _*), _)) => makePath(acc, path, Json.Null)
+      case (acc, Copy(from, Pointer(path @ _*))) => {
+        val value = pointer.evaluate(originalValue, from)
+        makePath(acc, path, value)
+      }
+      case (acc, Move(from, Pointer(path @ _*))) => {
+        val Pointer(fromPath @ _*) = from
+        val value = pointer.evaluate(originalValue, from)
+        makePath(makePath(acc, fromPath, Json.Null), path, value)
+      }
     }
     Json.fromJsonObject(JsonObject.fromMap(fields))
   }
