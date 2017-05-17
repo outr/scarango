@@ -3,7 +3,7 @@ package com.outr.arango
 import com.outr.arango.rest._
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder}
-import io.youi.http.{HttpResponse, Method}
+import io.youi.http.{HttpRequest, HttpResponse, Method}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,7 +15,7 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
   protected[arango] def restful[Request, Response](name: Option[String],
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: Option[HttpResponse => Response] = None)
+                                                   errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val path = name match {
       case Some(n) if n.isEmpty => s"collection/$collection"
@@ -28,7 +28,7 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
   protected[arango] def call[Response](name: Option[String],
                                        method: Method,
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: Option[HttpResponse => Response] = None)
+                                       errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     val path = name match {
       case Some(n) => s"collection/$collection/$n"

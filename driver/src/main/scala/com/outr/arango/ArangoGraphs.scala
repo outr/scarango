@@ -83,8 +83,8 @@ class ArangoVertex(val name: String, val graph: ArangoGraph) {
     graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Patch, params = params)
   }
 
-  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexResult[T]] = {
-    graph.db.restful[T, VertexResult[T]](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Put)
+  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[VertexInsert] = {
+    graph.db.restful[T, VertexInsert](s"gharial/${graph.name}/vertex/$name/$key", value, method = Method.Put)
   }
 
   def delete(key: String): Future[DeleteResponse] = {
@@ -129,8 +129,8 @@ class ArangoEdge(val name: String, val graph: ArangoGraph) {
     graph.db.restful[EdgeDefinition, GraphResponse](s"gharial/${graph.name}/edge/$name", EdgeDefinition(name, from, to), method = Method.Put)
   }
 
-  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[EdgeResult[T]] = {
-    graph.db.restful[T, EdgeResult[T]](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Put)
+  def replace[T](key: String, value: T)(implicit encoder: Encoder[T], decoder: Decoder[T]): Future[EdgeInsert] = {
+    graph.db.restful[T, EdgeInsert](s"gharial/${graph.name}/edge/$name/$key", value, method = Method.Put)
   }
 
   def delete(key: String): Future[DeleteResponse] = {
