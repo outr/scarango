@@ -52,10 +52,10 @@ class Graph(name: String,
            createDatabase: Boolean = false ): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
     initDb( createDatabase, db ).flatMap {
       dbInitialized => if( dbInitialized) {
-        // Fail fast, as soon as a single collection or graph fails
-        Future.find(
-          initCollections(createCollections) :+ initGraph(createGraph)
-        ) { !_ }.map{_.isEmpty}
+        initCollections(createCollections).flatMap {
+          case true => initGraph(createGraph)
+          case _ => Future.successful(false)
+        }
       } else {
         Future.successful(false)
       }
@@ -64,7 +64,7 @@ class Graph(name: String,
     Future.successful(true)
   }
 
-  private def initCollections(createCollections: Boolean): List[Future[Boolean]] = {
+  private def initCollections(createCollections: Boolean): Future[Boolean] = {
     if (createCollections) {
       val results: List[Future[Boolean]] = collections.map { collection =>
         collection.collection.exists().flatMap {
@@ -76,9 +76,10 @@ class Graph(name: String,
           }
         }
       }
-      results
+      // Fail fast, as soon as a single collection or graph fails
+      Future.foldLeft(results)( true ) { (o, i) => i && o }
     } else {
-      List(Future.successful(true))
+      Future.successful(true)
     }
   }
 
