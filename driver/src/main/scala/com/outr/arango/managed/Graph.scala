@@ -23,7 +23,7 @@ class Graph(name: String,
   private[managed] lazy val dbFuture: Future[ArangoDB] = sessionFuture.map(_.db(db))
   private[managed] lazy val graphFuture: Future[ArangoGraph] = dbFuture.map(_.graph(name))
 
-  private[managed] lazy val instance: ArangoGraph = Await.result[ArangoGraph](graphFuture, timeout)
+  protected[managed] lazy val instance: ArangoGraph = Await.result[ArangoGraph](graphFuture, timeout)
 
   private[managed] var managedCollections = List.empty[AbstractCollection[_]]
   private[managed] lazy val monitor: ReplicationMonitor = instance.db.replication.monitor
@@ -103,9 +103,5 @@ class Graph(name: String,
   def first[T](query: Query)(implicit decoder: Decoder[T]): Future[Option[T]] = instance.db.first[T](query)
   def execute(query: Query): Future[Boolean] = instance.db.execute(query)
 
-  def synchronous[T](future: Future[T], timeout: FiniteDuration = 10.seconds): T = try {
-    Await.result(future, timeout)
-  } catch {
-    case t: Throwable => throw new RuntimeException("Error while executing asynchronously", t)
-  }
+  def synchronous[T](future: Future[T], timeout: FiniteDuration = 10.seconds): T = Arango.synchronous(future, timeout)
 }

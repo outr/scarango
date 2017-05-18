@@ -9,8 +9,9 @@ import io.youi.client.HttpClient
 import io.youi.http.{Headers, HttpRequest, HttpResponse, Method, RequestContent, StringContent}
 import io.youi.net.URL
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 class Arango(baseURL: URL = Arango.defaultURL) {
   private var disposed: Boolean = false
@@ -117,5 +118,11 @@ object Arango {
     Some(Credentials(defaultUsername, defaultPassword))
   } else {
     None
+  }
+
+  def synchronous[T](future: Future[T], timeout: FiniteDuration = 10.seconds): T = try {
+    Await.result(future, timeout)
+  } catch {
+    case t: Throwable => throw new RuntimeException("Error while executing asynchronously", t)
   }
 }

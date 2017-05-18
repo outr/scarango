@@ -21,13 +21,7 @@ class RealTime(graph: Graph) {
     })
   }
 
-  def update(asynchronous: Boolean = true): Unit = {
-    if (asynchronous) {
-      graph.monitor.update()
-    } else {
-      graph.monitor.updateSynchronous()
-    }
-  }
+  def update(): Unit = graph.monitor.updateAndWait()
 
   def stop(): Unit = {
     cancellable.foreach(_.cancel())
