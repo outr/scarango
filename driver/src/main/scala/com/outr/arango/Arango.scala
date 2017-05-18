@@ -18,21 +18,18 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 
   protected[arango] def defaultErrorHandler[Request, Response](request: Request): (HttpRequest, HttpResponse) => Response = (req: HttpRequest, resp: HttpResponse) => {
     val content = resp.content.get.asInstanceOf[StringContent].value
-    decode[ArangoError](content) match {
-      case Left(error) => throw new ArangoException(
-        error = ArangoError(
+    val (error: ArangoError, cause: Option[Exception]) = decode[ArangoError](content) match {
+      case Left(exc) => {
+        ArangoError(
           error = true,
           code = resp.status.code,
           errorNum = ArangoCode.Failed.code,
-          errorMessage = error.getMessage
-        ),
-        message = resp.status.message,
-        request = request,
-        req.method,
-        req.url
-      )
-      case Right(error) => throw new ArangoException(error, resp.status.message, request, req.method, req.url)
+          errorMessage = exc.getMessage
+        ) -> Some(exc)
+      }
+      case Right(ae) => ae -> None
     }
+    throw new ArangoException(error, req, resp, cause)
   }
 
   protected[arango] def send(path: String,
