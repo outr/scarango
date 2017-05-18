@@ -136,4 +136,10 @@ class Graph(name: String,
   def call[T](query: Query)(implicit decoder: Decoder[T]): Future[T] = instance.db.call[T](query)
   def first[T](query: Query)(implicit decoder: Decoder[T]): Future[Option[T]] = instance.db.first[T](query)
   def execute(query: Query): Future[Boolean] = instance.db.execute(query)
+
+  def synchronous[T](future: Future[T], timeout: FiniteDuration = 10.seconds): T = try {
+    Await.result(future, timeout)
+  } catch {
+    case t: Throwable => throw new RuntimeException("Error while executing asynchronously", t)
+  }
 }

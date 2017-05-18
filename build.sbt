@@ -2,7 +2,7 @@ import sbt.Keys.libraryDependencies
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.5.0"
+version in ThisBuild := "0.5.2-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.2"
 crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -14,8 +14,8 @@ val reactifyVersion = "1.5.3"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.2"
-val youIVersion = "0.3.2"
-val diffsonVersion = "2.2.0-SNAPSHOT"
+val youIVersion = "0.3.3"
+val diffsonVersion = "2.2.0"
 val typeSafeConfigVersion = "1.3.1"
 
 lazy val root = project.in(file("."))

@@ -98,6 +98,18 @@ class AQLSpec extends AsyncWordSpec with Matchers {
           user._rev shouldNot be(None)
         }
       }
+      "verify `first` returns the first entry" in {
+        val query = aql"FOR user IN users RETURN user"
+        db.first[User](query).map { userOption =>
+          userOption shouldNot be(None)
+          val user = userOption.get
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
+        }
+      }
       "insert another user" in {
         users.document.create(User("Jane Doe", 20)).map { result =>
           result._id shouldNot be(None)

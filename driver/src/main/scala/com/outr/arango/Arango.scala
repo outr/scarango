@@ -16,12 +16,20 @@ class Arango(baseURL: URL = Arango.defaultURL) {
   private var disposed: Boolean = false
   private val client = new HttpClient
 
-  protected[arango] def defaultErrorHandler[Request, Response](request: Request): HttpResponse => Response = (response: HttpResponse) => {
-    val content = response.content.get.asInstanceOf[StringContent].value
-    decode[ArangoError](content) match {
-      case Left(_) => throw new RuntimeException(s"Error from server: ${response.status} with content: ${response.content}")
-      case Right(error) => throw new ArangoException(error, response.status.message, request)
+  protected[arango] def defaultErrorHandler[Request, Response](request: Request): (HttpRequest, HttpResponse) => Response = (req: HttpRequest, resp: HttpResponse) => {
+    val content = resp.content.get.asInstanceOf[StringContent].value
+    val (error: ArangoError, cause: Option[Exception]) = decode[ArangoError](content) match {
+      case Left(exc) => {
+        ArangoError(
+          error = true,
+          code = resp.status.code,
+          errorNum = ArangoCode.Failed.code,
+          errorMessage = exc.getMessage
+        ) -> Some(exc)
+      }
+      case Right(ae) => ae -> None
     }
+    throw new ArangoException(error, req, resp, cause)
   }
 
   protected[arango] def send(path: String,
@@ -39,7 +47,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                                    request: Request,
                                                    token: Option[String],
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: Option[HttpResponse => Response] = None,
+                                                   errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None,
                                                    method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
@@ -70,7 +78,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                        method: Method,
                                        token: Option[String],
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: Option[HttpResponse => Response] = None)
+                                       errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     val url = baseURL.withPath(path).withParams(params)
