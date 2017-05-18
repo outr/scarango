@@ -15,7 +15,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class Arango(baseURL: URL = Arango.defaultURL) {
   private var disposed: Boolean = false
   private val client = new HttpClient
-
+  private val nullChangeDoesNothing = true
+  
   protected[arango] def defaultErrorHandler[Request, Response](request: Request): (HttpRequest, HttpResponse) => Response = (req: HttpRequest, resp: HttpResponse) => {
     val content = resp.content.get.asInstanceOf[StringContent].value
     val (error: ArangoError, cause: Option[Exception]) = decode[ArangoError](content) match {
