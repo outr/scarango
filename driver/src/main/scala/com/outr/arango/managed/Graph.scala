@@ -52,8 +52,8 @@ class Graph(name: String,
            createDatabase: Boolean = false ): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
     initDb( createDatabase, db ).flatMap {
       dbInitialized => if( dbInitialized) {
-        initCollections(createCollections).flatMap {
-          case true => initGraph(createGraph)
+        initGraph(createGraph).flatMap {
+          case true => initCollections(createCollections)
           case _ => Future.successful(false)
         }
       } else {
