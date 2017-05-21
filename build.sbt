@@ -14,7 +14,7 @@ val reactifyVersion = "1.5.3"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.2"
-val youIVersion = "0.3.3"
+val youIVersion = "0.3.4"
 val diffsonVersion = "2.2.0"
 val typeSafeConfigVersion = "1.3.1"
 
