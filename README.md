@@ -17,7 +17,7 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "0.5.0"
+libraryDependencies += "com.outr" %% "scarango-driver" % "0.5.2"
 ```
 
 ## Dependencies
@@ -138,6 +138,11 @@ val response: Future[QueryResponse[Fruit]] = Database.fruit.cursor(query)
 The `QueryResponse` object has several useful pieces of information, but for our immediate needs calling `result` on it
 will give us a `List[Fruit]` of the results of the query.
 
+
+### Streaming Changes
+
+Scarango 
+
 ### Further Reading
 
 For more examples using managed graphs take a look at the `ManagedSpec` (https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/ManagedSpec.scala).
@@ -155,6 +160,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Seamless Re-Authentication support for token timeout
 * [ ] Proper support for differentiating `null` and exclusion of values
+* [ ] Better support for `_key`, `_id`, and `_rev` as references and in case classes
 
 ### Features for 0.5.0 (Released 2017.05.16)
 
