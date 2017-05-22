@@ -139,9 +139,34 @@ The `QueryResponse` object has several useful pieces of information, but for our
 will give us a `List[Fruit]` of the results of the query.
 
 
-### Streaming Changes
+### Real-time / Streaming Changes
 
-Scarango 
+Scarango adds support for real-time events from the database to be handled. This was inspired by https://github.com/baslr/arangochair.
+
+Simply start the monitor:
+
+```
+Database.realTime.start()
+```
+
+Then you can listen to upserts and deletes on any collection:
+
+```
+Database.fruit.triggers.upsert.attach { f =>
+    println(s"Fruit was upserted: $f")
+}
+Database.fruit.triggers.deletion.attach { f =>
+    println(s"Fruit was deleted: $f")
+}
+```
+
+Finally, you can listen to the raw stream of events if you'd rather do something more generic:
+
+```
+Database.realTime.events.attach { logEvent =>
+    println(s"Real-time event: $logEvent")
+}
+```
 
 ### Further Reading
 
