@@ -18,7 +18,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
   private val client = new HttpClient
 
   protected[arango] def defaultErrorHandler[Request, Response](request: Request): (HttpRequest, HttpResponse) => Response = (req: HttpRequest, resp: HttpResponse) => {
-    val content = resp.content.get.asInstanceOf[StringContent].value
+    val content = resp.content.map(_.asInstanceOf[StringContent].value).getOrElse("")
     val (error: ArangoError, cause: Option[Exception]) = decode[ArangoError](content) match {
       case Left(exc) => {
         ArangoError(
@@ -92,9 +92,9 @@ class Arango(baseURL: URL = Arango.defaultURL) {
       request = AuthenticationRequest(username, password),
       token = None
     ).map { response =>
-      new ArangoSession(this, Option(response.jwt))
+      new ArangoSession(this, Option(response.jwt), credentials)
     }
-    case None => Future.successful(new ArangoSession(this, None))
+    case None => Future.successful(new ArangoSession(this, None, credentials))
   }
 
   def isDisposed: Boolean = disposed

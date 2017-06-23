@@ -52,6 +52,21 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         user._rev shouldNot be(None)
       }
     }
+    "mess up the session token to force a reconnect" in {
+      session.token = Some("broken")
+      Future.successful(session.token should be(Some("broken")))
+    }
+    "insert another document causing a reconnect" in {
+      test.document.create(User("John Smith", 123), returnNew = true).map { response =>
+        response.`new` shouldNot be(None)
+        val user = response.`new`.head
+        user.name should be("John Smith")
+        user.age should be(123)
+        user._id shouldNot be(None)
+        user._key shouldNot be(None)
+        user._rev shouldNot be(None)
+      }
+    }
     "check replication state" in {
       db.replication.state().map { state =>
         state.state.lastLogTick shouldNot be("")
@@ -125,7 +140,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         response.name should be("test")
         response.`type` should be(2)
         response.status should be(3)
-        response.count should be(3)
+        response.count should be(4)
       }
     }
     "get collection revision" in {

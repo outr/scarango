@@ -7,7 +7,7 @@ import io.youi.http.{FileContent, HeaderKey, Method, StringContent}
 import io.circe.generic.auto._
 import io.circe.parser._
 import org.powerscala.io._
-import reactify.Observable
+import reactify.{InvocationType, Observable}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,8 +25,7 @@ class ArangoReplication(db: ArangoDB) {
       chunkSize.map("chunkSize" -> _.toString),
       Some("includeSystem" -> includeSystem.toString)
     ).flatten.toMap
-    val path = s"/_db/${db.db}/_api/replication/logger-follow"
-    db.session.instance.send(path, token = db.session.token, params = params).map { response =>
+    db.session.send(Some(db.db), "replication/logger-follow", params = params).map { response =>
       val contentStringOption = response.content.map {
         case content: StringContent => content.value
         case content: FileContent => IO.stream(content.file, new StringBuilder).toString
@@ -70,7 +69,7 @@ class ReplicationMonitor(replication: ArangoReplication) extends Observable[LogE
       }
     } else {
       replication.follow(from = Some(lastTick.get())).map { follow =>
-        follow.events.foreach(fire)
+        follow.events.foreach(fire(_, InvocationType.Direct))
         lastTick.set(follow.lastIncluded)
       }
     }

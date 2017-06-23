@@ -13,7 +13,7 @@ class ArangoDB(val session: ArangoSession, val db: String) {
                                                    errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None,
                                                    method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    session.instance.restful[Request, Response](s"/_db/$db/_api/$name", request, session.token, params, errorHandler, method)
+    session.restful[Request, Response](Some(db), name, request, params, errorHandler, method)
   }
 
   protected[arango] def call[Response](name: String,
@@ -21,7 +21,7 @@ class ArangoDB(val session: ArangoSession, val db: String) {
                                        params: Map[String, String] = Map.empty,
                                        errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
-    session.instance.call[Response](s"/_db/$db/_api/$name", method, session.token, params, errorHandler)
+    session.call[Response](Some(db), name, method, params, errorHandler)
   }
 
   def collection(name: String): ArangoCollection = new ArangoCollection(this, name)

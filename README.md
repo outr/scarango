@@ -17,7 +17,7 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "0.5.2"
+libraryDependencies += "com.outr" %% "scarango-driver" % "0.6.0"
 ```
 
 ## Dependencies
@@ -183,9 +183,12 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
-* [ ] Seamless Re-Authentication support for token timeout
 * [ ] Proper support for differentiating `null` and exclusion of values
 * [ ] Better support for `_key`, `_id`, and `_rev` as references and in case classes
+
+### Features for 0.6.0 (Released 2017.06.23)
+
+* [X] Seamless Re-Authentication support for token timeout
 
 ### Features for 0.5.0 (Released 2017.05.16)
 

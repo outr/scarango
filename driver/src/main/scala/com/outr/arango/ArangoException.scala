@@ -8,7 +8,7 @@ class ArangoException(val error: ArangoError,
                       val cause: Option[Throwable]) extends RuntimeException(cause.orNull) {
   override def getMessage: String = {
     s"""Error: $error,
-       |URL: ${request.url} (${request.method}),
+       |URL: ${request.url} (Method: ${request.method}, Status: ${response.status}),
        |Request: ${request.content.map(ArangoException.contentToString).getOrElse("No Content")},
        |Response: ${response.content.map(ArangoException.contentToString).getOrElse("No Content")}
      """.stripMargin.trim
