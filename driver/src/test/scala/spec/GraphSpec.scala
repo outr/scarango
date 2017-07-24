@@ -1,5 +1,6 @@
 package spec
 
+import com.outr.arango.managed.Graph
 import com.outr.arango.rest.EdgeDefinition
 import com.outr.arango.{ArangoDB, ArangoSession}
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -18,6 +19,15 @@ class GraphSpec extends AsyncWordSpec with Matchers {
         s.token shouldNot be("")
       }
     }
+//    "create the database" ignore  {
+//      // works but since there is no "remove db" function yet, there is no teardown hence fails on consecutive runs
+//      val g = new Graph("newGraph", "newDb")
+//      g.init(createGraph = false, createCollections = false, createDatabase = true).map {
+//        result =>
+//          println(result)
+//          result shouldBe true
+//      }
+//    }
     "list all the graphs" in {
       db.graph.list().map { result =>
         result.error should be(false)

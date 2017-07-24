@@ -2,8 +2,8 @@ package com.outr.arango.managed
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import com.outr.arango.rest.LogEvent
-import com.outr.arango.{Arango, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, Credentials, DocumentOption, Edge, Macros, Query, ReplicationMonitor}
+import com.outr.arango.rest.CreateDatabaseResponse
+import com.outr.arango.{Arango, ArangoCode, ArangoCursor, ArangoDB, ArangoGraph, ArangoSession, Credentials, DocumentOption, Edge, Macros, Query, ReplicationMonitor}
 import io.circe.Decoder
 import io.youi.net.URL
 import reactify.{Channel, Observable}
@@ -20,6 +20,7 @@ class Graph(name: String,
             timeout: FiniteDuration = 15.seconds) {
   private[managed] lazy val arango: Arango = new Arango(url)
   private[managed] lazy val sessionFuture: Future[ArangoSession] = arango.session(credentials)
+  private[managed] lazy val systemDbFuture: Future[ArangoDB] = sessionFuture.map(_.db("_system"))
   private[managed] lazy val dbFuture: Future[ArangoDB] = sessionFuture.map(_.db(db))
   private[managed] lazy val graphFuture: Future[ArangoGraph] = dbFuture.map(_.graph(name))
 
@@ -42,39 +43,73 @@ class Graph(name: String,
     * @param createGraph automatically creates the graph if it doesn't already exist if set to true. Defaults to true.
     * @param createCollections automatically creates the collections if they don't already exist if set to true.
     *                          Defaults to true.
+    * @param createDatabase attempts to create the database, if it does not exist and user has the rights. Halts creation of
+    *                       graph and collections on failure naturally
     * @return true if the operation completed without error
     */
   def init(createGraph: Boolean = true,
-           createCollections: Boolean = true): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
-    var future = graphFuture.flatMap { graph =>
+           createCollections: Boolean = true,
+           createDatabase: Boolean = false ): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
+    initDb( createDatabase, db ).flatMap {
+      dbInitialized => if( dbInitialized) {
+        initGraph(createGraph).flatMap {
+          case true => initCollections(createCollections)
+          case _ => Future.successful(false)
+        }
+      } else {
+        Future.successful(false)
+      }
+    }
+  } else {
+    Future.successful(true)
+  }
+
+  private def initCollections(createCollections: Boolean): Future[Boolean] = {
+    if (createCollections) {
+      val results: List[Future[Boolean]] = collections.map { collection =>
+        collection.collection.exists().flatMap {
+          case Some(_) => Future.successful(true)
+          case None => {
+            collection.create(waitForSync = true).map { response =>
+              !response.error
+            }
+          }
+        }
+      }
+      // Fail fast, as soon as a single collection or graph fails
+      Future.foldLeft(results)( true ) { (o, i) => i && o }
+    } else {
+      Future.successful(true)
+    }
+  }
+
+  private def initGraph(createGraph: Boolean): Future[Boolean] = {
+    graphFuture.flatMap { graph =>
       graph.exists().flatMap {
         case Some(response) => Future.successful(!response.error)
         case None if createGraph => graph.create().map(!_.error)
         case None => Future.successful(true)
       }
     }
-    if (createCollections) {
-      collections.foreach { collection =>
-        future = future.flatMap { b =>
-          if (b) {
-            collection.collection.exists().flatMap {
-              case Some(_) => Future.successful(true)
-              case None => {
-                collection.create(waitForSync = true).map { response =>
-                  !response.error
-                }
-              }
-            }
+  }
+
+  private def initDb( createDatabase: Boolean, db: String ): Future[Boolean] = {
+    if( createDatabase ) {
+      systemDbFuture.flatMap { sysDb =>
+        (for {
+          dbExists <- sysDb.databaseExists(db)
+          response <- if(dbExists) {
+            Future.successful(CreateDatabaseResponse(false, true, ArangoCode.ArangoDuplicateName.code))
           } else {
-            Future.successful(false)
+            sysDb.createDatabase(db)
           }
+        } yield response).flatMap {
+          case CreateDatabaseResponse(_, error, _) => Future.successful(!error)
         }
       }
+    } else {
+      Future.successful(true)
     }
-    future.foreach(initialized := _)
-    future
-  } else {
-    Future.successful(true)
   }
 
   def vertex[T <: DocumentOption](name: String): VertexCollection[T] = macro Macros.vertex[T]

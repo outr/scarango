@@ -64,7 +64,10 @@ trait UpgradeSupport extends Graph {
     f
   }
 
-  override def init(createGraph: Boolean, createCollections: Boolean): Future[Boolean] = super.init(createGraph, createCollections).flatMap { b =>
+  override def init(createGraph: Boolean,
+                    createCollections: Boolean,
+                    createDatabase: Boolean): Future[Boolean] =
+    super.init(createGraph, createCollections, createDatabase ).flatMap { b =>
     upgrade().map(_ => b)
   }
 }

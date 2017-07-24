@@ -1,12 +1,39 @@
 package com.outr.arango
 
+import com.outr.arango.rest.{ArangoUser, CreateDatabaseRequest, CreateDatabaseResponse, DatabaseListResponse}
 import io.circe.{Decoder, Encoder}
 import io.youi.http.{HttpRequest, HttpResponse, Method}
-
+import io.circe.generic.auto._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArangoDB(val session: ArangoSession, val db: String) {
+  protected[arango] def databaseExists(name: String): Future[Boolean] = {
+    val databaseList = session.instance.call[DatabaseListResponse](
+      s"/_db/$db/_api/database",
+      Method.Get,
+      session.token)
+
+    databaseList.flatMap {
+      r: DatabaseListResponse => Future.successful(
+        r.result.contains(name)
+      )
+    }
+  }
+
+  protected[arango] def createDatabase( name: String): Future[CreateDatabaseResponse] = {
+    val request = if( Arango.defaultAuthentication ) {
+      CreateDatabaseRequest(name, List( ArangoUser(Arango.defaultUsername, Option(Arango.defaultPassword))))
+    } else {
+      CreateDatabaseRequest(name)
+    }
+    session.instance.restful[CreateDatabaseRequest, CreateDatabaseResponse](
+      s"/_db/$db/_api/database",
+      request,
+      session.token
+    )
+  }
+
   protected[arango] def restful[Request, Response](name: String,
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
