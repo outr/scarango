@@ -10,12 +10,12 @@ resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
 
 val circeVersion = "0.8.0"
-val reactifyVersion = "2.0.3"
+val reactifyVersion = "2.0.6"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
-val scribeVersion = "1.4.3"
-val youIVersion = "0.4.2"
-val diffsonVersion = "2.2.0"
+val scribeVersion = "1.4.5"
+val youIVersion = "0.5.0"
+val diffsonVersion = "2.2.1"
 val typeSafeConfigVersion = "1.3.1"
 
 lazy val root = project.in(file("."))

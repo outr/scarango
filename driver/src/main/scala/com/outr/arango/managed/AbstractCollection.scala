@@ -141,7 +141,7 @@ class Triggers[T <: DocumentOption](collection: AbstractCollection[T]) {
   lazy val events: Observable[LogEvent] = {
     val c = Channel[LogEvent]
     collection.graph.realTime.events.attach { event =>
-      if (event.cname.contains(collection.name)) {
+      if (event.collectionOption.contains(collection.name)) {
         c := event
       }
     }

@@ -23,7 +23,12 @@ case class LogEvent(tick: String,
                     cid: Option[String],
                     cname: Option[String],
                     data: Option[Json]) {
-  def collection: String = cname.getOrElse(throw new RuntimeException(s"No collection defined for $eventType."))
+  // TODO: switch back after https://github.com/arangodb/arangodb/issues/2868 is addressed
+//  def collection: String = cname.getOrElse(throw new RuntimeException(s"No collection defined for $eventType."))
+  lazy val collectionOption: Option[String] = cname.orElse {
+    data.flatMap(json => (json \\ "_id").headOption.map(_.asString.get).map(s => s.substring(0, s.indexOf('/'))))
+  }
+  def collection: String = collectionOption.getOrElse(throw new RuntimeException(s"No collection defined for $eventType."))
   lazy val eventType: EventType = EventType(`type`)
 }
 
