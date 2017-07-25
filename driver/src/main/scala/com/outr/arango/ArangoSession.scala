@@ -76,7 +76,7 @@ class ArangoSession(val instance: Arango, var token: Option[String], credentials
     instance.send(path, method, token, params, content)
   }
 
-  def db(name: String = Arango.defaultDatabase): ArangoDB = new ArangoDB(this, name)
+  lazy val db = new ArangoDatabases(this)
 
   def parse(query: String): Future[ParseResult] = {
     implicit val decoder: Decoder[ParseResult] = deriveDecoder[ParseResult]

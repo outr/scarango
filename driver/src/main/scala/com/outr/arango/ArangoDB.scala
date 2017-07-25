@@ -1,6 +1,8 @@
 package com.outr.arango
 
+import com.outr.arango.rest.{ArangoUser, CreateDatabaseRequest, Result}
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.auto._
 import io.youi.http.{HttpRequest, HttpResponse, Method}
 
 import scala.concurrent.Future
@@ -22,6 +24,15 @@ class ArangoDB(val session: ArangoSession, val db: String) {
                                        errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     session.call[Response](Some(db), name, method, params, errorHandler)
+  }
+
+  def create(users: ArangoUser*): Future[Result[Boolean]] = {
+    val request = CreateDatabaseRequest(db, users.toList)
+    session.restful[CreateDatabaseRequest, Result[Boolean]](None, "database", request)
+  }
+
+  def drop(): Future[Result[Boolean]] = {
+    session.call[Result[Boolean]](None, s"database/$db", Method.Delete)
   }
 
   def collection(name: String): ArangoCollection = new ArangoCollection(this, name)
