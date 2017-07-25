@@ -16,7 +16,7 @@ val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.5"
 val youIVersion = "0.5.0"
 val diffsonVersion = "2.2.1"
-val typeSafeConfigVersion = "1.3.1"
+val profigVersion = "1.0.2"
 
 lazy val root = project.in(file("."))
   .aggregate(
@@ -45,8 +45,8 @@ lazy val driver = project.in(file("driver"))
     libraryDependencies ++= Seq(
       "com.outr" %% "scribe" % scribeVersion,
       "com.outr" %% "reactify" % reactifyVersion,
+      "com.outr" %% "profig" % profigVersion,
       "io.youi" %% "youi-client" % youIVersion,
-      "com.typesafe" % "config" % typeSafeConfigVersion,
       "org.gnieh" %% "diffson-circe" % diffsonVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"

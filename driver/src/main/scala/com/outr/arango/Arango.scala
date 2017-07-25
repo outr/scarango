@@ -1,13 +1,13 @@
 package com.outr.arango
 
 import com.outr.arango.rest.{AuthenticationRequest, AuthenticationResponse}
-import com.typesafe.config.ConfigFactory
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import io.youi.client.HttpClient
 import io.youi.http.{Headers, HttpRequest, HttpResponse, Method, RequestContent, StringContent}
 import io.youi.net.URL
+import profig.Config
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -106,13 +106,13 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 }
 
 object Arango {
-  private val config = ConfigFactory.load(getClass.getClassLoader)
+  private lazy val config = Config("arango")
 
-  var defaultDatabase: String = config.getString("Arango.db")
-  var defaultURL: URL = URL(config.getString("Arango.url"))
-  var defaultAuthentication: Boolean = config.getBoolean("Arango.authentication")
-  var defaultUsername: String = config.getString("Arango.username")
-  var defaultPassword: String = config.getString("Arango.password")
+  def defaultDatabase: String = config("db").as[String]
+  def defaultURL: URL = URL(config("url").as[String])
+  def defaultAuthentication: Boolean = config("authentication").as[Boolean]
+  def defaultUsername: String = config("username").as[String]
+  def defaultPassword: String = config("password").as[String]
 
   def defaultCredentials: Option[Credentials] = if (defaultAuthentication) {
     Some(Credentials(defaultUsername, defaultPassword))
