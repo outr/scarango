@@ -27,7 +27,7 @@ class DatabaseSpec extends AsyncWordSpec with Matchers {
       session.db.list().map { result =>
         result.error should be(false)
         result.code should be(200)
-        result.result should be(List("_system"))
+        result.result should contain("_system")
       }
     }
     "create a test database" in {
@@ -41,7 +41,8 @@ class DatabaseSpec extends AsyncWordSpec with Matchers {
       session.db.list().map { result =>
         result.error should be(false)
         result.code should be(200)
-        result.result.toSet should be(Set("_system", "databaseExample"))
+        result.result.toSet should contain("_system")
+        result.result.toSet should contain("databaseExample")
       }
     }
     "drop the test database" in {
@@ -55,7 +56,7 @@ class DatabaseSpec extends AsyncWordSpec with Matchers {
       session.db.list().map { result =>
         result.error should be(false)
         result.code should be(200)
-        result.result should be(List("_system"))
+        result.result should contain("_system")
       }
     }
   }

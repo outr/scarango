@@ -2,21 +2,21 @@ import sbt.Keys.libraryDependencies
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.7.0"
-scalaVersion in ThisBuild := "2.12.2"
-crossScalaVersions in ThisBuild := List("2.12.2", "2.11.11")
+version in ThisBuild := "0.7.1-SNAPSHOT"
+scalaVersion in ThisBuild := "2.12.3"
+crossScalaVersions in ThisBuild := List("2.12.3", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
 
 val circeVersion = "0.8.0"
-val reactifyVersion = "2.0.6"
+val reactifyVersion = "2.1.0"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.5"
-val youIVersion = "0.5.0"
+val youIVersion = "0.5.1"
 val diffsonVersion = "2.2.1"
-val profigVersion = "1.0.2"
+val profigVersion = "1.1.1"
 
 lazy val root = project.in(file("."))
   .aggregate(

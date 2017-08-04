@@ -245,6 +245,9 @@ object Macros {
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {
     import c.universe._
 
+    // Make sure that Profig is initialized
+    c.eval(reify(profig.Config.initMacro(Nil)))
+
     c.prefix.tree match {
       case Apply(_, List(Apply(_, rawParts))) => {
         val parts = rawParts map { case t @ Literal(Constant(const: String)) => (const, t.pos) }

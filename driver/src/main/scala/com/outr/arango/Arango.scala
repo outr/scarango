@@ -106,6 +106,8 @@ class Arango(baseURL: URL = Arango.defaultURL) {
 }
 
 object Arango {
+  Config.init(Nil)   // Make sure Profig is initialized
+
   private lazy val config = Config("arango")
 
   def defaultDatabase: String = config("db").as[String]
