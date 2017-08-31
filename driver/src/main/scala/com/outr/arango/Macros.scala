@@ -262,21 +262,29 @@ object Macros {
               val value = args(index - 1)
               val vt = value.actualType
               val queryArg = if (vt <:< typeOf[String]) {
-                c.Expr[Value](q"com.outr.arango.Value($value)")
+                c.Expr[Value](q"com.outr.arango.Value.string($value)")
               } else if (vt <:< typeOf[Int]) {
-                c.Expr[Value](q"com.outr.arango.Value($value)")
+                c.Expr[Value](q"com.outr.arango.Value.int($value)")
               } else if (vt <:< typeOf[Long]) {
-                c.Expr[Value](q"com.outr.arango.Value($value)")
+                c.Expr[Value](q"com.outr.arango.Value.long($value)")
               } else if (vt <:< typeOf[Double]) {
-                c.Expr[Value](q"com.outr.arango.Value($value)")
+                c.Expr[Value](q"com.outr.arango.Value.double($value)")
               } else if (vt <:< typeOf[Null]) {
                 c.Expr[Value](q"com.outr.arango.Value.Null")
+              } else if (vt <:< typeOf[Seq[String]]) {
+                c.Expr[Value](q"com.outr.arango.Value.strings($value)")
+              } else if (vt <:< typeOf[Seq[Int]]) {
+                c.Expr[Value](q"com.outr.arango.Value.ints($value)")
+              } else if (vt <:< typeOf[Seq[Long]]) {
+                c.Expr[Value](q"com.outr.arango.Value.longs($value)")
+              } else if (vt <:< typeOf[Seq[Double]]) {
+                c.Expr[Value](q"com.outr.arango.Value.doubles($value)")
               } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
                 special = true
-                c.Expr[Value](q"com.outr.arango.Value($value.name)")
+                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
               } else if (vt <:< typeOf[com.outr.arango.managed.EdgeCollection[_]]) {
                 special = true
-                c.Expr[Value](q"com.outr.arango.Value($value.name)")
+                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
               } else {
                 c.abort(c.enclosingPosition, s"Unsupported Value: $vt.")
               }

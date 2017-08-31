@@ -37,7 +37,7 @@ class ArangoDocument(collection: ArangoCollection) {
          |UPDATE $jsonString IN ${collection.collection}
          |RETURN NEW
        """.stripMargin
-    val query = Query(queryString, Map("key" -> Value(document._key.get)))
+    val query = Query(queryString, Map("key" -> Value.string(document._key.get)))
     collection.db.call[T](query)
   }
 }

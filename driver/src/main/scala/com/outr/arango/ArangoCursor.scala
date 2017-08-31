@@ -25,6 +25,10 @@ class ArangoCursor(arangoDB: ArangoDB) {
           case IntValue(i) => Json.fromInt(i)
           case LongValue(l) => Json.fromLong(l)
           case DoubleValue(d) => Json.fromDoubleOrNull(d)
+          case SeqStringValue(l) => Json.fromValues(l.map(Json.fromString))
+          case SeqIntValue(l) => Json.fromValues(l.map(Json.fromInt))
+          case SeqLongValue(l) => Json.fromValues(l.map(Json.fromLong))
+          case SeqDoubleValue(l) => Json.fromValues(l.map(Json.fromDoubleOrNull))
         }
         key -> argValue
       }

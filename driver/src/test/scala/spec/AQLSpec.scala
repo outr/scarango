@@ -49,7 +49,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val name = "John Doe"
         val query = aql"FOR u IN users FILTER u.id == $id && u.name == $name RETURN u"
         query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
-        query.args should be(Map("arg1" -> Value(123), "arg2" -> Value("John Doe")))
+        query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
       }
     }
     "dsl" should {
@@ -128,6 +128,36 @@ class AQLSpec extends AsyncWordSpec with Matchers {
             response.result.size should be(1)
             response.count should be(Some(2))
           }
+        }
+      }
+      "find a user from a list of names" in {
+        val names = List("John Doe")
+        val query = aql"FOR user IN users FILTER user.name IN $names RETURN user"
+        db.cursor[User](query, count = true).map { result =>
+          result.count should be(Some(1))
+          val userOption = result.result.headOption
+          userOption shouldNot be(None)
+          val user = userOption.get
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
+        }
+      }
+      "find a user from a list of ages" in {
+        val ages = List(21)
+        val query = aql"FOR user IN users FILTER user.age IN $ages RETURN user"
+        db.cursor[User](query, count = true).map { result =>
+          result.count should be(Some(1))
+          val userOption = result.result.headOption
+          userOption shouldNot be(None)
+          val user = userOption.get
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
         }
       }
     }

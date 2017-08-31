@@ -191,6 +191,7 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 * [X] Replace use of Typesafe Config with Profig for better support
 * [X] Update driver for ArangoDB 3.2 changes
 * [X] Test and update driver for RocksDB backing datastorage
+* [X] Support for sequences in AQL queries
 
 ### Features for 0.6.0 (Released 2017.06.23)
 

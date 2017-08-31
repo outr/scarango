@@ -55,7 +55,7 @@ trait UpgradeSupport extends Graph {
     if (latest > v) {
       (v + 1 to latest).foreach { upgradeTo =>
         val upgrade = upgrades.getOrElse(upgradeTo, throw new RuntimeException(s"Attempting to upgrade to $upgradeTo, but no upgrade found!"))
-        f = f.flatMap(_ => upgrade(newDatabase).map(_ => store.map += UpgradeSupport.Key -> Value(upgradeTo)))
+        f = f.flatMap(_ => upgrade(newDatabase).map(_ => store.map += UpgradeSupport.Key -> Value.int(upgradeTo)))
       }
       f.foreach { _ =>
         scribe.info(s"Successfully upgraded from $v to $latest.")
