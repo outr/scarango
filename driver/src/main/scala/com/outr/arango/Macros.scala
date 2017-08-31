@@ -271,6 +271,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.long($value)")
               } else if (vt <:< typeOf[Double]) {
                 c.Expr[Value](q"com.outr.arango.Value.double($value)")
+              } else if (vt <:< typeOf[BigDecimal]) {
+                c.Expr[Value](q"com.outr.arango.Value.bigDecimal($value)")
               } else if (vt <:< typeOf[Option[String]]) {
                 c.Expr[Value](q"com.outr.arango.Value.string($value)")
               } else if (vt <:< typeOf[Option[Boolean]]) {
@@ -281,6 +283,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.long($value)")
               } else if (vt <:< typeOf[Option[Double]]) {
                 c.Expr[Value](q"com.outr.arango.Value.double($value)")
+              } else if (vt <:< typeOf[Option[BigDecimal]]) {
+                c.Expr[Value](q"com.outr.arango.Value.bigDecimal($value)")
               } else if (vt <:< typeOf[Null]) {
                 c.Expr[Value](q"com.outr.arango.Value.Null")
               } else if (vt <:< typeOf[Seq[String]]) {
@@ -293,6 +297,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.longs($value)")
               } else if (vt <:< typeOf[Seq[Double]]) {
                 c.Expr[Value](q"com.outr.arango.Value.doubles($value)")
+              } else if (vt <:< typeOf[Seq[BigDecimal]]) {
+                c.Expr[Value](q"com.outr.arango.Value.bigDecimals($value)")
               } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
                 special = true
                 c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
