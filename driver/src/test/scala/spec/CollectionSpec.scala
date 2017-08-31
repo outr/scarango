@@ -183,6 +183,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
 
 case class User(name: String,
                 age: Int,
+                status: Option[String] = None,
                 _key: Option[String] = None,
                 _id: Option[String] = None,
                 _rev: Option[String] = None)

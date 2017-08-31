@@ -19,7 +19,7 @@ case class SeqLongValue(value: Seq[Long]) extends Value
 case class SeqDoubleValue(value: Seq[Double]) extends Value
 
 object Value {
-  def string(value: String): Value = StringValue(value)
+  def string(value: String): Value = if (value != null) StringValue(value) else Null
   def int(value: Int): Value = IntValue(value)
   def long(value: Long): Value = LongValue(value)
   def double(value: Double): Value = DoubleValue(value)

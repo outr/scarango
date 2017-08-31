@@ -111,7 +111,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         }
       }
       "insert another user" in {
-        users.document.create(User("Jane Doe", 20)).map { result =>
+        users.document.create(User("Jane Doe", 20, Some("Online"))).map { result =>
           result._id shouldNot be(None)
         }
       }
@@ -148,6 +148,21 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       "find a user from a list of ages" in {
         val ages = List(21)
         val query = aql"FOR user IN users FILTER user.age IN $ages RETURN user"
+        db.cursor[User](query, count = true).map { result =>
+          result.count should be(Some(1))
+          val userOption = result.result.headOption
+          userOption shouldNot be(None)
+          val user = userOption.get
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
+        }
+      }
+      "find a user where status is null" in {
+        val status: String = null
+        val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
         db.cursor[User](query, count = true).map { result =>
           result.count should be(Some(1))
           val userOption = result.result.headOption
