@@ -17,7 +17,7 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "0.7.1"
+libraryDependencies += "com.outr" %% "scarango-driver" % "0.8.0"
 ```
 
 ## Dependencies
@@ -181,17 +181,25 @@ For more examples using managed graphs take a look at the `ManagedSpec` (https:/
 
 ### Features for 1.0.0 (In-Progress)
 
+* [ ] Migrate all case classes to `core` for better re-use in Scala.js
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Proper support for differentiating `null` and exclusion of values
 * [ ] Better support for `_key`, `_id`, and `_rev` as references and in case classes
+
+### Features for 0.8.0 (Released 2017.08.31)
+
+* [X] Support for sequences in AQL queries
+* [X] Support for null in AQL queries
+* [X] Support for Option in AQL queries
+* [X] Support for Boolean in AQL queries
+* [X] Support for BigDecimal in AQL queries
 
 ### Features for 0.7.0 (Released 2017.07.25)
 
 * [X] Replace use of Typesafe Config with Profig for better support
 * [X] Update driver for ArangoDB 3.2 changes
 * [X] Test and update driver for RocksDB backing datastorage
-* [X] Support for sequences in AQL queries
 
 ### Features for 0.6.0 (Released 2017.06.23)
 
