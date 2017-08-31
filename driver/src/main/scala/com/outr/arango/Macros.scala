@@ -269,6 +269,14 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.long($value)")
               } else if (vt <:< typeOf[Double]) {
                 c.Expr[Value](q"com.outr.arango.Value.double($value)")
+              } else if (vt <:< typeOf[Option[String]]) {
+                c.Expr[Value](q"com.outr.arango.Value.string($value)")
+              } else if (vt <:< typeOf[Option[Int]]) {
+                c.Expr[Value](q"com.outr.arango.Value.int($value)")
+              } else if (vt <:< typeOf[Option[Long]]) {
+                c.Expr[Value](q"com.outr.arango.Value.long($value)")
+              } else if (vt <:< typeOf[Option[Double]]) {
+                c.Expr[Value](q"com.outr.arango.Value.double($value)")
               } else if (vt <:< typeOf[Null]) {
                 c.Expr[Value](q"com.outr.arango.Value.Null")
               } else if (vt <:< typeOf[Seq[String]]) {

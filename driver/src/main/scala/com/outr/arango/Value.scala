@@ -20,9 +20,13 @@ case class SeqDoubleValue(value: Seq[Double]) extends Value
 
 object Value {
   def string(value: String): Value = if (value != null) StringValue(value) else Null
+  def string(value: Option[String]): Value = value.map(StringValue).getOrElse(Null)
   def int(value: Int): Value = IntValue(value)
+  def int(value: Option[Int]): Value = value.map(IntValue).getOrElse(Null)
   def long(value: Long): Value = LongValue(value)
+  def long(value: Option[Long]): Value = value.map(LongValue).getOrElse(Null)
   def double(value: Double): Value = DoubleValue(value)
+  def double(value: Option[Double]): Value = value.map(DoubleValue).getOrElse(Null)
   def strings(value: Seq[String]): Value = SeqStringValue(value)
   def ints(value: Seq[Int]): Value = SeqIntValue(value)
   def longs(value: Seq[Long]): Value = SeqLongValue(value)

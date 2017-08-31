@@ -175,6 +175,21 @@ class AQLSpec extends AsyncWordSpec with Matchers {
           user._rev shouldNot be(None)
         }
       }
+      "find a user where status is None" in {
+        val status: Option[String] = None
+        val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
+        db.cursor[User](query, count = true).map { result =>
+          result.count should be(Some(1))
+          val userOption = result.result.headOption
+          userOption shouldNot be(None)
+          val user = userOption.get
+          user.name should be("John Doe")
+          user.age should be(21)
+          user._id shouldNot be(None)
+          user._key shouldNot be(None)
+          user._rev shouldNot be(None)
+        }
+      }
     }
     "cleanup" should {
       "drop the users collection" in {
