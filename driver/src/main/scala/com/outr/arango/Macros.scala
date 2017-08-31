@@ -263,6 +263,8 @@ object Macros {
               val vt = value.actualType
               val queryArg = if (vt <:< typeOf[String]) {
                 c.Expr[Value](q"com.outr.arango.Value.string($value)")
+              } else if (vt <:< typeOf[Boolean]) {
+                c.Expr[Value](q"com.outr.arango.Value.boolean($value)")
               } else if (vt <:< typeOf[Int]) {
                 c.Expr[Value](q"com.outr.arango.Value.int($value)")
               } else if (vt <:< typeOf[Long]) {
@@ -271,6 +273,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.double($value)")
               } else if (vt <:< typeOf[Option[String]]) {
                 c.Expr[Value](q"com.outr.arango.Value.string($value)")
+              } else if (vt <:< typeOf[Option[Boolean]]) {
+                c.Expr[Value](q"com.outr.arango.Value.boolean($value)")
               } else if (vt <:< typeOf[Option[Int]]) {
                 c.Expr[Value](q"com.outr.arango.Value.int($value)")
               } else if (vt <:< typeOf[Option[Long]]) {
@@ -281,6 +285,8 @@ object Macros {
                 c.Expr[Value](q"com.outr.arango.Value.Null")
               } else if (vt <:< typeOf[Seq[String]]) {
                 c.Expr[Value](q"com.outr.arango.Value.strings($value)")
+              } else if (vt <:< typeOf[Seq[Boolean]]) {
+                c.Expr[Value](q"com.outr.arango.Value.booleans($value)")
               } else if (vt <:< typeOf[Seq[Int]]) {
                 c.Expr[Value](q"com.outr.arango.Value.ints($value)")
               } else if (vt <:< typeOf[Seq[Long]]) {
