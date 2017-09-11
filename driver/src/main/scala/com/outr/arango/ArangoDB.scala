@@ -3,6 +3,7 @@ package com.outr.arango
 import com.outr.arango.rest.{ArangoUser, CreateDatabaseRequest, Result}
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
+import io.youi.client.ErrorHandler
 import io.youi.http.{HttpRequest, HttpResponse, Method}
 
 import scala.concurrent.Future
@@ -12,7 +13,7 @@ class ArangoDB(val session: ArangoSession, val db: String) {
   protected[arango] def restful[Request, Response](name: String,
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None,
+                                                   errorHandler: Option[ErrorHandler[Response]] = None,
                                                    method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     session.restful[Request, Response](Some(db), name, request, params, errorHandler, method)
@@ -21,7 +22,7 @@ class ArangoDB(val session: ArangoSession, val db: String) {
   protected[arango] def call[Response](name: String,
                                        method: Method,
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
+                                       errorHandler: Option[ErrorHandler[Response]] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     session.call[Response](Some(db), name, method, params, errorHandler)
   }

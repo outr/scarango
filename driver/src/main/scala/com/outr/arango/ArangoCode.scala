@@ -339,5 +339,10 @@ object ArangoCode {
 case class ArangoCode private(code: Int, title: String, message: String) {
   ArangoCode.codeMap += code -> this
 
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case code: ArangoCode => code.code == this.code
+    case _ => false
+  }
+
   override def toString: String = s"code: $code, title: $title, message: $message"
 }

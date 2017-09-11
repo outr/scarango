@@ -4,7 +4,7 @@ import com.outr.arango.rest.{AuthenticationRequest, AuthenticationResponse}
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.generic.auto._
 import io.circe.parser.decode
-import io.youi.client.HttpClient
+import io.youi.client.{ErrorHandler, HttpClient}
 import io.youi.http.{Headers, HttpRequest, HttpResponse, Method, RequestContent, StringContent}
 import io.youi.net.URL
 import profig.Config
@@ -17,20 +17,23 @@ class Arango(baseURL: URL = Arango.defaultURL) {
   private var disposed: Boolean = false
   private val client = new HttpClient
 
-  protected[arango] def defaultErrorHandler[Request, Response](request: Request): (HttpRequest, HttpResponse) => Response = (req: HttpRequest, resp: HttpResponse) => {
-    val content = resp.content.map(_.asInstanceOf[StringContent].value).getOrElse("")
-    val (error: ArangoError, cause: Option[Exception]) = decode[ArangoError](content) match {
-      case Left(exc) => {
-        ArangoError(
-          error = true,
-          code = resp.status.code,
-          errorNum = ArangoCode.Failed.code,
-          errorMessage = exc.getMessage
-        ) -> Some(exc)
+  protected[arango] def defaultErrorHandler[Request, Response](request: Request): ErrorHandler[Response] = new ErrorHandler[Response] {
+    override def apply(request: HttpRequest, response: HttpResponse, throwable: Option[Throwable]): Response = {
+      val content = response.content.map(_.asInstanceOf[StringContent].value).getOrElse("")
+      val (error: ArangoError, cause: Option[Throwable]) = decode[ArangoError](content) match {
+        case Left(exc) => {
+          val t = throwable.getOrElse(exc)
+          ArangoError(
+            error = true,
+            code = response.status.code,
+            errorNum = Some(ArangoCode.Failed.code),
+            errorMessage = t.getMessage
+          ) -> Some(t)
+        }
+        case Right(ae) => ae -> None
       }
-      case Right(ae) => ae -> None
+      throw new ArangoException(error, request, response, cause)
     }
-    throw new ArangoException(error, req, resp, cause)
   }
 
   protected[arango] def send(path: String,
@@ -48,7 +51,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                                    request: Request,
                                                    token: Option[String],
                                                    params: Map[String, String] = Map.empty,
-                                                   errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None,
+                                                   errorHandler: Option[ErrorHandler[Response]] = None,
                                                    method: Method = Method.Post)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
@@ -79,7 +82,7 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                        method: Method,
                                        token: Option[String],
                                        params: Map[String, String] = Map.empty,
-                                       errorHandler: Option[(HttpRequest, HttpResponse) => Response] = None)
+                                       errorHandler: Option[ErrorHandler[Response]] = None)
                                       (implicit decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     val url = baseURL.withPath(path).withParams(params)
