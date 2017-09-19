@@ -1,6 +1,6 @@
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.8.2-SNAPSHOT"
+version in ThisBuild := "0.8.2"
 scalaVersion in ThisBuild := "2.12.3"
 crossScalaVersions in ThisBuild := List("2.12.3", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -12,7 +12,7 @@ val reactifyVersion = "2.2.0"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.5"
-val youIVersion = "0.6.6"
+val youIVersion = "0.6.7"
 val diffsonVersion = "2.2.2"
 val profigVersion = "1.1.2"
 
