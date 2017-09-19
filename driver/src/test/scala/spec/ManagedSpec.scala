@@ -37,7 +37,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     if (!isTravis) {
       "manually call realTime.update" in {
         Future.successful {
-          realTime.update()
+          realTime.update() should be(ReplicationResult.Started)
           fruit.triggers.upsert.attach { f =>
             fruitUpserted += f
           }
@@ -58,7 +58,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     if (!isTravis) {
       "verify the Apple fired the trigger" in {
         Future {
-          realTime.update()
+          realTime.update() should be(ReplicationResult.Results)
 
           fruitUpserted.length should be(1)
           val f = fruitUpserted.head

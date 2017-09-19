@@ -18,7 +18,7 @@ class ArangoReplication(db: ArangoDB) {
   def follow(from: Option[Long] = None,
              to: Option[Long] = None,
              chunkSize: Option[Long] = None,
-             includeSystem: Boolean = true): Future[LoggerFollow] = {
+             includeSystem: Boolean = false): Future[LoggerFollow] = {
     val params = List(
       from.map("from" -> _.toString),
       to.map("to" -> _.toString),
@@ -62,18 +62,47 @@ class ReplicationMonitor(replication: ArangoReplication) extends Observable[LogE
   private val running = new AtomicBoolean(false)
   private val lastTick = new AtomicLong(0L)
 
-  def update(): Future[Unit] = {
-    if (lastTick.get() == 0L) {
-      replication.state().map { state =>
-        lastTick.set(state.state.lastLogTick)
+  def update(): Future[ReplicationResult] = synchronized {
+    if (running.compareAndSet(false, true)) {
+      if (lastTick.get() == 0L) {
+        replication.state().map { state =>
+          lastTick.set(state.state.lastLogTick)
+          running.set(false)
+          ReplicationResult.Started
+        }
+      } else {
+        replication.follow(from = Some(lastTick.get())).map { follow =>
+          follow.events.foreach(fire(_, InvocationType.Direct))
+          val lastReceived = if (follow.lastIncluded != 0L) {
+            follow.lastIncluded
+          } else {
+            follow.lastTick
+          }
+          lastTick.set(lastReceived)
+          running.set(false)
+          if (follow.checkMore) {
+            ReplicationResult.MaxResults
+          } else if (follow.events.nonEmpty) {
+            ReplicationResult.Results
+          } else {
+            ReplicationResult.NoResults
+          }
+        }
       }
     } else {
-      replication.follow(from = Some(lastTick.get())).map { follow =>
-        follow.events.foreach(fire(_, InvocationType.Direct))
-        lastTick.set(follow.lastIncluded)
-      }
+      Future.successful(ReplicationResult.AlreadyRunning)
     }
   }
 
-  def updateAndWait(): Unit = Arango.synchronous(update())
+  def updateAndWait(): ReplicationResult = Arango.synchronous(update())
+}
+
+sealed trait ReplicationResult
+
+object ReplicationResult {
+  case object Started extends ReplicationResult
+  case object AlreadyRunning extends ReplicationResult
+  case object NoResults extends ReplicationResult
+  case object Results extends ReplicationResult
+  case object MaxResults extends ReplicationResult
 }
