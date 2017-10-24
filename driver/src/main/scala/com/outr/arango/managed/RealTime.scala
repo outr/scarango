@@ -8,6 +8,7 @@ import reactify.Observable
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 class RealTime(graph: Graph) {
   private lazy val system = ActorSystem("GraphRealTime")
@@ -22,7 +23,14 @@ class RealTime(graph: Graph) {
     })
   }
 
-  def update(): ReplicationResult = graph.monitor.updateAndWait()
+  def update(): ReplicationResult = Try(graph.monitor.updateAndWait()) match {
+    case Success(result) => result
+    case Failure(e) => {
+      scribe.error("Error occurred while executing RealTime polling")
+      scribe.error(e)
+      ReplicationResult.NoResults
+    }
+  }
 
   def stop(): Unit = {
     cancellable.foreach(_.cancel())
