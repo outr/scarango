@@ -74,7 +74,10 @@ class Arango(baseURL: URL = Arango.defaultURL) {
       }
 
       if (json.isArray) {
-        val list = json.as[List[Json]].getOrElse(throw new RuntimeException("Something went wrong"))
+        val list: List[Json] = json.as[List[Json]] match {
+          case Left(failure) => throw failure
+          case Right(values) => values
+        }
         val modified = list.map(removeAll)
         Json.fromValues(modified)
       } else {
