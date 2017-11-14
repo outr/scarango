@@ -58,25 +58,28 @@ class Arango(baseURL: URL = Arango.defaultURL) {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
     val url = baseURL.withPath(path).withParams(params).copy(fragment = anchor)
     val processor = (json: Json) => {
-      val cursor = json.hcursor
-      var modified = json
-
-      def removeEmpty(fieldName: String): Unit = {
-        cursor.downField(fieldName).as[Option[String]] match {
-          case Left(_) =>
+      def removeEmpty(fieldName: String, json: Json): Json = {
+        json.hcursor.downField(fieldName).as[Option[String]] match {
+          case Left(_) => json
           case Right(option) => if (option.isEmpty) {
-            modified = modified.mapObject(_.remove(fieldName))
+            json.mapObject(_.remove(fieldName))
+          } else {
+            json
           }
         }
       }
 
-      // TODO: support removeEmpty recursively
+      def removeAll(json: Json): Json = {
+        removeEmpty("_key", removeEmpty("_id", removeEmpty("_rev", json)))
+      }
 
-      removeEmpty("_key")
-      removeEmpty("_id")
-      removeEmpty("_rev")
-
-      modified
+      if (json.isArray) {
+        val list = json.as[List[Json]].getOrElse(throw new RuntimeException("Something went wrong"))
+        val modified = list.map(removeAll)
+        Json.fromValues(modified)
+      } else {
+        removeAll(json)
+      }
     }
     client.restful[Request, Response](url, request, headers, errorHandler.getOrElse(defaultErrorHandler(request)), method, processor)
   }

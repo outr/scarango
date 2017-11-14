@@ -144,28 +144,27 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "bulk import records" in {
-      case class UserImport(name: String, age: Int)
       val entries = List(
-        UserImport("George Washington", 57),
-        UserImport("John Adams", 61),
-        UserImport("Thomas Jefferson", 57),
-        UserImport("James Madison", 57),
-        UserImport("James Monroe", 58),
-        UserImport("John Q. Adams", 57),
-        UserImport("Andrew Jackson", 61),
-        UserImport("Martin Van Buren", 54),
-        UserImport("William H. Harrison", 68),
-        UserImport("John Tyler", 51),
-        UserImport("James K. Polk", 49),
-        UserImport("Zachary Taylor", 64),
-        UserImport("Millard Fillmore", 50),
-        UserImport("Franklin Pierce", 48),
-        UserImport("James Buchanan", 65),
-        UserImport("Abraham Lincoln", 52),
-        UserImport("Andrew Johnson", 56),
-        UserImport("Ulysses S. Grant", 46),
-        UserImport("Rutherford B. Hayes", 54),
-        UserImport("James A. Garfield", 49)
+        User("George Washington", 57),
+        User("John Adams", 61),
+        User("Thomas Jefferson", 57),
+        User("James Madison", 57),
+        User("James Monroe", 58),
+        User("John Q. Adams", 57),
+        User("Andrew Jackson", 61),
+        User("Martin Van Buren", 54),
+        User("William H. Harrison", 68),
+        User("John Tyler", 51),
+        User("James K. Polk", 49),
+        User("Zachary Taylor", 64),
+        User("Millard Fillmore", 50),
+        User("Franklin Pierce", 48),
+        User("James Buchanan", 65),
+        User("Abraham Lincoln", 52),
+        User("Andrew Johnson", 56),
+        User("Ulysses S. Grant", 46),
+        User("Rutherford B. Hayes", 54),
+        User("James A. Garfield", 49)
       )
       test.document.bulk.insert(entries, waitForSync = true, details = true).map { response =>
         response.error should be(false)
