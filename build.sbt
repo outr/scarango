@@ -1,6 +1,6 @@
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.8.4-SNAPSHOT"
+version in ThisBuild := "0.8.4"
 scalaVersion in ThisBuild := "2.12.4"
 crossScalaVersions in ThisBuild := List("2.12.4", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
