@@ -1,11 +1,11 @@
 package spec
 
-import com.outr.arango.rest.EventType
+import com.outr.arango.rest.{BulkInserted, EventType}
 import com.outr.arango.{ArangoCode, ArangoCollection, ArangoDB, ArangoException, ArangoSession}
-import io.circe.Encoder
+import io.circe.{Decoder, Encoder}
 import org.scalatest.{AsyncWordSpec, Matchers}
 import io.circe.generic.auto._
-import io.circe.generic.semiauto.deriveEncoder
+import io.circe.generic.semiauto._
 
 import scala.concurrent.Future
 
@@ -15,6 +15,7 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
   private var test: ArangoCollection = _
 
   implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  implicit val bulkInsertedDecoder: Decoder[BulkInserted] = deriveDecoder[BulkInserted]
 
   private var nameIndexId: Option[String] = None
   private var lastLogTick: Long = _
