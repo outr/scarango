@@ -52,10 +52,11 @@ class Arango(baseURL: URL = Arango.defaultURL) {
                                                    token: Option[String],
                                                    params: Map[String, String] = Map.empty,
                                                    errorHandler: Option[ErrorHandler[Response]] = None,
-                                                   method: Method = Method.Post)
+                                                   method: Method = Method.Post,
+                                                   anchor: Option[String] = None)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
     val headers = token.map(t => Headers.empty.withHeader(Headers.Request.Authorization(s"bearer $t"))).getOrElse(Headers.empty)
-    val url = baseURL.withPath(path).withParams(params)
+    val url = baseURL.withPath(path).withParams(params).copy(fragment = anchor)
     val processor = (json: Json) => {
       val cursor = json.hcursor
       var modified = json
@@ -68,6 +69,8 @@ class Arango(baseURL: URL = Arango.defaultURL) {
           }
         }
       }
+
+      // TODO: support removeEmpty recursively
 
       removeEmpty("_key")
       removeEmpty("_id")

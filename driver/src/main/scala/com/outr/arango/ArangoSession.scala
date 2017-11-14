@@ -18,6 +18,7 @@ class ArangoSession(val instance: Arango, var token: Option[String], credentials
                                                    params: Map[String, String] = Map.empty,
                                                    errorHandler: Option[ErrorHandler[Response]] = None,
                                                    method: Method = Method.Post,
+                                                   anchor: Option[String] = None,
                                                    retryAttempts: Int = 1)
                                                   (implicit encoder: Encoder[Request],
                                                             decoder: Decoder[Response]): Future[Response] = {
@@ -32,14 +33,14 @@ class ArangoSession(val instance: Arango, var token: Option[String], credentials
           val newSession = Await.result(instance.session(credentials), 10.seconds)
           token = newSession.token
           scribe.info(s"Reconnect successful. Retrying $method to $path...")
-          Await.result(restful[Request, Response](db, name, request, params, errorHandler, method, retryAttempts - 1)(encoder, decoder), Duration.Inf)
+          Await.result(restful[Request, Response](db, name, request, params, errorHandler, method, anchor, retryAttempts - 1)(encoder, decoder), Duration.Inf)
         } else {
           errorHandler.getOrElse(instance.defaultErrorHandler(request))(httpRequest, httpResponse, throwable)
         }
       }
     }
 
-    instance.restful[Request, Response](path, request, token, params, Some(fallbackHandler), method)
+    instance.restful[Request, Response](path, request, token, params, Some(fallbackHandler), method, anchor)
   }
 
   protected[arango] def call[Response](db: Option[String],

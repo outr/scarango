@@ -143,6 +143,48 @@ class CollectionSpec extends AsyncWordSpec with Matchers {
         response.count should be(4)
       }
     }
+    "bulk import records" in {
+      case class UserImport(name: String, age: Int)
+      val entries = List(
+        UserImport("George Washington", 57),
+        UserImport("John Adams", 61),
+        UserImport("Thomas Jefferson", 57),
+        UserImport("James Madison", 57),
+        UserImport("James Monroe", 58),
+        UserImport("John Q. Adams", 57),
+        UserImport("Andrew Jackson", 61),
+        UserImport("Martin Van Buren", 54),
+        UserImport("William H. Harrison", 68),
+        UserImport("John Tyler", 51),
+        UserImport("James K. Polk", 49),
+        UserImport("Zachary Taylor", 64),
+        UserImport("Millard Fillmore", 50),
+        UserImport("Franklin Pierce", 48),
+        UserImport("James Buchanan", 65),
+        UserImport("Abraham Lincoln", 52),
+        UserImport("Andrew Johnson", 56),
+        UserImport("Ulysses S. Grant", 46),
+        UserImport("Rutherford B. Hayes", 54),
+        UserImport("James A. Garfield", 49)
+      )
+      test.document.bulk.insert(entries, waitForSync = true, details = true).map { response =>
+        response.error should be(false)
+        response.created should be(20)
+        response.errors should be(0)
+        response.empty should be(0)
+        response.updated should be(0)
+        response.ignored should be(0)
+        response.details should be(Some(Nil))
+      }
+    }
+    "get collection count after bulk import" in {
+      test.count().map { response =>
+        response.name should be("test")
+        response.`type` should be(2)
+        response.status should be(3)
+        response.count should be(24)
+      }
+    }
     "get collection revision" in {
       test.revision().map { response =>
         response.name should be("test")

@@ -13,7 +13,7 @@ import scala.language.experimental.macros
 trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
   def name: String
-  protected[managed] lazy val collection: ArangoCollection = graph.instance.db.collection(name)
+  lazy val collection: ArangoCollection = graph.instance.db.collection(name)
 
   implicit val encoder: Encoder[T]
   implicit val decoder: Decoder[T]

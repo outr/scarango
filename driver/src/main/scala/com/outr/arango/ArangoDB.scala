@@ -14,9 +14,10 @@ class ArangoDB(val session: ArangoSession, val db: String) {
                                                    request: Request,
                                                    params: Map[String, String] = Map.empty,
                                                    errorHandler: Option[ErrorHandler[Response]] = None,
-                                                   method: Method = Method.Post)
+                                                   method: Method = Method.Post,
+                                                   anchor: Option[String] = None)
                                                   (implicit encoder: Encoder[Request], decoder: Decoder[Response]): Future[Response] = {
-    session.restful[Request, Response](Some(db), name, request, params, errorHandler, method)
+    session.restful[Request, Response](Some(db), name, request, params, errorHandler, method, anchor)
   }
 
   protected[arango] def call[Response](name: String,

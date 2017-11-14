@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.rest.CreateDocument
+import com.outr.arango.rest.{BulkInserted, CreateDocument}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -39,5 +39,26 @@ class ArangoDocument(collection: ArangoCollection) {
        """.stripMargin
     val query = Query(queryString, Map("key" -> Value.string(document._key.get)))
     collection.db.call[T](query)
+  }
+
+  object bulk {
+    def insert[T](documents: Seq[T],
+                  overwrite: Boolean = false,
+                  waitForSync: Boolean = false,
+                  onDuplicate: String = "error",
+                  complete: Boolean = true,
+                  details: Boolean = false)
+                 (implicit encoder: Encoder[T], decoder: Decoder[BulkInserted]): Future[BulkInserted] = {
+      val params = Map(
+        "collection" -> collection.collection,
+        "type" -> "list",
+        "overwrite" -> overwrite.toString,
+        "waitForSync" -> waitForSync.toString,
+        "onDuplicate" -> onDuplicate,
+        "complete" -> complete.toString,
+        "details" -> details.toString
+      )
+      collection.db.restful[Seq[T], BulkInserted]("import", documents, params, anchor = Some("json"))
+    }
   }
 }
