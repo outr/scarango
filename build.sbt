@@ -1,6 +1,6 @@
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.8.4"
+version in ThisBuild := "0.8.5-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.4"
 crossScalaVersions in ThisBuild := List("2.12.4", "2.11.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -12,9 +12,9 @@ val reactifyVersion = "2.2.0"
 val scalacticVersion = "3.0.3"
 val scalaTestVersion = "3.0.3"
 val scribeVersion = "1.4.5"
-val youIVersion = "0.9.0-M1"
-val diffsonVersion = "2.2.2"
-val profigVersion = "1.1.2"
+val youIVersion = "0.9.0-M2"
+val diffsonVersion = "2.2.3"
+val profigVersion = "1.1.3"
 
 lazy val root = project.in(file("."))
   .aggregate(

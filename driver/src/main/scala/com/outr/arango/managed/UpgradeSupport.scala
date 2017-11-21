@@ -24,9 +24,13 @@ trait UpgradeSupport extends Graph {
   def version: Future[Int] = store.map.future.intOption(UpgradeSupport.Key).map(_.getOrElse(0))
 
   /**
-    * Determines the latest version available based on the upgrades registered.
+    * Determines the latest version available based on the upgrades registered. If no upgrades are associated with this
+    * Graph, the value will be 0.
     */
-  def latestVersion: Int = upgrades.keys.max
+  def latestVersion: Int = upgrades.keys match {
+    case keys if keys.nonEmpty => keys.max
+    case _ => 0
+  }
 
   /**
     * Registers an upgrade for a specific version. Version numbers should start at 1 as 0 represents the initial state.
@@ -60,6 +64,8 @@ trait UpgradeSupport extends Graph {
       f.foreach { _ =>
         scribe.info(s"Successfully upgraded from $v to $latest.")
       }
+    } else {
+      scribe.info(s"Current database version $v is the latest.")
     }
     f
   }

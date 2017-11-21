@@ -5,7 +5,6 @@ import org.scalatest.{AsyncWordSpec, Matchers}
 
 class DatabaseSpec extends AsyncWordSpec with Matchers {
   private var session: ArangoSession = _
-  private var db: Option[ArangoDB] = None
 
   "Database" should {
     "create the session" in {
