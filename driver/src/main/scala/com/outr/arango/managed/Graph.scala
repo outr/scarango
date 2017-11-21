@@ -39,18 +39,40 @@ class Graph(name: String,
     * exist (if createGraph and createCollections is true). This can be invoked multiple times without risk of duplicate
     * functionality.
     *
+    * @param createDatabase automatically creates the database if it doesn't already exist if set to true. Defaults to
+    *                       true.
     * @param createGraph automatically creates the graph if it doesn't already exist if set to true. Defaults to true.
     * @param createCollections automatically creates the collections if they don't already exist if set to true.
     *                          Defaults to true.
+    * @param force if true, will force initialization even if it has already previously been initialized. This can be
+    *              useful in tests where a single `Graph` instance needs to be initialized and deleted multiple times.
+    *              Defaults to false.
     * @return true if the operation completed without error
     */
-  def init(createGraph: Boolean = true,
-           createCollections: Boolean = true): Future[Boolean] = if (initCalled.compareAndSet(false, true)) {
-    var future = graphFuture.flatMap { graph =>
-      graph.exists().flatMap {
-        case Some(response) => Future.successful(!response.error)
-        case None if createGraph => graph.create().map(!_.error)
-        case None => Future.successful(true)
+  def init(createDatabase: Boolean = true,
+           createGraph: Boolean = true,
+           createCollections: Boolean = true,
+           force: Boolean = false): Future[Boolean] = if (initCalled.compareAndSet(false, true) || force) {
+    val createDBFuture: Future[Unit] = if (createDatabase) {
+      dbFuture.flatMap { dbInstance =>
+        dbInstance.session.db.list().flatMap { databases =>
+          if (databases.result.contains(db)) {
+            Future.successful(())
+          } else {
+            dbInstance.create().map(_ => ())
+          }
+        }
+      }
+    } else {
+      Future.successful(())
+    }
+    var future = createDBFuture.flatMap { _ =>
+      graphFuture.flatMap { graph =>
+        graph.exists().flatMap {
+          case Some(response) => Future.successful(!response.error)
+          case None if createGraph => graph.create().map(!_.error)
+          case None => Future.successful(true)
+        }
       }
     }
     if (createCollections) {
