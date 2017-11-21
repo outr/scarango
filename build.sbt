@@ -1,8 +1,8 @@
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "0.8.6-SNAPSHOT"
+version in ThisBuild := "0.8.6"
 scalaVersion in ThisBuild := "2.12.4"
-crossScalaVersions in ThisBuild := List("2.12.4", "2.11.11")
+crossScalaVersions in ThisBuild := List("2.12.4", "2.11.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
