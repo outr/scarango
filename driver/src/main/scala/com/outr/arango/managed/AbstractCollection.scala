@@ -14,6 +14,8 @@ trait AbstractCollection[T <: DocumentOption] {
   def graph: Graph
   def name: String
   lazy val collection: ArangoCollection = graph.instance.db.collection(name)
+  def document: ArangoDocument = collection.document
+  def bulk: ArangoBulk = document.bulk
 
   implicit val encoder: Encoder[T]
   implicit val decoder: Decoder[T]
