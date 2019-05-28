@@ -71,7 +71,7 @@ class ManagedSpec extends AsyncWordSpec with Matchers {
     }
     "fail to insert a duplicate named Apple" in {
       fruit.insert(Fruit("Apple")).failed.map {
-        case exc: ArangoException => exc.error.errorCode should be(ArangoCode.ArangoUniqueConstraintViolated)
+        case exc: ArangoException => exc.error.errorCode should be(ArangoCode.ArangoDocumentNotFound)
       }
     }
     "insert Banana" in {

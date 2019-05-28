@@ -10,7 +10,6 @@ case class GraphEntry(_key: Option[String],
                       name: Option[String],
                       isSmart: Boolean,
                       numberOfShards: Int,
-                      smartGraphAttribute: String,
                       orphanCollections: List[String],
                       edgeDefinitions: List[EdgeDefinition])
 

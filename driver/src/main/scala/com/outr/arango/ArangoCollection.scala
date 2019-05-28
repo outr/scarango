@@ -50,7 +50,7 @@ class ArangoCollection(val db: ArangoDB, val collection: String) {
              waitForSync: Boolean = false,
              doCompact: Boolean = true,
              isVolatile: Boolean = false,
-             shardKeys: Option[Array[String]] = None,
+             shardKeys: Array[String] = Array("_key"),
              numberOfShards: Int = 1,
              isSystem: Boolean = false,
              `type`: Int = 2,
