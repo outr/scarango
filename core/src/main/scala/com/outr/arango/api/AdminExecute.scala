@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -24,8 +25,8 @@ class AdminExecute(client: HttpClient) {
   * user-defined code and disables this API endpoint entirely. 
   * This is also the recommended setting for production.
   */
-  def post(body: IoCirceJson): Future[ArangoResponse] = client
+  def post(body: Json): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_admin/execute".withArguments(Map()))
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

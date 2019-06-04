@@ -1,5 +1,3 @@
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
-
 name := "scarango"
 organization in ThisBuild := "com.outr"
 version in ThisBuild := "2.0.0-SNAPSHOT"

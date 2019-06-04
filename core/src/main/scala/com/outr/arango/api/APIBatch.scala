@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -139,8 +140,8 @@ class APIBatch(client: HttpClient) {
   * </code><code>"--SomeBoundaryValue\r\nContent-Type: application/x-arango-batchpart\r\n\r\nHTTP/1.1 404 Not Found\r\nServer: \r\nConnection: \r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: 87\r\n\r\n{\"error\":true,\"errorMessage\":\"collection or view not found\",\"code\":404,\"errorNum\":1203}\r\n--SomeBoundaryValue\r\nContent-Type: application/x-arango-batchpart\r\n\r\nHTTP/1.1 404 Not Found\r\nServer: \r\nConnection: \r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: 101\r\n\r\n{\"error\":true,\"code\":404,\"errorNum\":404,\"errorMessage\":\"unknown path '_api/collection/notexisting2'\"}\r\n--SomeBoundaryValue--"
   * </code></pre>
   */
-  def post(body: IoCirceJson): Future[ArangoResponse] = client
+  def post(body: Json): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/batch".withArguments(Map()))
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

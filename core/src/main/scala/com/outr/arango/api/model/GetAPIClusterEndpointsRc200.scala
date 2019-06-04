@@ -1,9 +1,11 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * GetAPIClusterEndpointsRc200
   *
-  * @param error boolean flag to indicate whether an error occurred (*true* in this case)
+  * @param error boolean flag to indicate whether an error occurred ({@literal *}true{@literal *} in this case)
   * @param code the HTTP status code - 200
   * @param endpoints *** No description ***
   *

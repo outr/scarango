@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -13,9 +14,9 @@ class APIFoxxScriptsName(client: HttpClient) {
   * 
   * Returns the exports of the script, if any.
   */
-  def post(body: Option[IoCirceJson] = None, name: String, mount: String): Future[ArangoResponse] = client
+  def post(body: Json, name: String, mount: String): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/foxx/scripts/{name}".withArguments(Map("name" -> name)))
     .params("mount" -> mount.toString)
-    .restful[Option[IoCirceJson] = None, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

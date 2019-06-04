@@ -1,11 +1,13 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAPIExplain
   *
   * @param query the query which you want explained; If the query references any bind variables,
-  *        these must also be passed in the attribute *bindVars*. Additional
-  *        options for the query can be passed in the *options* attribute.
+  *        these must also be passed in the attribute {@literal *}bindVars{@literal *}. Additional
+  *        options for the query can be passed in the {@literal *}options{@literal *} attribute.
   * @param bindVars key/value pairs representing the bind parameters.
   * @param options *** No description ***
   *

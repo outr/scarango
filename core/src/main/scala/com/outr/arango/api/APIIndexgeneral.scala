@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -61,9 +62,9 @@ class APIIndexgeneral(client: HttpClient) {
   * insert a value into the index that already exists in the index will always fail,
   * regardless of the value of this attribute.
   */
-  def post(collection: String, body: IoCirceJson): Future[ArangoResponse] = client
+  def post(collection: String, body: Json): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/index#general".withArguments(Map()))
     .params("collection" -> collection.toString)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

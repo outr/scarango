@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -113,6 +114,6 @@ class APIIndexskiplist(client: HttpClient) {
   def post(collectionName: String, body: PostAPIIndexSkiplist): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/index#skiplist".withArguments(Map()))
-    .params("collection-name" -> collection-name.toString)
+    .params("collection-name" -> collectionName.toString)
     .restful[PostAPIIndexSkiplist, ArangoResponse](body)
 }

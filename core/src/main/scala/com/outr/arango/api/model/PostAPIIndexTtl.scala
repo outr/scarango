@@ -1,9 +1,11 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAPIIndexTtl
   *
-  * @param type must be equal to *"ttl"*.
+  * @param type must be equal to {@literal *}"ttl"{@literal *}.
   * @param expireAfter The time (in seconds) after a document's creation after which the
   *        documents count as "expired".
   * @param fields an array with exactly one attribute path.

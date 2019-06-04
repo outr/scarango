@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -221,7 +222,7 @@ class APIImportdocument(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: IoCirceJson, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(body: Json, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/import#document".withArguments(Map()))
     .params("collection" -> collection.toString)
@@ -232,5 +233,5 @@ class APIImportdocument(client: HttpClient) {
     .param[Option[String]]("onDuplicate", onDuplicate, None)
     .param[Option[Boolean]]("complete", complete, None)
     .param[Option[Boolean]]("details", details, None)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -332,14 +333,14 @@ class APIGharialGraphVertexCollectionVertex(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def patch(graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: IoCirceJson): Future[GeneralGraphVertexModifyHttpExamplesRc200] = client
+  def patch(graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphVertexModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
     .path(path"/_db/_system/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)))
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[IoCirceJson, GeneralGraphVertexModifyHttpExamplesRc200](body)
+    .restful[Json, GeneralGraphVertexModifyHttpExamplesRc200](body)
 
   /**
   * Replaces the data of a vertex in the collection.
@@ -460,12 +461,12 @@ class APIGharialGraphVertexCollectionVertex(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: IoCirceJson): Future[GeneralGraphVertexReplaceHttpExamplesRc200] = client
+  def put(graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphVertexReplaceHttpExamplesRc200] = client
     .method(HttpMethod.Put)
     .path(path"/_db/_system/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)))
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[IoCirceJson, GeneralGraphVertexReplaceHttpExamplesRc200](body)
+    .restful[Json, GeneralGraphVertexReplaceHttpExamplesRc200](body)
 }

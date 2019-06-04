@@ -1,13 +1,15 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PutAPISimpleFulltext
   *
   * @param collection The name of the collection to query.
   * @param attribute The attribute that contains the texts.
   * @param index The identifier of the fulltext-index to use.
-  * @param limit The maximal amount of documents to return. The *skip*
-  *        is applied before the *limit* restriction. (optional)
+  * @param limit The maximal amount of documents to return. The {@literal *}skip{@literal *}
+  *        is applied before the {@literal *}limit{@literal *} restriction. (optional)
   * @param query The fulltext query. Please refer to [Fulltext queries](../../Manual/Appendix/Deprecated/SimpleQueries/FulltextQueries.html)
   *          for details.
   * @param skip The number of documents to skip in the query (optional).

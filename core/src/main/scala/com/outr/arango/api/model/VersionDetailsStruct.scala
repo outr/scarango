@@ -1,10 +1,12 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * VersionDetailsStruct
   *
-  * @param architecture The CPU architecture, i.e. *64bit*
-  * @param arm *false* - this is not running on an ARM cpu
+  * @param architecture The CPU architecture, i.e. {@literal *}64bit{@literal *}
+  * @param arm {@literal *}false{@literal *} - this is not running on an ARM cpu
   * @param asan has this been compiled with the asan address sanitizer turned on? (should be false)
   * @param asm-crc32 do we have assembler implemented CRC functions?
   * @param assertions do we have assertions compiled in (=> developer version)
@@ -13,24 +15,24 @@ package com.outr.arango.api.model
   * @param build-repository reference to the git-ID this was compiled from
   * @param compiler which compiler did we use
   * @param cplusplus C++ standards version
-  * @param debug *false* for production binaries
-  * @param endianness currently only *little* is supported
-  * @param failure-tests *false* for production binaries (the facility to invoke fatal errors is disabled)
-  * @param fd-client-event-handler which method do we use to handle fd-sets, *poll* should be here on linux.
-  * @param fd-setsize if not *poll* the fd setsize is valid for the maximum number of filedescriptors
+  * @param debug {@literal *}false{@literal *} for production binaries
+  * @param endianness currently only {@literal *}little{@literal *} is supported
+  * @param failure-tests {@literal *}false{@literal *} for production binaries (the facility to invoke fatal errors is disabled)
+  * @param fd-client-event-handler which method do we use to handle fd-sets, {@literal *}poll{@literal *} should be here on linux.
+  * @param fd-setsize if not {@literal *}poll{@literal *} the fd setsize is valid for the maximum number of filedescriptors
   * @param full-version-string The full version string
   * @param host the host ID
   * @param icu-version Which version of ICU do we bundle
-  * @param jemalloc *true* if we use jemalloc
-  * @param maintainer-mode *false* if this is a production binary
-  * @param mode the mode we're runnig as - one of [*server*, *console*, *script*]
+  * @param jemalloc {@literal *}true{@literal *} if we use jemalloc
+  * @param maintainer-mode {@literal *}false{@literal *} if this is a production binary
+  * @param mode the mode we're runnig as - one of [{@literal *}server{@literal *}, {@literal *}console{@literal *}, {@literal *}script{@literal *}]
   * @param openssl-version which openssl version do we link?
-  * @param platform the host os - *linux*, *windows* or *darwin*
-  * @param reactor-type *epoll* TODO
+  * @param platform the host os - {@literal *}linux{@literal *}, {@literal *}windows{@literal *} or {@literal *}darwin{@literal *}
+  * @param reactor-type {@literal *}epoll{@literal *} TODO
   * @param rocksdb-version the rocksdb version this release bundles
   * @param server-version the ArangoDB release version
-  * @param sizeof int number of bytes for *integers*
-  * @param sizeof void* number of bytes for *void pointers*
+  * @param sizeof int number of bytes for {@literal *}integers{@literal *}
+  * @param sizeof void* number of bytes for {@literal *}void pointers{@literal *}
   * @param sse42 do we have a SSE 4.2 enabled cpu?
   * @param unaligned-access does this system support unaligned memory access?
   * @param v8-version the bundled V8 javascript engine version

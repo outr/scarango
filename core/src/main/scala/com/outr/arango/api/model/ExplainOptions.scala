@@ -1,10 +1,12 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * ExplainOptions
   *
-  * @param allPlans if set to *true*, all possible execution plans will be returned.
-  *        The default is *false*, meaning only the optimal plan will be returned.
+  * @param allPlans if set to {@literal *}true{@literal *}, all possible execution plans will be returned.
+  *        The default is {@literal *}false{@literal *}, meaning only the optimal plan will be returned.
   * @param maxNumberOfPlans an optional maximum number of plans that the optimizer is 
   *        allowed to generate. Setting this attribute to a low value allows to put a
   *        cap on the amount of work the optimizer does.

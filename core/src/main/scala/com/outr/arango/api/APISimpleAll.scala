@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -146,8 +147,8 @@ class APISimpleAll(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: IoCirceJson): Future[ArangoResponse] = client
+  def put(body: Json): Future[ArangoResponse] = client
     .method(HttpMethod.Put)
     .path(path"/_db/_system/_api/simple/all".withArguments(Map()))
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

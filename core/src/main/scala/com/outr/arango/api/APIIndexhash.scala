@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -155,6 +156,6 @@ class APIIndexhash(client: HttpClient) {
   def post(collectionName: String, body: PostAPIIndexHash): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/index#hash".withArguments(Map()))
-    .params("collection-name" -> collection-name.toString)
+    .params("collection-name" -> collectionName.toString)
     .restful[PostAPIIndexHash, ArangoResponse](body)
 }

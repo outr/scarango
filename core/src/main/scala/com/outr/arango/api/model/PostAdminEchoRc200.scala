@@ -1,5 +1,7 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAdminEchoRc200
   *
@@ -16,7 +18,7 @@ package com.outr.arango.api.model
   * @param rawRequestBody List of digits of the sent characters
   * @param rawSuffix *** No description ***
   * @param requestBody stringified version of the POST body we sent
-  * @param requestType In this case *POST*, if you use another HTTP-Verb, you will se that (GET/DELETE, ...)
+  * @param requestType In this case {@literal *}POST{@literal *}, if you use another HTTP-Verb, you will se that (GET/DELETE, ...)
   * @param server *** No description ***
   * @param suffix *** No description ***
   * @param url the raw request URL
@@ -26,13 +28,13 @@ package com.outr.arango.api.model
   */
 case class PostAdminEchoRc200(authorized: Boolean,
                               client: Option[AdminEchoClientStruct] = None,
-                              cookies: Option[io.circe.Json] = None,
+                              cookies: Option[Json] = None,
                               database: Option[String] = None,
-                              headers: Option[io.circe.Json] = None,
-                              internals: Option[io.circe.Json] = None,
-                              parameters: Option[io.circe.Json] = None,
+                              headers: Option[Json] = None,
+                              internals: Option[Json] = None,
+                              parameters: Option[Json] = None,
                               path: Option[String] = None,
-                              prefix: Option[io.circe.Json] = None,
+                              prefix: Option[Json] = None,
                               protocol: Option[String] = None,
                               rawRequestBody: Option[List[String]] = None,
                               rawSuffix: Option[List[String]] = None,

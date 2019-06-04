@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -110,13 +111,13 @@ class APIDocumentCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(body: IoCirceJson, collection: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(body: Json, collection: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Delete)
     .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 
   /**
   * Partially updates documents, the documents to update are specified
@@ -175,7 +176,7 @@ class APIDocumentCollection(client: HttpClient) {
   * cases the error 1200 "revision conflict" and in 10 cases the error
   * 1205 "illegal document handle" has happened.
   */
-  def patch(body: IoCirceJson, collection: String, keepNull: Option[Boolean] = None, mergeObjects: Option[Boolean] = None, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
+  def patch(body: Json, collection: String, keepNull: Option[Boolean] = None, mergeObjects: Option[Boolean] = None, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Patch)
     .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
     .param[Option[Boolean]]("keepNull", keepNull, None)
@@ -184,7 +185,7 @@ class APIDocumentCollection(client: HttpClient) {
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 
   /**
   * Creates a new document from the document given in the body, unless there
@@ -453,7 +454,7 @@ class APIDocumentCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collection: String, body: IoCirceJson, collection: Option[String] = None, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(collection: String, body: Json, collection: Option[String] = None, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
     .param[Option[String]]("collection", collection, None)
@@ -462,7 +463,7 @@ class APIDocumentCollection(client: HttpClient) {
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("silent", silent, None)
     .param[Option[Boolean]]("overwrite", overwrite, None)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 
   /**
   * Replaces multiple documents in the specified collection with the
@@ -514,12 +515,12 @@ class APIDocumentCollection(client: HttpClient) {
   * cases the error 1200 "revision conflict" and in 10 cases the error
   * 1205 "illegal document handle" has happened.
   */
-  def put(body: IoCirceJson, collection: String, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
+  def put(body: Json, collection: String, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Put)
     .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[IoCirceJson, ArangoResponse](body)
+    .restful[Json, ArangoResponse](body)
 }

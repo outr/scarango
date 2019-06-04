@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -39,8 +40,8 @@ class AdminEcho(client: HttpClient) {
   * - **rawRequestBody** (anonymous json object): List of digits of the sent characters
   * - **user**: the currently user that sent this request
   */
-  def post(body: IoCirceJson): Future[PostAdminEchoRc200] = client
+  def post(body: Json): Future[PostAdminEchoRc200] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_admin/echo".withArguments(Map()))
-    .restful[IoCirceJson, PostAdminEchoRc200](body)
+    .restful[Json, PostAdminEchoRc200](body)
 }

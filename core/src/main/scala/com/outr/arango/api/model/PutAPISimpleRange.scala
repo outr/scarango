@@ -1,15 +1,17 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PutAPISimpleRange
   *
   * @param collection The name of the collection to query.
   * @param attribute The attribute path to check.
-  * @param closed If *true*, use interval including *left* and *right*,
-  *        otherwise exclude *right*, but include *left*.
+  * @param closed If {@literal *}true{@literal *}, use interval including {@literal *}left{@literal *} and {@literal *}right{@literal *},
+  *        otherwise exclude {@literal *}right{@literal *}, but include {@literal *}left{@literal *}.
   * @param left The lower bound.
-  * @param limit The maximal amount of documents to return. The *skip*
-  *        is applied before the *limit* restriction. (optional)
+  * @param limit The maximal amount of documents to return. The {@literal *}skip{@literal *}
+  *        is applied before the {@literal *}limit{@literal *} restriction. (optional)
   * @param right The upper bound.
   * @param skip The number of documents to skip in the query (optional).
   *

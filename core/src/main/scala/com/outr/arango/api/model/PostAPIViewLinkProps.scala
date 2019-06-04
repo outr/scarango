@@ -1,5 +1,7 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAPIViewLinkProps
   *
@@ -10,8 +12,8 @@ package com.outr.arango.api.model
   *        depth (default: false).
   * @param storeValues How should the view track the attribute values, this setting allows for
   *        additional value retrieval optimizations, one of:
-  *        - *none*: Do not store values by the view
-  *        - *id*: Store only information about value presence, to allow use of the EXISTS() function
+  *        - {@literal *}none{@literal *}: Do not store values by the view
+  *        - {@literal *}id{@literal *}: Store only information about value presence, to allow use of the EXISTS() function
   *        (default "none").
   * @param trackListPositions The flag determines whether or not values in a lists should be treated separate
   *        (default: false).

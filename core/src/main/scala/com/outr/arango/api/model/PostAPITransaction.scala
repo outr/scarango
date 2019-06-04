@@ -1,14 +1,16 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAPITransaction
   *
-  * @param collections *collections* must be a JSON object that can have one or all sub-attributes
-  *        *read*, *write* or *exclusive*, each being an array of collection names or a
+  * @param collections {@literal *}collections{@literal *} must be a JSON object that can have one or all sub-attributes
+  *        {@literal *}read{@literal *}, {@literal *}write{@literal *} or {@literal *}exclusive{@literal *}, each being an array of collection names or a
   *        single collection name as string. Collections that will be written to in the
-  *        transaction must be declared with the *write* or *exclusive* attribute or it
+  *        transaction must be declared with the {@literal *}write{@literal *} or {@literal *}exclusive{@literal *} attribute or it
   *        will fail, whereas non-declared collections from which is solely read will be
-  *        added lazily. The optional sub-attribute *allowImplicit* can be set to *false*
+  *        added lazily. The optional sub-attribute {@literal *}allowImplicit{@literal *} can be set to {@literal *}false{@literal *}
   *        to let transactions fail in case of undeclared collections for reading.
   *        Collections for reading should be fully declared if possible, to avoid
   *        deadlocks.
@@ -17,16 +19,16 @@ package com.outr.arango.api.model
   * @param action the actual transaction operations to be executed, in the
   *        form of stringified JavaScript code. The code will be executed on server
   *        side, with late binding. It is thus critical that the code specified in
-  *        *action* properly sets up all the variables it needs.
-  *        If the code specified in *action* ends with a return statement, the
-  *        value returned will also be returned by the REST API in the *result*
+  *        {@literal *}action{@literal *} properly sets up all the variables it needs.
+  *        If the code specified in {@literal *}action{@literal *} ends with a return statement, the
+  *        value returned will also be returned by the REST API in the {@literal *}result{@literal *}
   *        attribute if the transaction committed successfully.
   * @param lockTimeout an optional numeric value that can be used to set a
   *        timeout for waiting on collection locks. If not specified, a default
-  *        value will be used. Setting *lockTimeout* to *0* will make ArangoDB
+  *        value will be used. Setting {@literal *}lockTimeout{@literal *} to {@literal *}0{@literal *} will make ArangoDB
   *        not time out waiting for a lock.
   * @param maxTransactionSize Transaction size limit in bytes. Honored by the RocksDB storage engine only.
-  * @param params optional arguments passed to *action*.
+  * @param params optional arguments passed to {@literal *}action{@literal *}.
   * @param waitForSync an optional boolean flag that, if set, will force the
   *        transaction to write all data to disk before returning.
   *

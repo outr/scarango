@@ -4,6 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
+import io.circe.Json
 import scala.concurrent.Future
 import scribe.Execution.global
       
@@ -354,14 +355,14 @@ class APIGharialGraphEdgeCollectionEdge(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def patch(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: IoCirceJson): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
+  def patch(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
     .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)))
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[IoCirceJson, GeneralGraphEdgeModifyHttpExamplesRc200](body)
+    .restful[Json, GeneralGraphEdgeModifyHttpExamplesRc200](body)
 
   /**
   * Replaces the data of an edge in the collection.

@@ -1,5 +1,7 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PutAPISimpleUpdateByExample
   *
@@ -12,5 +14,5 @@ package com.outr.arango.api.model
   */
 case class PutAPISimpleUpdateByExample(collection: String,
                                        example: Option[String] = None,
-                                       newValue: Option[io.circe.Json] = None,
+                                       newValue: Option[Json] = None,
                                        options: Option[PutAPISimpleUpdateByExampleOptions] = None)

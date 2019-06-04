@@ -1,21 +1,23 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * PostAPICursorRc201
   *
-  * @param error A flag to indicate that an error occurred (*false* in this case)
+  * @param error A flag to indicate that an error occurred ({@literal *}false{@literal *} in this case)
   * @param cached a boolean flag indicating whether the query result was served
   *        from the query cache or not. If the query result is served from the query
-  *        cache, the *extra* return attribute will not contain any *stats* sub-attribute
-  *        and no *profile* sub-attribute.
+  *        cache, the {@literal *}extra{@literal *} return attribute will not contain any {@literal *}stats{@literal *} sub-attribute
+  *        and no {@literal *}profile{@literal *} sub-attribute.
   * @param code the HTTP status code
   * @param count the total number of result documents available (only
-  *        available if the query was executed with the *count* attribute set)
+  *        available if the query was executed with the {@literal *}count{@literal *} attribute set)
   * @param extra an optional JSON object with extra information about the query result
-  *        contained in its *stats* sub-attribute. For data-modification queries, the
-  *        *extra.stats* sub-attribute will contain the number of modified documents and
+  *        contained in its {@literal *}stats{@literal *} sub-attribute. For data-modification queries, the
+  *        {@literal *}extra.stats{@literal *} sub-attribute will contain the number of modified documents and
   *        the number of documents that could not be modified
-  *        due to an error (if *ignoreErrors* query option is specified)
+  *        due to an error (if {@literal *}ignoreErrors{@literal *} query option is specified)
   * @param hasMore A boolean indicator whether there are more results
   *        available for the cursor on the server
   * @param id id of temporary cursor created on the server (optional, see above)
@@ -27,7 +29,7 @@ case class PostAPICursorRc201(error: Boolean,
                               cached: Option[Boolean] = None,
                               code: Option[Int] = None,
                               count: Option[Long] = None,
-                              extra: Option[io.circe.Json] = None,
+                              extra: Option[Json] = None,
                               hasMore: Option[Boolean] = None,
                               id: Option[String] = None,
                               result: Option[List[String]] = None)

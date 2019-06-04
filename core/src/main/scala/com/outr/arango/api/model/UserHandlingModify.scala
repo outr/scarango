@@ -1,5 +1,7 @@
 package com.outr.arango.api.model
 
+import io.circe.Json
+
 /**
   * UserHandlingModify
   *
@@ -13,4 +15,4 @@ package com.outr.arango.api.model
   */
 case class UserHandlingModify(passwd: String,
                               active: Option[Boolean] = None,
-                              extra: Option[io.circe.Json] = None)
+                              extra: Option[Json] = None)
