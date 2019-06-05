@@ -110,9 +110,9 @@ class APIIndexpersistent(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collectionName: String, body: PostAPIIndexPersistent): Future[ArangoResponse] = client
+  def post(collectionName: String, body: PostAPIIndexPersistent): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#persistent".withArguments(Map()))
+    .path(path"/_api/index#persistent", append = true) 
     .params("collection-name" -> collectionName.toString)
-    .restful[PostAPIIndexPersistent, ArangoResponse](body)
+    .restful[PostAPIIndexPersistent, Json](body)
 }

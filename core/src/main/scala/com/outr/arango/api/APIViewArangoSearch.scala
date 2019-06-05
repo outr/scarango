@@ -130,8 +130,8 @@ class APIViewArangoSearch(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: PostAPIViewIresearch): Future[ArangoResponse] = client
+  def post(body: PostAPIViewIresearch): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/view#ArangoSearch".withArguments(Map()))
-    .restful[PostAPIViewIresearch, ArangoResponse](body)
+    .path(path"/_api/view#ArangoSearch", append = true) 
+    .restful[PostAPIViewIresearch, Json](body)
 }

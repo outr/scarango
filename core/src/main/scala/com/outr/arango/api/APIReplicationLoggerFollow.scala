@@ -486,12 +486,12 @@ class APIReplicationLoggerFollow(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(from: Option[Double] = None, to: Option[Double] = None, chunkSize: Option[Double] = None, includeSystem: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(from: Option[Double] = None, to: Option[Double] = None, chunkSize: Option[Double] = None, includeSystem: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/logger-follow".withArguments(Map()))
+    .path(path"/_api/replication/logger-follow", append = true) 
     .param[Option[Double]]("from", from, None)
     .param[Option[Double]]("to", to, None)
     .param[Option[Double]]("chunkSize", chunkSize, None)
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

@@ -115,9 +115,9 @@ class APIExport(client: HttpClient) {
   * 
   * Note: this API is currently not supported on cluster coordinators.
   */
-  def post(body: PostAPIExport, collection: String): Future[ArangoResponse] = client
+  def post(body: PostAPIExport, collection: String): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/export".withArguments(Map()))
+    .path(path"/_api/export", append = true) 
     .params("collection" -> collection.toString)
-    .restful[PostAPIExport, ArangoResponse](body)
+    .restful[PostAPIExport, Json](body)
 }

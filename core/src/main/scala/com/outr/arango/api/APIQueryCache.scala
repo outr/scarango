@@ -12,8 +12,8 @@ class APIQueryCache(client: HttpClient) {
   /**
   * clears the query results cache for the current database
   */
-  def delete(): Future[ArangoResponse] = client
+  def delete(): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/query-cache".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query-cache", append = true) 
+    .call[Json]
 }

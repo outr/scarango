@@ -19,8 +19,8 @@ class APICollectionCollectionNameResponsibleShard(client: HttpClient) {
   * 
   * **Note** : This method is only available in a cluster coordinator.
   */
-  def put(collectionName: String): Future[ArangoResponse] = client
+  def put(collectionName: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/collection/{collection-name}/responsibleShard".withArguments(Map("collection-name" -> collectionName)))
-    .call[ArangoResponse]
+    .path(path"/_api/collection/{collection-name}/responsibleShard".withArguments(Map("collection-name" -> collectionName)), append = true)
+    .call[Json]
 }

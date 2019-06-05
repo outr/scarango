@@ -87,7 +87,7 @@ class APIAqlfunctionName(client: HttpClient) {
   */
   def delete(name: String, group: Option[String] = None): Future[DeleteAPIAqlfunctionRc200] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/aqlfunction/{name}".withArguments(Map("name" -> name)))
+    .path(path"/_api/aqlfunction/{name}".withArguments(Map("name" -> name)), append = true)
     .param[Option[String]]("group", group, None)
     .call[DeleteAPIAqlfunctionRc200]
 }

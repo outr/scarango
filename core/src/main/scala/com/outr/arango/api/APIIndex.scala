@@ -99,9 +99,9 @@ class APIIndex(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(collection: String): Future[ArangoResponse] = client
+  def get(collection: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/index".withArguments(Map()))
+    .path(path"/_api/index", append = true) 
     .params("collection" -> collection.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

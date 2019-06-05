@@ -15,8 +15,8 @@ class AdminServerAvailability(client: HttpClient) {
   * This is a public API so it does *not* require authentication. It is meant to be
   * used only in the context of server monitoring only.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/server/availability".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/server/availability", append = true) 
+    .call[Json]
 }

@@ -34,8 +34,8 @@ class APIDatabaseDatabaseName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(databaseName: String): Future[ArangoResponse] = client
+  def delete(databaseName: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/database/{database-name}".withArguments(Map("database-name" -> databaseName)))
-    .call[ArangoResponse]
+    .path(path"/_api/database/{database-name}".withArguments(Map("database-name" -> databaseName)), append = true)
+    .call[Json]
 }

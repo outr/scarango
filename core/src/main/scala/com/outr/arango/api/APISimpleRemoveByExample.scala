@@ -135,8 +135,8 @@ class APISimpleRemoveByExample(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleRemoveByExample): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleRemoveByExample): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/remove-by-example".withArguments(Map()))
-    .restful[PutAPISimpleRemoveByExample, ArangoResponse](body)
+    .path(path"/_api/simple/remove-by-example", append = true) 
+    .restful[PutAPISimpleRemoveByExample, Json](body)
 }

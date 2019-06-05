@@ -49,10 +49,10 @@ class AdminWalProperties(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/wal/properties".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/wal/properties", append = true) 
+    .call[Json]
 
   /**
   * Configures the behavior of the write-ahead log. The body of the request
@@ -100,8 +100,8 @@ class AdminWalProperties(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(): Future[ArangoResponse] = client
+  def put(): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_admin/wal/properties".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/wal/properties", append = true) 
+    .call[Json]
 }

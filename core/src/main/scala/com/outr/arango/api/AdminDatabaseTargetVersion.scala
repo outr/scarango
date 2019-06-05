@@ -13,8 +13,8 @@ class AdminDatabaseTargetVersion(client: HttpClient) {
   * Returns the database version that this server requires.
   * The version is returned in the *version* attribute of the result.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/database/target-version".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/database/target-version", append = true) 
+    .call[Json]
 }

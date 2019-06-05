@@ -12,9 +12,9 @@ class AdminClusterStatistics(client: HttpClient) {
   /**
   * Queries the statistics of the given DBserver
   */
-  def get(DBserver: String): Future[ArangoResponse] = client
+  def get(DBserver: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/clusterStatistics".withArguments(Map()))
+    .path(path"/_admin/clusterStatistics", append = true) 
     .params("DBserver" -> DBserver.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

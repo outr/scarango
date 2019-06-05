@@ -42,6 +42,6 @@ class AdminEcho(client: HttpClient) {
   */
   def post(body: Json): Future[PostAdminEchoRc200] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_admin/echo".withArguments(Map()))
+    .path(path"/_admin/echo", append = true) 
     .restful[Json, PostAdminEchoRc200](body)
 }

@@ -116,8 +116,8 @@ class APISimpleReplaceByExample(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleReplaceByExample): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleReplaceByExample): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/replace-by-example".withArguments(Map()))
-    .restful[PutAPISimpleReplaceByExample, ArangoResponse](body)
+    .path(path"/_api/simple/replace-by-example", append = true) 
+    .restful[PutAPISimpleReplaceByExample, Json](body)
 }

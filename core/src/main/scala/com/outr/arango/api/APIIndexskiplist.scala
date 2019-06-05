@@ -111,9 +111,9 @@ class APIIndexskiplist(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collectionName: String, body: PostAPIIndexSkiplist): Future[ArangoResponse] = client
+  def post(collectionName: String, body: PostAPIIndexSkiplist): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#skiplist".withArguments(Map()))
+    .path(path"/_api/index#skiplist", append = true) 
     .params("collection-name" -> collectionName.toString)
-    .restful[PostAPIIndexSkiplist, ArangoResponse](body)
+    .restful[PostAPIIndexSkiplist, Json](body)
 }

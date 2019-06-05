@@ -101,10 +101,10 @@ class APICollectionCollectionNameChecksum(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(collectionName: String, withRevisions: Option[Boolean] = None, withData: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(collectionName: String, withRevisions: Option[Boolean] = None, withData: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection/{collection-name}/checksum".withArguments(Map("collection-name" -> collectionName)))
+    .path(path"/_api/collection/{collection-name}/checksum".withArguments(Map("collection-name" -> collectionName)), append = true)
     .param[Option[Boolean]]("withRevisions", withRevisions, None)
     .param[Option[Boolean]]("withData", withData, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

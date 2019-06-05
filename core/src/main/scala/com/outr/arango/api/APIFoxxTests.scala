@@ -33,12 +33,12 @@ class APIFoxxTests(client: HttpClient) {
   * 
   * Otherwise the response body will be formatted as non-prettyprinted JSON.
   */
-  def post(mount: String, reporter: Option[String] = None, idiomatic: Option[Boolean] = None, filter: Option[String] = None): Future[ArangoResponse] = client
+  def post(mount: String, reporter: Option[String] = None, idiomatic: Option[Boolean] = None, filter: Option[String] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx/tests".withArguments(Map()))
+    .path(path"/_api/foxx/tests", append = true) 
     .params("mount" -> mount.toString)
     .param[Option[String]]("reporter", reporter, None)
     .param[Option[Boolean]]("idiomatic", idiomatic, None)
     .param[Option[String]]("filter", filter, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

@@ -63,8 +63,8 @@ class APICollectionCollectionNameRevision(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(collectionName: String): Future[ArangoResponse] = client
+  def get(collectionName: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection/{collection-name}/revision".withArguments(Map("collection-name" -> collectionName)))
-    .call[ArangoResponse]
+    .path(path"/_api/collection/{collection-name}/revision".withArguments(Map("collection-name" -> collectionName)), append = true)
+    .call[Json]
 }

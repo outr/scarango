@@ -67,9 +67,9 @@ class APIReplicationApplierStart(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(from: Option[String] = None): Future[ArangoResponse] = client
+  def put(from: Option[String] = None): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/applier-start".withArguments(Map()))
+    .path(path"/_api/replication/applier-start", append = true) 
     .param[Option[String]]("from", from, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

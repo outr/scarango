@@ -59,7 +59,7 @@ class APIGharialGraphEdge(client: HttpClient) {
   */
   def get(graph: String): Future[GeneralGraphListEdgeHttpExamplesRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)))
+    .path(path"/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)), append = true)
     .call[GeneralGraphListEdgeHttpExamplesRc200]
 
   /**
@@ -243,8 +243,8 @@ class APIGharialGraphEdge(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples): Future[ArangoResponse] = client
+  def post(graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)))
-    .restful[GeneralGraphEdgeDefinitionAddHttpExamples, ArangoResponse](body)
+    .path(path"/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)), append = true)
+    .restful[GeneralGraphEdgeDefinitionAddHttpExamples, Json](body)
 }

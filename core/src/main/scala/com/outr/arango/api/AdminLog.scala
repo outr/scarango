@@ -29,7 +29,7 @@ class AdminLog(client: HttpClient) {
   */
   def get(upto: Option[String] = None, level: Option[String] = None, start: Option[Double] = None, size: Option[Double] = None, offset: Option[Double] = None, search: Option[String] = None, sort: Option[String] = None): Future[GetAdminLogRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/log".withArguments(Map()))
+    .path(path"/_admin/log", append = true) 
     .param[Option[String]]("upto", upto, None)
     .param[Option[String]]("level", level, None)
     .param[Option[Double]]("start", start, None)

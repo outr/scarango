@@ -17,10 +17,10 @@ class APIReplicationBatchId(client: HttpClient) {
   * The very same request is forwarded synchronously to that DBserver.
   * It is an error if this attribute is not bound in the coordinator case.
   */
-  def delete(id: String): Future[ArangoResponse] = client
+  def delete(id: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/replication/batch/{id}".withArguments(Map("id" -> id)))
-    .call[ArangoResponse]
+    .path(path"/_api/replication/batch/{id}".withArguments(Map("id" -> id)), append = true)
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -40,8 +40,8 @@ class APIReplicationBatchId(client: HttpClient) {
   * The very same request is forwarded synchronously to that DBserver.
   * It is an error if this attribute is not bound in the coordinator case.
   */
-  def put(body: PutBatchReplication, id: String): Future[ArangoResponse] = client
+  def put(body: PutBatchReplication, id: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/batch/{id}".withArguments(Map("id" -> id)))
-    .restful[PutBatchReplication, ArangoResponse](body)
+    .path(path"/_api/replication/batch/{id}".withArguments(Map("id" -> id)), append = true)
+    .restful[PutBatchReplication, Json](body)
 }

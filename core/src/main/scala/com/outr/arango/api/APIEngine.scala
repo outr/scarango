@@ -57,6 +57,6 @@ class APIEngine(client: HttpClient) {
   */
   def get(): Future[GetEngineRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/engine".withArguments(Map()))
+    .path(path"/_api/engine", append = true) 
     .call[GetEngineRc200]
 }

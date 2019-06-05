@@ -125,11 +125,11 @@ class APIJobType(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(`type`: String, stamp: Option[Double] = None): Future[ArangoResponse] = client
+  def delete(`type`: String, stamp: Option[Double] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/job/{type}".withArguments(Map("type" -> `type`)))
+    .path(path"/_api/job/{type}".withArguments(Map("type" -> `type`)), append = true)
     .param[Option[Double]]("stamp", stamp, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Returns the list of ids of async jobs with a specific status (either done or
@@ -227,9 +227,9 @@ class APIJobType(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(`type`: String, count: Option[Double] = None): Future[ArangoResponse] = client
+  def get(`type`: String, count: Option[Double] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/job/{type}".withArguments(Map("type" -> `type`)))
+    .path(path"/_api/job/{type}".withArguments(Map("type" -> `type`)), append = true)
     .param[Option[Double]]("count", count, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

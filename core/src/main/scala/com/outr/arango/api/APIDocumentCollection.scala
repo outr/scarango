@@ -111,13 +111,13 @@ class APIDocumentCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(body: Json, collection: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(body: Json, collection: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
+    .path(path"/_api/document/{collection}".withArguments(Map("collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 
   /**
   * Partially updates documents, the documents to update are specified
@@ -176,16 +176,16 @@ class APIDocumentCollection(client: HttpClient) {
   * cases the error 1200 "revision conflict" and in 10 cases the error
   * 1205 "illegal document handle" has happened.
   */
-  def patch(body: Json, collection: String, keepNull: Option[Boolean] = None, mergeObjects: Option[Boolean] = None, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
+  def patch(body: Json, collection: String, keepNull: Option[Boolean] = None, mergeObjects: Option[Boolean] = None, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
+    .path(path"/_api/document/{collection}".withArguments(Map("collection" -> collection)), append = true)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("mergeObjects", mergeObjects, None)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 
   /**
   * Creates a new document from the document given in the body, unless there
@@ -454,15 +454,15 @@ class APIDocumentCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collection: String, body: Json, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(collection: String, body: Json, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
+    .path(path"/_api/document/{collection}".withArguments(Map("collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("silent", silent, None)
     .param[Option[Boolean]]("overwrite", overwrite, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 
   /**
   * Replaces multiple documents in the specified collection with the
@@ -514,12 +514,12 @@ class APIDocumentCollection(client: HttpClient) {
   * cases the error 1200 "revision conflict" and in 10 cases the error
   * 1205 "illegal document handle" has happened.
   */
-  def put(body: Json, collection: String, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[ArangoResponse] = client
+  def put(body: Json, collection: String, waitForSync: Option[Boolean] = None, ignoreRevs: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
+    .path(path"/_api/document/{collection}".withArguments(Map("collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("ignoreRevs", ignoreRevs, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

@@ -60,7 +60,7 @@ class APIGharialGraphVertex(client: HttpClient) {
   */
   def get(graph: String): Future[GeneralGraphListVertexHttpExamplesRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)))
+    .path(path"/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)), append = true)
     .call[GeneralGraphListVertexHttpExamplesRc200]
 
   /**
@@ -214,8 +214,8 @@ class APIGharialGraphVertex(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(graph: String): Future[ArangoResponse] = client
+  def post(graph: String): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)))
-    .call[ArangoResponse]
+    .path(path"/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)), append = true)
+    .call[Json]
 }

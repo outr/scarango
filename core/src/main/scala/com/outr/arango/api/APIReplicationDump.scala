@@ -118,9 +118,9 @@ class APIReplicationDump(client: HttpClient) {
   * </code><code>}&#x21A9;
   * </code></pre>
   */
-  def get(collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/dump".withArguments(Map()))
+    .path(path"/_api/replication/dump", append = true) 
     .params("collection" -> collection.toString)
     .param[Option[Double]]("chunkSize", chunkSize, None)
     .params("batchId" -> batchId.toString)
@@ -129,5 +129,5 @@ class APIReplicationDump(client: HttpClient) {
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
     .param[Option[Boolean]]("ticks", ticks, None)
     .param[Option[Boolean]]("flush", flush, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

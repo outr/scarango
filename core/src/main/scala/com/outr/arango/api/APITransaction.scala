@@ -214,8 +214,8 @@ class APITransaction(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: PostAPITransaction): Future[ArangoResponse] = client
+  def post(body: PostAPITransaction): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/transaction".withArguments(Map()))
-    .restful[PostAPITransaction, ArangoResponse](body)
+    .path(path"/_api/transaction", append = true) 
+    .restful[PostAPITransaction, Json](body)
 }

@@ -39,10 +39,10 @@ class APIUserUserDatabaseDbname(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def delete(user: String, dbname: String): Future[ArangoResponse] = client
+  def delete(user: String, dbname: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/user/{user}/database/{dbname}".withArguments(Map("user" -> user, "dbname" -> dbname)))
-    .call[ArangoResponse]
+    .path(path"/_api/user/{user}/database/{dbname}".withArguments(Map("user" -> user, "dbname" -> dbname)), append = true)
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -87,8 +87,8 @@ class APIUserUserDatabaseDbname(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def put(body: UserHandlingGrantDatabase, user: String, dbname: String): Future[ArangoResponse] = client
+  def put(body: UserHandlingGrantDatabase, user: String, dbname: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/user/{user}/database/{dbname}".withArguments(Map("user" -> user, "dbname" -> dbname)))
-    .restful[UserHandlingGrantDatabase, ArangoResponse](body)
+    .path(path"/_api/user/{user}/database/{dbname}".withArguments(Map("user" -> user, "dbname" -> dbname)), append = true)
+    .restful[UserHandlingGrantDatabase, Json](body)
 }

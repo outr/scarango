@@ -14,10 +14,10 @@ class AdminLogLevel(client: HttpClient) {
   * The result is a JSON object with the log topics being the object keys, and
   * the log levels being the object values.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/log/level".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/log/level", append = true) 
+    .call[Json]
 
   /**
   * Modifies and returns the server's current log level settings.
@@ -81,8 +81,8 @@ class AdminLogLevel(client: HttpClient) {
   *   - **heartbeat**: One of the possible log levels.
   *   - **requests**: One of the possible log levels.
   */
-  def put(body: PutAdminLoglevel): Future[ArangoResponse] = client
+  def put(body: PutAdminLoglevel): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_admin/log/level".withArguments(Map()))
-    .restful[PutAdminLoglevel, ArangoResponse](body)
+    .path(path"/_admin/log/level", append = true) 
+    .restful[PutAdminLoglevel, Json](body)
 }

@@ -149,8 +149,8 @@ class APIQuery(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: PostApiQueryProperties): Future[ArangoResponse] = client
+  def post(body: PostApiQueryProperties): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/query".withArguments(Map()))
-    .restful[PostApiQueryProperties, ArangoResponse](body)
+    .path(path"/_api/query", append = true) 
+    .restful[PostApiQueryProperties, Json](body)
 }

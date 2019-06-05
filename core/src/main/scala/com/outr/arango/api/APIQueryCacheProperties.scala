@@ -28,10 +28,10 @@ class APIQueryCacheProperties(client: HttpClient) {
   * - *includeSystem*: whether or not results of queries that involve system collections will be
   *   stored in the query results cache.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/query-cache/properties".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query-cache/properties", append = true) 
+    .call[Json]
 
   /**
   * After the properties have been changed, the current set of properties will
@@ -52,8 +52,8 @@ class APIQueryCacheProperties(client: HttpClient) {
   *   - **maxResults**: the maximum number of query results that will be stored per database-specific cache.
   *   - **maxEntrySize**: the maximum individual size of query results that will be stored per database-specific cache.
   */
-  def put(body: PutApiQueryCacheProperties): Future[ArangoResponse] = client
+  def put(body: PutApiQueryCacheProperties): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/query-cache/properties".withArguments(Map()))
-    .restful[PutApiQueryCacheProperties, ArangoResponse](body)
+    .path(path"/_api/query-cache/properties", append = true) 
+    .restful[PutApiQueryCacheProperties, Json](body)
 }

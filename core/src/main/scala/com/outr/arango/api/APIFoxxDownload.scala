@@ -17,9 +17,9 @@ class APIFoxxDownload(client: HttpClient) {
   * Otherwise the bundle will represent the version of a service that
   * is installed on that ArangoDB instance.
   */
-  def post(mount: String): Future[ArangoResponse] = client
+  def post(mount: String): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx/download".withArguments(Map()))
+    .path(path"/_api/foxx/download", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

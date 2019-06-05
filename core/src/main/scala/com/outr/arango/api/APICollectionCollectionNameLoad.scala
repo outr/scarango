@@ -72,8 +72,8 @@ class APICollectionCollectionNameLoad(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(collectionName: String): Future[ArangoResponse] = client
+  def put(collectionName: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/collection/{collection-name}/load".withArguments(Map("collection-name" -> collectionName)))
-    .call[ArangoResponse]
+    .path(path"/_api/collection/{collection-name}/load".withArguments(Map("collection-name" -> collectionName)), append = true)
+    .call[Json]
 }

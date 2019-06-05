@@ -17,8 +17,8 @@ class AdminClusterMaintenance(client: HttpClient) {
   * To enable the maintenance mode the request body must contain the string `"on"`. To disable it, send the string
   * `"off"` (Please note it _must_ be lowercase as well as include the quotes).
   */
-  def put(): Future[ArangoResponse] = client
+  def put(): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_admin/cluster/maintenance".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/cluster/maintenance", append = true) 
+    .call[Json]
 }

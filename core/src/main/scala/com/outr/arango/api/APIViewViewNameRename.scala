@@ -46,8 +46,8 @@ class APIViewViewNameRename(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(viewName: String): Future[ArangoResponse] = client
+  def put(viewName: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/view/{view-name}/rename".withArguments(Map("view-name" -> viewName)))
-    .call[ArangoResponse]
+    .path(path"/_api/view/{view-name}/rename".withArguments(Map("view-name" -> viewName)), append = true)
+    .call[Json]
 }

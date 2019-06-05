@@ -71,8 +71,8 @@ class APIReplicationSync(client: HttpClient) {
   * 
   * **Note**: this method is not supported on a coordinator in a cluster.
   */
-  def put(body: PutAPIReplicationSynchronize): Future[ArangoResponse] = client
+  def put(body: PutAPIReplicationSynchronize): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/sync".withArguments(Map()))
-    .restful[PutAPIReplicationSynchronize, ArangoResponse](body)
+    .path(path"/_api/replication/sync", append = true) 
+    .restful[PutAPIReplicationSynchronize, Json](body)
 }

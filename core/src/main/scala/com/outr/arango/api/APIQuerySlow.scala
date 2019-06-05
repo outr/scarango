@@ -12,10 +12,10 @@ class APIQuerySlow(client: HttpClient) {
   /**
   * Clears the list of slow AQL queries
   */
-  def delete(): Future[ArangoResponse] = client
+  def delete(): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/query/slow".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query/slow", append = true) 
+    .call[Json]
 
   /**
   * Returns an array containing the last AQL queries that are finished and
@@ -42,8 +42,8 @@ class APIQuerySlow(client: HttpClient) {
   * 
   * - *stream*: whether or not the query uses a streaming cursor
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/query/slow".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query/slow", append = true) 
+    .call[Json]
 }

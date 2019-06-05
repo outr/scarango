@@ -144,10 +144,10 @@ class APIReplicationApplierConfig(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/applier-config".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/replication/applier-config", append = true) 
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -292,8 +292,8 @@ class APIReplicationApplierConfig(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPIReplicationApplierAdjust): Future[ArangoResponse] = client
+  def put(body: PutAPIReplicationApplierAdjust): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/applier-config".withArguments(Map()))
-    .restful[PutAPIReplicationApplierAdjust, ArangoResponse](body)
+    .path(path"/_api/replication/applier-config", append = true) 
+    .restful[PutAPIReplicationApplierAdjust, Json](body)
 }

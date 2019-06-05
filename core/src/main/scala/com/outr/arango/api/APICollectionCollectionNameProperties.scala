@@ -146,7 +146,7 @@ class APICollectionCollectionNameProperties(client: HttpClient) {
   */
   def get(collectionName: String): Future[CollectionInfo] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection/{collection-name}/properties".withArguments(Map("collection-name" -> collectionName)))
+    .path(path"/_api/collection/{collection-name}/properties".withArguments(Map("collection-name" -> collectionName)), append = true)
     .call[CollectionInfo]
 
   /**
@@ -249,8 +249,8 @@ class APICollectionCollectionNameProperties(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(collectionName: String): Future[ArangoResponse] = client
+  def put(collectionName: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/collection/{collection-name}/properties".withArguments(Map("collection-name" -> collectionName)))
-    .call[ArangoResponse]
+    .path(path"/_api/collection/{collection-name}/properties".withArguments(Map("collection-name" -> collectionName)), append = true)
+    .call[Json]
 }

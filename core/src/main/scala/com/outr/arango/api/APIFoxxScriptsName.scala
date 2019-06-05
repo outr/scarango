@@ -14,9 +14,9 @@ class APIFoxxScriptsName(client: HttpClient) {
   * 
   * Returns the exports of the script, if any.
   */
-  def post(body: Json, name: String, mount: String): Future[ArangoResponse] = client
+  def post(body: Json, name: String, mount: String): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx/scripts/{name}".withArguments(Map("name" -> name)))
+    .path(path"/_api/foxx/scripts/{name}".withArguments(Map("name" -> name)), append = true)
     .params("mount" -> mount.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

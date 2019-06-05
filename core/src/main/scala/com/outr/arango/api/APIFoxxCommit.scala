@@ -14,9 +14,9 @@ class APIFoxxCommit(client: HttpClient) {
   * 
   * This can be used to resolve service conflicts between coordinators that can not be fixed automatically due to missing data.
   */
-  def post(replace: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(replace: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx/commit".withArguments(Map()))
+    .path(path"/_api/foxx/commit", append = true) 
     .param[Option[Boolean]]("replace", replace, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

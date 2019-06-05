@@ -46,8 +46,8 @@ class APIDatabaseCurrent(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/database/current".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/database/current", append = true) 
+    .call[Json]
 }

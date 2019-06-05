@@ -59,11 +59,11 @@ class APIGharialGraph(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(graph: String, dropCollections: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(graph: String, dropCollections: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/gharial/{graph}".withArguments(Map("graph" -> graph)))
+    .path(path"/_api/gharial/{graph}".withArguments(Map("graph" -> graph)), append = true)
     .param[Option[Boolean]]("dropCollections", dropCollections, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Selects information for a given graph.
@@ -152,6 +152,6 @@ class APIGharialGraph(client: HttpClient) {
   */
   def get(graph: String): Future[GeneralGraphGetHttpExamplesRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/gharial/{graph}".withArguments(Map("graph" -> graph)))
+    .path(path"/_api/gharial/{graph}".withArguments(Map("graph" -> graph)), append = true)
     .call[GeneralGraphGetHttpExamplesRc200]
 }

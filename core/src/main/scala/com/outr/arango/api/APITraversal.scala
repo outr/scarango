@@ -3207,8 +3207,8 @@ class APITraversal(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: HTTPAPITRAVERSAL): Future[ArangoResponse] = client
+  def post(body: HTTPAPITRAVERSAL): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/traversal".withArguments(Map()))
-    .restful[HTTPAPITRAVERSAL, ArangoResponse](body)
+    .path(path"/_api/traversal", append = true) 
+    .restful[HTTPAPITRAVERSAL, Json](body)
 }

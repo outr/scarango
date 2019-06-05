@@ -886,11 +886,11 @@ class APIReplicationInventory(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(includeSystem: Option[Boolean] = None, _global: Option[Boolean] = None, batchId: Double): Future[ArangoResponse] = client
+  def get(includeSystem: Option[Boolean] = None, _global: Option[Boolean] = None, batchId: Double): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/inventory".withArguments(Map()))
+    .path(path"/_api/replication/inventory", append = true) 
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
     .param[Option[Boolean]]("global", _global, None)
     .params("batchId" -> batchId.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

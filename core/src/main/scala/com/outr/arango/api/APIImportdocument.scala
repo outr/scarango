@@ -222,9 +222,9 @@ class APIImportdocument(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: Json, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(body: Json, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/import#document".withArguments(Map()))
+    .path(path"/_api/import#document", append = true) 
     .params("collection" -> collection.toString)
     .param[Option[String]]("fromPrefix", fromPrefix, None)
     .param[Option[String]]("toPrefix", toPrefix, None)
@@ -233,5 +233,5 @@ class APIImportdocument(client: HttpClient) {
     .param[Option[String]]("onDuplicate", onDuplicate, None)
     .param[Option[Boolean]]("complete", complete, None)
     .param[Option[Boolean]]("details", details, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

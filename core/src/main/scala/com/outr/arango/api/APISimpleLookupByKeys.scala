@@ -168,8 +168,8 @@ class APISimpleLookupByKeys(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: RestLookupByKeys): Future[ArangoResponse] = client
+  def put(body: RestLookupByKeys): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/lookup-by-keys".withArguments(Map()))
-    .restful[RestLookupByKeys, ArangoResponse](body)
+    .path(path"/_api/simple/lookup-by-keys", append = true) 
+    .restful[RestLookupByKeys, Json](body)
 }

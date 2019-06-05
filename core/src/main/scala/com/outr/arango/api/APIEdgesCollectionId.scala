@@ -133,10 +133,10 @@ class APIEdgesCollectionId(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(collectionId: String, vertex: String, direction: Option[String] = None): Future[ArangoResponse] = client
+  def get(collectionId: String, vertex: String, direction: Option[String] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/edges/{collection-id}".withArguments(Map("collection-id" -> collectionId)))
+    .path(path"/_api/edges/{collection-id}".withArguments(Map("collection-id" -> collectionId)), append = true)
     .params("vertex" -> vertex.toString)
     .param[Option[String]]("direction", direction, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

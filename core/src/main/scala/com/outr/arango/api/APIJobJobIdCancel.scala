@@ -59,8 +59,8 @@ class APIJobJobIdCancel(client: HttpClient) {
   * </code><code>]
   * </code></pre>
   */
-  def put(jobId: String): Future[ArangoResponse] = client
+  def put(jobId: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/job/{job-id}/cancel".withArguments(Map("job-id" -> jobId)))
-    .call[ArangoResponse]
+    .path(path"/_api/job/{job-id}/cancel".withArguments(Map("job-id" -> jobId)), append = true)
+    .call[Json]
 }

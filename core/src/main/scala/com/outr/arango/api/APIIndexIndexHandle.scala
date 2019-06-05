@@ -31,10 +31,10 @@ class APIIndexIndexHandle(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(indexHandle: String): Future[ArangoResponse] = client
+  def delete(indexHandle: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)))
-    .call[ArangoResponse]
+    .path(path"/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)), append = true)
+    .call[Json]
 
   /**
   * The result is an object describing the index. It has at least the following
@@ -73,8 +73,8 @@ class APIIndexIndexHandle(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(indexHandle: String): Future[ArangoResponse] = client
+  def get(indexHandle: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)))
-    .call[ArangoResponse]
+    .path(path"/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)), append = true)
+    .call[Json]
 }

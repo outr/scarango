@@ -92,8 +92,8 @@ class APISimpleRange(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleRange): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleRange): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/range".withArguments(Map()))
-    .restful[PutAPISimpleRange, ArangoResponse](body)
+    .path(path"/_api/simple/range", append = true) 
+    .restful[PutAPISimpleRange, Json](body)
 }

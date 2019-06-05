@@ -77,11 +77,11 @@ class APIAnalyzerAnalyzerName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(analyzerName: String, force: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(analyzerName: String, force: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)))
+    .path(path"/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)), append = true)
     .param[Option[Boolean]]("force", force, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Retrieves the full definition for the specified analyzer name.
@@ -113,8 +113,8 @@ class APIAnalyzerAnalyzerName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(analyzerName: String): Future[ArangoResponse] = client
+  def get(analyzerName: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)))
-    .call[ArangoResponse]
+    .path(path"/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)), append = true)
+    .call[Json]
 }

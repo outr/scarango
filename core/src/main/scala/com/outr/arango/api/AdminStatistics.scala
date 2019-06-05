@@ -244,6 +244,6 @@ class AdminStatistics(client: HttpClient) {
   */
   def get(): Future[GetAdminStatisticsRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/statistics".withArguments(Map()))
+    .path(path"/_admin/statistics", append = true) 
     .call[GetAdminStatisticsRc200]
 }

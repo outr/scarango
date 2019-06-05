@@ -188,6 +188,6 @@ class APICollectionCollectionNameFigures(client: HttpClient) {
   */
   def get(collectionName: String): Future[GetAPICollectionFiguresRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection/{collection-name}/figures".withArguments(Map("collection-name" -> collectionName)))
+    .path(path"/_api/collection/{collection-name}/figures".withArguments(Map("collection-name" -> collectionName)), append = true)
     .call[GetAPICollectionFiguresRc200]
 }

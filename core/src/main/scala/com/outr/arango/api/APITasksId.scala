@@ -72,7 +72,7 @@ class APITasksId(client: HttpClient) {
   */
   def delete(id: String): Future[DeleteAPITasksRc200] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/tasks/{id}".withArguments(Map("id" -> id)))
+    .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
     .call[DeleteAPITasksRc200]
 
   /**
@@ -144,7 +144,7 @@ class APITasksId(client: HttpClient) {
   */
   def get(id: String): Future[APITaskStruct] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/tasks/{id}".withArguments(Map("id" -> id)))
+    .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
     .call[APITaskStruct]
 
   /**
@@ -196,8 +196,8 @@ class APITasksId(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(id: String, body: PutAPINewTasks): Future[ArangoResponse] = client
+  def put(id: String, body: PutAPINewTasks): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/tasks/{id}".withArguments(Map("id" -> id)))
-    .restful[PutAPINewTasks, ArangoResponse](body)
+    .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
+    .restful[PutAPINewTasks, Json](body)
 }

@@ -14,12 +14,12 @@ class APIFoxxService(client: HttpClient) {
   * 
   * Returns an empty response on success.
   */
-  def delete(mount: String, teardown: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(mount: String, teardown: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/foxx/service".withArguments(Map()))
+    .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
     .param[Option[Boolean]]("teardown", teardown, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Fetches detailed information for the service at the given mount path.
@@ -37,11 +37,11 @@ class APIFoxxService(client: HttpClient) {
   * - *name*: a string identifying the service type
   * - *version*: a semver-compatible version string
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/service".withArguments(Map()))
+    .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Installs the given new service on top of the service currently installed at the given mount path.
@@ -79,15 +79,15 @@ class APIFoxxService(client: HttpClient) {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def patch(mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[ArangoResponse] = client
+  def patch(mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/foxx/service".withArguments(Map()))
+    .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
     .param[Option[Boolean]]("teardown", teardown, None)
     .param[Option[Boolean]]("setup", setup, None)
     .param[Option[Boolean]]("legacy", legacy, None)
     .param[Option[Boolean]]("force", force, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Removes the service at the given mount path from the database and file system.
@@ -125,13 +125,13 @@ class APIFoxxService(client: HttpClient) {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def put(mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[ArangoResponse] = client
+  def put(mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/foxx/service".withArguments(Map()))
+    .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
     .param[Option[Boolean]]("teardown", teardown, None)
     .param[Option[Boolean]]("setup", setup, None)
     .param[Option[Boolean]]("legacy", legacy, None)
     .param[Option[Boolean]]("force", force, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

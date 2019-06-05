@@ -88,8 +88,8 @@ class APIViewViewNameProperties(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(viewName: String): Future[ArangoResponse] = client
+  def get(viewName: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/view/{view-name}/properties".withArguments(Map("view-name" -> viewName)))
-    .call[ArangoResponse]
+    .path(path"/_api/view/{view-name}/properties".withArguments(Map("view-name" -> viewName)), append = true)
+    .call[Json]
 }

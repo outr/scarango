@@ -63,9 +63,9 @@ class APIIndexfulltext(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collectionName: String, body: PostAPIIndexFulltext): Future[ArangoResponse] = client
+  def post(collectionName: String, body: PostAPIIndexFulltext): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#fulltext".withArguments(Map()))
+    .path(path"/_api/index#fulltext", append = true) 
     .params("collection-name" -> collectionName.toString)
-    .restful[PostAPIIndexFulltext, ArangoResponse](body)
+    .restful[PostAPIIndexFulltext, Json](body)
 }

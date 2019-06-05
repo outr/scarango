@@ -34,6 +34,6 @@ class AdminServerRole(client: HttpClient) {
   */
   def get(): Future[GetAdminServerRoleRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/server/role".withArguments(Map()))
+    .path(path"/_admin/server/role", append = true) 
     .call[GetAdminServerRoleRc200]
 }

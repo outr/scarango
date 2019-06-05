@@ -40,10 +40,10 @@ class APIUserUser(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def delete(user: String): Future[ArangoResponse] = client
+  def delete(user: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/user/{user}".withArguments(Map("user" -> user)))
-    .call[ArangoResponse]
+    .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
+    .call[Json]
 
   /**
   * Fetches data about the specified user. You can fetch information about
@@ -78,10 +78,10 @@ class APIUserUser(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def get(user: String): Future[ArangoResponse] = client
+  def get(user: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/user/{user}".withArguments(Map("user" -> user)))
-    .call[ArangoResponse]
+    .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -134,10 +134,10 @@ class APIUserUser(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def patch(user: String, body: UserHandlingModify): Future[ArangoResponse] = client
+  def patch(user: String, body: UserHandlingModify): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/user/{user}".withArguments(Map("user" -> user)))
-    .restful[UserHandlingModify, ArangoResponse](body)
+    .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
+    .restful[UserHandlingModify, Json](body)
 
   /**
   * **A JSON object with these properties is required:**
@@ -187,8 +187,8 @@ class APIUserUser(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def put(user: String, body: UserHandlingReplace): Future[ArangoResponse] = client
+  def put(user: String, body: UserHandlingReplace): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/user/{user}".withArguments(Map("user" -> user)))
-    .restful[UserHandlingReplace, ArangoResponse](body)
+    .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
+    .restful[UserHandlingReplace, Json](body)
 }

@@ -153,9 +153,9 @@ class APISimpleAllKeys(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(collection: Option[String] = None, body: PutReadAllDocuments): Future[ArangoResponse] = client
+  def put(collection: Option[String] = None, body: PutReadAllDocuments): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/all-keys".withArguments(Map()))
+    .path(path"/_api/simple/all-keys", append = true) 
     .param[Option[String]]("collection", collection, None)
-    .restful[PutReadAllDocuments, ArangoResponse](body)
+    .restful[PutReadAllDocuments, Json](body)
 }

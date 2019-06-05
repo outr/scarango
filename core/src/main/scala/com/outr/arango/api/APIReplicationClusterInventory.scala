@@ -19,9 +19,9 @@ class APIReplicationClusterInventory(client: HttpClient) {
   * just that the *indexes* attribute there is relocated to adjust it to
   * the data format of arangodump.
   */
-  def get(includeSystem: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(includeSystem: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/clusterInventory".withArguments(Map()))
+    .path(path"/_api/replication/clusterInventory", append = true) 
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

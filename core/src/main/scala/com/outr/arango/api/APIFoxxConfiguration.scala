@@ -15,31 +15,31 @@ class APIFoxxConfiguration(client: HttpClient) {
   * Returns an object mapping the configuration option names to their definitions
   * including a human-friendly *title* and the *current* value (if any).
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/configuration".withArguments(Map()))
+    .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Replaces the given service's configuration.
   * 
   * Returns an object mapping all configuration option names to their new values.
   */
-  def patch(body: Json, mount: String): Future[ArangoResponse] = client
+  def patch(body: Json, mount: String): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/foxx/configuration".withArguments(Map()))
+    .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 
   /**
   * Replaces the given service's configuration completely.
   * 
   * Returns an object mapping all configuration option names to their new values.
   */
-  def put(body: Json, mount: String): Future[ArangoResponse] = client
+  def put(body: Json, mount: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/foxx/configuration".withArguments(Map()))
+    .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

@@ -129,10 +129,10 @@ class APIViewViewNamePropertiesArangoSearch(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def patch(viewName: String, body: PatchAPIViewPropertiesIresearch): Future[ArangoResponse] = client
+  def patch(viewName: String, body: PatchAPIViewPropertiesIresearch): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)))
-    .restful[PatchAPIViewPropertiesIresearch, ArangoResponse](body)
+    .path(path"/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)), append = true)
+    .restful[PatchAPIViewPropertiesIresearch, Json](body)
 
   /**
   * **A JSON object with these properties is required:**
@@ -254,8 +254,8 @@ class APIViewViewNamePropertiesArangoSearch(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(viewName: String, body: PutAPIViewPropertiesIresearch): Future[ArangoResponse] = client
+  def put(viewName: String, body: PutAPIViewPropertiesIresearch): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)))
-    .restful[PutAPIViewPropertiesIresearch, ArangoResponse](body)
+    .path(path"/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)), append = true)
+    .restful[PutAPIViewPropertiesIresearch, Json](body)
 }

@@ -38,8 +38,8 @@ class APIView(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/view".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/view", append = true) 
+    .call[Json]
 }

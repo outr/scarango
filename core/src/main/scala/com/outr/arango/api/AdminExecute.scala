@@ -25,8 +25,8 @@ class AdminExecute(client: HttpClient) {
   * user-defined code and disables this API endpoint entirely. 
   * This is also the recommended setting for production.
   */
-  def post(body: Json): Future[ArangoResponse] = client
+  def post(body: Json): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_admin/execute".withArguments(Map()))
-    .restful[Json, ArangoResponse](body)
+    .path(path"/_admin/execute", append = true) 
+    .restful[Json, Json](body)
 }

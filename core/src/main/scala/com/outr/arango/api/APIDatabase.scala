@@ -37,10 +37,10 @@ class APIDatabase(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/database".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/database", append = true) 
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -127,8 +127,8 @@ class APIDatabase(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: GetAPIDatabaseNew): Future[ArangoResponse] = client
+  def post(body: GetAPIDatabaseNew): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/database".withArguments(Map()))
-    .restful[GetAPIDatabaseNew, ArangoResponse](body)
+    .path(path"/_api/database", append = true) 
+    .restful[GetAPIDatabaseNew, Json](body)
 }

@@ -121,8 +121,8 @@ class APISimpleRemoveByKeys(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: RestRemoveByKeys): Future[ArangoResponse] = client
+  def put(body: RestRemoveByKeys): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/remove-by-keys".withArguments(Map()))
-    .restful[RestRemoveByKeys, ArangoResponse](body)
+    .path(path"/_api/simple/remove-by-keys", append = true) 
+    .restful[RestRemoveByKeys, Json](body)
 }

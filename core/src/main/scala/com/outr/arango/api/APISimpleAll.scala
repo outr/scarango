@@ -147,8 +147,8 @@ class APISimpleAll(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: Json): Future[ArangoResponse] = client
+  def put(body: Json): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/all".withArguments(Map()))
-    .restful[Json, ArangoResponse](body)
+    .path(path"/_api/simple/all", append = true) 
+    .restful[Json, Json](body)
 }

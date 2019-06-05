@@ -109,7 +109,7 @@ class APIGharialGraphEdgeCollectionEdge(client: HttpClient) {
   */
   def delete(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ifMatch: Option[String] = None): Future[GeneralGraphEdgeDeleteHttpExamplesRc200] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)))
+    .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .call[GeneralGraphEdgeDeleteHttpExamplesRc200]
@@ -220,7 +220,7 @@ class APIGharialGraphEdgeCollectionEdge(client: HttpClient) {
   */
   def get(graph: String, collection: String, edge: String, rev: Option[String] = None, ifMatch: Option[String] = None, ifNoneMatch: Option[String] = None): Future[GeneralGraphEdgeGetHttpExamplesRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)))
+    .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[String]]("rev", rev, None)
     .call[GeneralGraphEdgeGetHttpExamplesRc200]
 
@@ -357,7 +357,7 @@ class APIGharialGraphEdgeCollectionEdge(client: HttpClient) {
   */
   def patch(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)))
+    .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
@@ -506,12 +506,12 @@ class APIGharialGraphEdgeCollectionEdge(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples): Future[ArangoResponse] = client
+  def put(graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)))
+    .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[GeneralGraphEdgeReplaceHttpExamples, ArangoResponse](body)
+    .restful[GeneralGraphEdgeReplaceHttpExamples, Json](body)
 }

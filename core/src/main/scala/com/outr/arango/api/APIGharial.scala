@@ -125,7 +125,7 @@ class APIGharial(client: HttpClient) {
   */
   def get(): Future[GeneralGraphListHttpExamplesRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/gharial".withArguments(Map()))
+    .path(path"/_api/gharial", append = true) 
     .call[GeneralGraphListHttpExamplesRc200]
 
   /**
@@ -378,9 +378,9 @@ class APIGharial(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples): Future[ArangoResponse] = client
+  def post(waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/gharial".withArguments(Map()))
+    .path(path"/_api/gharial", append = true) 
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
-    .restful[GeneralGraphCreateHttpExamples, ArangoResponse](body)
+    .restful[GeneralGraphCreateHttpExamples, Json](body)
 }

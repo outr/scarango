@@ -153,9 +153,9 @@ class APIIndexhash(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collectionName: String, body: PostAPIIndexHash): Future[ArangoResponse] = client
+  def post(collectionName: String, body: PostAPIIndexHash): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#hash".withArguments(Map()))
+    .path(path"/_api/index#hash", append = true) 
     .params("collection-name" -> collectionName.toString)
-    .restful[PostAPIIndexHash, ArangoResponse](body)
+    .restful[PostAPIIndexHash, Json](body)
 }

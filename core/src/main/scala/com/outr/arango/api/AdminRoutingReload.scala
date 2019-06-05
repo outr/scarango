@@ -12,8 +12,8 @@ class AdminRoutingReload(client: HttpClient) {
   /**
   * Reloads the routing information from the collection *routing*.
   */
-  def post(): Future[ArangoResponse] = client
+  def post(): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_admin/routing/reload".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/routing/reload", append = true) 
+    .call[Json]
 }

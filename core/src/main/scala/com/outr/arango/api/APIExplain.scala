@@ -1206,8 +1206,8 @@ class APIExplain(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: PostAPIExplain): Future[ArangoResponse] = client
+  def post(body: PostAPIExplain): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/explain".withArguments(Map()))
-    .restful[PostAPIExplain, ArangoResponse](body)
+    .path(path"/_api/explain", append = true) 
+    .restful[PostAPIExplain, Json](body)
 }

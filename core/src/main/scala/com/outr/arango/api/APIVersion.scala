@@ -142,7 +142,7 @@ class APIVersion(client: HttpClient) {
   */
   def get(details: Option[Boolean] = None): Future[GetAPIReturnRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/version".withArguments(Map()))
+    .path(path"/_api/version", append = true) 
     .param[Option[Boolean]]("details", details, None)
     .call[GetAPIReturnRc200]
 }

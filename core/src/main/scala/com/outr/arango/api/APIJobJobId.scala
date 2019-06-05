@@ -72,10 +72,10 @@ class APIJobJobId(client: HttpClient) {
   * </code><code>
   * </code></pre>
   */
-  def get(jobId: String): Future[ArangoResponse] = client
+  def get(jobId: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/job/{job-id}".withArguments(Map("job-id" -> jobId)))
-    .call[ArangoResponse]
+    .path(path"/_api/job/{job-id}".withArguments(Map("job-id" -> jobId)), append = true)
+    .call[Json]
 
   /**
   * Returns the result of an async job identified by job-id. If the async job
@@ -187,8 +187,8 @@ class APIJobJobId(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(jobId: String): Future[ArangoResponse] = client
+  def put(jobId: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/job/{job-id}".withArguments(Map("job-id" -> jobId)))
-    .call[ArangoResponse]
+    .path(path"/_api/job/{job-id}".withArguments(Map("job-id" -> jobId)), append = true)
+    .call[Json]
 }

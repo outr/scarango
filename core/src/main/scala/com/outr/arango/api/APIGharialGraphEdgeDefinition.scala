@@ -132,12 +132,12 @@ class APIGharialGraphEdgeDefinition(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)))
+    .path(path"/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("dropCollections", dropCollections, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Change one specific edge definition.
@@ -304,10 +304,10 @@ class APIGharialGraphEdgeDefinition(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None, body: GeneralGraphEdgeDefinitionModifyHttpExamples): Future[ArangoResponse] = client
+  def put(graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None, body: GeneralGraphEdgeDefinitionModifyHttpExamples): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)))
+    .path(path"/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("dropCollections", dropCollections, None)
-    .restful[GeneralGraphEdgeDefinitionModifyHttpExamples, ArangoResponse](body)
+    .restful[GeneralGraphEdgeDefinitionModifyHttpExamples, Json](body)
 }

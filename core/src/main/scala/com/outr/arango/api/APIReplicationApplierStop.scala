@@ -57,8 +57,8 @@ class APIReplicationApplierStop(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(): Future[ArangoResponse] = client
+  def put(): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/applier-stop".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/replication/applier-stop", append = true) 
+    .call[Json]
 }

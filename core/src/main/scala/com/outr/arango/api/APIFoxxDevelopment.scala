@@ -16,11 +16,11 @@ class APIFoxxDevelopment(client: HttpClient) {
   * replace the service on all other coordinators with the version on this
   * coordinator.
   */
-  def delete(mount: String): Future[ArangoResponse] = client
+  def delete(mount: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/foxx/development".withArguments(Map()))
+    .path(path"/_api/foxx/development", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Puts the service into development mode.
@@ -34,9 +34,9 @@ class APIFoxxDevelopment(client: HttpClient) {
   * coordinators. This means you should treat your coordinators as inconsistent
   * as long as any service is running in development mode.
   */
-  def post(mount: String): Future[ArangoResponse] = client
+  def post(mount: String): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx/development".withArguments(Map()))
+    .path(path"/_api/foxx/development", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

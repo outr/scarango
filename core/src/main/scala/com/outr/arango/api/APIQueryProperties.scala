@@ -38,10 +38,10 @@ class APIQueryProperties(client: HttpClient) {
   *   can be used to save memory in case very long query strings are used. The
   *   value is specified in bytes.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/query/properties".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query/properties", append = true) 
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -75,8 +75,8 @@ class APIQueryProperties(client: HttpClient) {
   * After the properties have been changed, the current set of properties will
   * be returned in the HTTP response.
   */
-  def put(body: PutApiQueryProperties): Future[ArangoResponse] = client
+  def put(body: PutApiQueryProperties): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/query/properties".withArguments(Map()))
-    .restful[PutApiQueryProperties, ArangoResponse](body)
+    .path(path"/_api/query/properties", append = true) 
+    .restful[PutApiQueryProperties, Json](body)
 }

@@ -15,31 +15,31 @@ class APIFoxxDependencies(client: HttpClient) {
   * Returns an object mapping the dependency names to their definitions
   * including a human-friendly *title* and the *current* mount path (if any).
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/dependencies".withArguments(Map()))
+    .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Replaces the given service's dependencies.
   * 
   * Returns an object mapping all dependency names to their new mount paths.
   */
-  def patch(body: Json, mount: String): Future[ArangoResponse] = client
+  def patch(body: Json, mount: String): Future[Json] = client
     .method(HttpMethod.Patch)
-    .path(path"/_db/_system/_api/foxx/dependencies".withArguments(Map()))
+    .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 
   /**
   * Replaces the given service's dependencies completely.
   * 
   * Returns an object mapping all dependency names to their new mount paths.
   */
-  def put(body: Json, mount: String): Future[ArangoResponse] = client
+  def put(body: Json, mount: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/foxx/dependencies".withArguments(Map()))
+    .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

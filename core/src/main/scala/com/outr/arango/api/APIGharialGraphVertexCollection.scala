@@ -176,7 +176,7 @@ class APIGharialGraphVertexCollection(client: HttpClient) {
   */
   def delete(graph: String, collection: String, dropCollection: Option[Boolean] = None): Future[GeneralGraphVertexCollectionRemoveHttpExamplesRc200] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)))
+    .path(path"/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("dropCollection", dropCollection, None)
     .call[GeneralGraphVertexCollectionRemoveHttpExamplesRc200]
 
@@ -275,10 +275,10 @@ class APIGharialGraphVertexCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: Json): Future[ArangoResponse] = client
+  def post(graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: Json): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)))
+    .path(path"/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

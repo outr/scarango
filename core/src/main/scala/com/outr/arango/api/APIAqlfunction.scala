@@ -63,7 +63,7 @@ class APIAqlfunction(client: HttpClient) {
   */
   def get(namespace: Option[String] = None): Future[GetAPIAqlfunctionRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/aqlfunction".withArguments(Map()))
+    .path(path"/_api/aqlfunction", append = true) 
     .param[Option[String]]("namespace", namespace, None)
     .call[GetAPIAqlfunctionRc200]
 
@@ -146,6 +146,6 @@ class APIAqlfunction(client: HttpClient) {
   */
   def post(body: PostAPIAqlfunction): Future[PostAPIAqlfunctionRc200] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/aqlfunction".withArguments(Map()))
+    .path(path"/_api/aqlfunction", append = true) 
     .restful[PostAPIAqlfunction, PostAPIAqlfunctionRc200](body)
 }

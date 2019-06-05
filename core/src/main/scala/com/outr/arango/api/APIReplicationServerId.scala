@@ -33,8 +33,8 @@ class APIReplicationServerId(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/replication/server-id".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/replication/server-id", append = true) 
+    .call[Json]
 }

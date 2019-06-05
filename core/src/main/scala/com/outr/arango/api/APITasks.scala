@@ -80,7 +80,7 @@ class APITasks(client: HttpClient) {
   */
   def post(body: PostAPINewTasks): Future[PostAPINewTasksRc200] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/tasks".withArguments(Map()))
+    .path(path"/_api/tasks", append = true) 
     .restful[PostAPINewTasks, PostAPINewTasksRc200](body)
 
   /**
@@ -133,6 +133,6 @@ class APITasks(client: HttpClient) {
   */
   def get(): Future[GetAPITasksAllRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/tasks/".withArguments(Map()))
+    .path(path"/_api/tasks/", append = true) 
     .call[GetAPITasksAllRc200]
 }

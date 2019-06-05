@@ -17,10 +17,10 @@ class AdminServerMode(client: HttpClient) {
   * 
   * This is a public API so it does *not* require authentication.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/server/mode".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/server/mode", append = true) 
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -37,8 +37,8 @@ class AdminServerMode(client: HttpClient) {
   * 
   * This API so it *does require* authentication and administrative server rights.
   */
-  def put(body: PutAdminServerMode): Future[ArangoResponse] = client
+  def put(body: PutAdminServerMode): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_admin/server/mode".withArguments(Map()))
-    .restful[PutAdminServerMode, ArangoResponse](body)
+    .path(path"/_admin/server/mode", append = true) 
+    .restful[PutAdminServerMode, Json](body)
 }

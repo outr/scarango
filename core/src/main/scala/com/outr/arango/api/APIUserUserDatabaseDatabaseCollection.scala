@@ -37,8 +37,8 @@ class APIUserUserDatabaseDatabaseCollection(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def get(user: String, database: String, collection: String): Future[ArangoResponse] = client
+  def get(user: String, database: String, collection: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/user/{user}/database/{database}/{collection}".withArguments(Map("user" -> user, "database" -> database, "collection" -> collection)))
-    .call[ArangoResponse]
+    .path(path"/_api/user/{user}/database/{database}/{collection}".withArguments(Map("user" -> user, "database" -> database, "collection" -> collection)), append = true)
+    .call[Json]
 }

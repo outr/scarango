@@ -192,8 +192,8 @@ class APIReplicationMakeSlave(client: HttpClient) {
   * 
   * **Note**: this method is not supported on a coordinator in a cluster.
   */
-  def put(body: PutAPIReplicationMakeSlave): Future[ArangoResponse] = client
+  def put(body: PutAPIReplicationMakeSlave): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/replication/make-slave".withArguments(Map()))
-    .restful[PutAPIReplicationMakeSlave, ArangoResponse](body)
+    .path(path"/_api/replication/make-slave", append = true) 
+    .restful[PutAPIReplicationMakeSlave, Json](body)
 }

@@ -141,10 +141,10 @@ class APIGharialGraphEdgeCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: GeneralGraphEdgeCreateHttpExamples): Future[ArangoResponse] = client
+  def post(graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: GeneralGraphEdgeCreateHttpExamples): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/gharial/{graph}/edge/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)))
+    .path(path"/_api/gharial/{graph}/edge/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[GeneralGraphEdgeCreateHttpExamples, ArangoResponse](body)
+    .restful[GeneralGraphEdgeCreateHttpExamples, Json](body)
 }

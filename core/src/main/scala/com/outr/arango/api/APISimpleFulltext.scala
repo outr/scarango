@@ -92,8 +92,8 @@ class APISimpleFulltext(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleFulltext): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleFulltext): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/fulltext".withArguments(Map()))
-    .restful[PutAPISimpleFulltext, ArangoResponse](body)
+    .path(path"/_api/simple/fulltext", append = true) 
+    .restful[PutAPISimpleFulltext, Json](body)
 }

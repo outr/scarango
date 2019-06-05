@@ -98,8 +98,8 @@ class APISimpleWithinRectangle(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleWithinRectangle): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleWithinRectangle): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/within-rectangle".withArguments(Map()))
-    .restful[PutAPISimpleWithinRectangle, ArangoResponse](body)
+    .path(path"/_api/simple/within-rectangle", append = true) 
+    .restful[PutAPISimpleWithinRectangle, Json](body)
 }

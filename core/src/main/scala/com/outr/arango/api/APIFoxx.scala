@@ -24,11 +24,11 @@ class APIFoxx(client: HttpClient) {
   * - *name*: a string identifying the service type
   * - *version*: a semver-compatible version string
   */
-  def get(excludeSystem: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(excludeSystem: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx".withArguments(Map()))
+    .path(path"/_api/foxx", append = true) 
     .param[Option[Boolean]]("excludeSystem", excludeSystem, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Installs the given new service at the given mount path.
@@ -61,12 +61,12 @@ class APIFoxx(client: HttpClient) {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def post(mount: String, development: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(mount: String, development: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/foxx".withArguments(Map()))
+    .path(path"/_api/foxx", append = true) 
     .params("mount" -> mount.toString)
     .param[Option[Boolean]]("development", development, None)
     .param[Option[Boolean]]("setup", setup, None)
     .param[Option[Boolean]]("legacy", legacy, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

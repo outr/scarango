@@ -159,11 +159,11 @@ class APICollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(excludeSystem: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(excludeSystem: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection".withArguments(Map()))
+    .path(path"/_api/collection", append = true) 
     .param[Option[Boolean]]("excludeSystem", excludeSystem, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * Creates a new collection with a given name. The request must contain an
@@ -475,7 +475,7 @@ class APICollection(client: HttpClient) {
   */
   def post(body: PostAPICollection, waitForSyncReplication: Option[Int] = None, enforceReplicationFactor: Option[Int] = None): Future[CollectionInfo] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/collection".withArguments(Map()))
+    .path(path"/_api/collection", append = true) 
     .param[Option[Int]]("waitForSyncReplication", waitForSyncReplication, None)
     .param[Option[Int]]("enforceReplicationFactor", enforceReplicationFactor, None)
     .restful[PostAPICollection, CollectionInfo](body)

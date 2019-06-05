@@ -120,9 +120,9 @@ class APIIndexgeo(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collection: String, body: PostAPIIndexGeo): Future[ArangoResponse] = client
+  def post(collection: String, body: PostAPIIndexGeo): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#geo".withArguments(Map()))
+    .path(path"/_api/index#geo", append = true) 
     .params("collection" -> collection.toString)
-    .restful[PostAPIIndexGeo, ArangoResponse](body)
+    .restful[PostAPIIndexGeo, Json](body)
 }

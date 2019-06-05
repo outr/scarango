@@ -738,8 +738,8 @@ class APICursor(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: PostAPICursor): Future[ArangoResponse] = client
+  def post(body: PostAPICursor): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/cursor".withArguments(Map()))
-    .restful[PostAPICursor, ArangoResponse](body)
+    .path(path"/_api/cursor", append = true) 
+    .restful[PostAPICursor, Json](body)
 }

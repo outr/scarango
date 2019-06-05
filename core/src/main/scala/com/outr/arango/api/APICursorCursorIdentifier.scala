@@ -77,10 +77,10 @@ class APICursorCursorIdentifier(client: HttpClient) {
   * </code><code>
   * </code></pre>
   */
-  def delete(cursorIdentifier: String): Future[ArangoResponse] = client
+  def delete(cursorIdentifier: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)))
-    .call[ArangoResponse]
+    .path(path"/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)), append = true)
+    .call[Json]
 
   /**
   * If the cursor is still alive, returns an object with the following
@@ -193,8 +193,8 @@ class APICursorCursorIdentifier(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(cursorIdentifier: String): Future[ArangoResponse] = client
+  def put(cursorIdentifier: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)))
-    .call[ArangoResponse]
+    .path(path"/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)), append = true)
+    .call[Json]
 }

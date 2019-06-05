@@ -12,8 +12,8 @@ class AdminShutdown(client: HttpClient) {
   /**
   * This call initiates a clean shutdown sequence. Requires administrive privileges
   */
-  def delete(): Future[ArangoResponse] = client
+  def delete(): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_admin/shutdown".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/shutdown", append = true) 
+    .call[Json]
 }

@@ -62,9 +62,9 @@ class APIIndexgeneral(client: HttpClient) {
   * insert a value into the index that already exists in the index will always fail,
   * regardless of the value of this attribute.
   */
-  def post(collection: String, body: Json): Future[ArangoResponse] = client
+  def post(collection: String, body: Json): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#general".withArguments(Map()))
+    .path(path"/_api/index#general", append = true) 
     .params("collection" -> collection.toString)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }

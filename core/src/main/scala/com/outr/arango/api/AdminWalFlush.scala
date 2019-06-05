@@ -16,10 +16,10 @@ class AdminWalFlush(client: HttpClient) {
   * present in the collection journals and datafiles, for example, when dumping
   * the data of a collection.
   */
-  def put(waitForSync: Option[Boolean] = None, waitForCollector: Option[Boolean] = None): Future[ArangoResponse] = client
+  def put(waitForSync: Option[Boolean] = None, waitForCollector: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_admin/wal/flush".withArguments(Map()))
+    .path(path"/_admin/wal/flush", append = true) 
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("waitForCollector", waitForCollector, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

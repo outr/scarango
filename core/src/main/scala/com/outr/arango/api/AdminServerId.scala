@@ -13,8 +13,8 @@ class AdminServerId(client: HttpClient) {
   * Returns the id of a server in a cluster. The request will fail if the
   * server is not running in cluster mode.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/server/id".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/server/id", append = true) 
+    .call[Json]
 }

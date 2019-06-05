@@ -66,8 +66,8 @@ class AdminStatus(client: HttpClient) {
   * 
   * - *agent.term*: current term number.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/status".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/status", append = true) 
+    .call[Json]
 }

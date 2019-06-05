@@ -128,8 +128,8 @@ class APISimpleUpdateByExample(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleUpdateByExample): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleUpdateByExample): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/update-by-example".withArguments(Map()))
-    .restful[PutAPISimpleUpdateByExample, ArangoResponse](body)
+    .path(path"/_api/simple/update-by-example", append = true) 
+    .restful[PutAPISimpleUpdateByExample, Json](body)
 }

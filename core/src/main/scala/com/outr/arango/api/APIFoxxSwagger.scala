@@ -14,9 +14,9 @@ class APIFoxxSwagger(client: HttpClient) {
   * 
   * The response body will be an OpenAPI 2.0 compatible JSON description of the service API.
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/swagger".withArguments(Map()))
+    .path(path"/_api/foxx/swagger", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

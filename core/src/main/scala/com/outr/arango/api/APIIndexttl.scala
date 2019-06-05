@@ -61,9 +61,9 @@ class APIIndexttl(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collectionName: String, body: PostAPIIndexTtl): Future[ArangoResponse] = client
+  def post(collectionName: String, body: PostAPIIndexTtl): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/index#ttl".withArguments(Map()))
+    .path(path"/_api/index#ttl", append = true) 
     .params("collection-name" -> collectionName.toString)
-    .restful[PostAPIIndexTtl, ArangoResponse](body)
+    .restful[PostAPIIndexTtl, Json](body)
 }

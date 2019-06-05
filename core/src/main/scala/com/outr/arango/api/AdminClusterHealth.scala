@@ -39,8 +39,8 @@ class AdminClusterHealth(client: HttpClient) {
   *     - `Leading`: Whether this agent is the leader (true) or not (false).
   *     - `LastAckedTime`: Time since last `acked` in seconds.
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/cluster/health".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/cluster/health", append = true) 
+    .call[Json]
 }

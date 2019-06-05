@@ -40,10 +40,10 @@ class APIUserUserDatabaseDbnameCollection(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def delete(user: String, dbname: String, collection: String): Future[ArangoResponse] = client
+  def delete(user: String, dbname: String, collection: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/user/{user}/database/{dbname}/{collection}".withArguments(Map("user" -> user, "dbname" -> dbname, "collection" -> collection)))
-    .call[ArangoResponse]
+    .path(path"/_api/user/{user}/database/{dbname}/{collection}".withArguments(Map("user" -> user, "dbname" -> dbname, "collection" -> collection)), append = true)
+    .call[Json]
 
   /**
   * **A JSON object with these properties is required:**
@@ -88,8 +88,8 @@ class APIUserUserDatabaseDbnameCollection(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def put(body: UserHandlingGrantCollection, user: String, dbname: String, collection: String): Future[ArangoResponse] = client
+  def put(body: UserHandlingGrantCollection, user: String, dbname: String, collection: String): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/user/{user}/database/{dbname}/{collection}".withArguments(Map("user" -> user, "dbname" -> dbname, "collection" -> collection)))
-    .restful[UserHandlingGrantCollection, ArangoResponse](body)
+    .path(path"/_api/user/{user}/database/{dbname}/{collection}".withArguments(Map("user" -> user, "dbname" -> dbname, "collection" -> collection)), append = true)
+    .restful[UserHandlingGrantCollection, Json](body)
 }

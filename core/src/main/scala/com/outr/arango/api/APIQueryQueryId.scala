@@ -13,8 +13,8 @@ class APIQueryQueryId(client: HttpClient) {
   * Kills a running query. The query will be terminated at the next cancelation
   * point.
   */
-  def delete(queryId: String): Future[ArangoResponse] = client
+  def delete(queryId: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/query/{query-id}".withArguments(Map("query-id" -> queryId)))
-    .call[ArangoResponse]
+    .path(path"/_api/query/{query-id}".withArguments(Map("query-id" -> queryId)), append = true)
+    .call[Json]
 }

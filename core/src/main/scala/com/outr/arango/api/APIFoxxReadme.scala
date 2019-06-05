@@ -12,9 +12,9 @@ class APIFoxxReadme(client: HttpClient) {
   /**
   * Fetches the service's README or README.md file's contents if any.
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/readme".withArguments(Map()))
+    .path(path"/_api/foxx/readme", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

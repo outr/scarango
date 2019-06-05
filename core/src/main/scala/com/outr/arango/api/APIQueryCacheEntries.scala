@@ -34,8 +34,8 @@ class APIQueryCacheEntries(client: HttpClient) {
   * 
   * - *dataSources*: an array of collections/views the query was using
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/query-cache/entries".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/query-cache/entries", append = true) 
+    .call[Json]
 }

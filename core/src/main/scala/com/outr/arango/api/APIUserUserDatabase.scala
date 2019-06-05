@@ -91,9 +91,9 @@ class APIUserUserDatabase(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def get(user: String, full: Option[Boolean] = None): Future[ArangoResponse] = client
+  def get(user: String, full: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/user/{user}/database/".withArguments(Map("user" -> user)))
+    .path(path"/_api/user/{user}/database/".withArguments(Map("user" -> user)), append = true)
     .param[Option[Boolean]]("full", full, None)
-    .call[ArangoResponse]
+    .call[Json]
 }

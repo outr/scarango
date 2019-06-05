@@ -28,6 +28,6 @@ class APIClusterEndpoints(client: HttpClient) {
   */
   def get(): Future[GetAPIClusterEndpointsRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/cluster/endpoints".withArguments(Map()))
+    .path(path"/_api/cluster/endpoints", append = true) 
     .call[GetAPIClusterEndpointsRc200]
 }

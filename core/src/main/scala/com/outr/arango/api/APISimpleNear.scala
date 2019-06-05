@@ -171,8 +171,8 @@ class APISimpleNear(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def put(body: PutAPISimpleNear): Future[ArangoResponse] = client
+  def put(body: PutAPISimpleNear): Future[Json] = client
     .method(HttpMethod.Put)
-    .path(path"/_db/_system/_api/simple/near".withArguments(Map()))
-    .restful[PutAPISimpleNear, ArangoResponse](body)
+    .path(path"/_api/simple/near", append = true) 
+    .restful[PutAPISimpleNear, Json](body)
 }

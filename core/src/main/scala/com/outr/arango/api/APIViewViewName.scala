@@ -55,10 +55,10 @@ class APIViewViewName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(viewName: String): Future[ArangoResponse] = client
+  def delete(viewName: String): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/view/{view-name}".withArguments(Map("view-name" -> viewName)))
-    .call[ArangoResponse]
+    .path(path"/_api/view/{view-name}".withArguments(Map("view-name" -> viewName)), append = true)
+    .call[Json]
 
   /**
   * The result is an object describing the view with the following attributes:
@@ -110,8 +110,8 @@ class APIViewViewName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(viewName: String): Future[ArangoResponse] = client
+  def get(viewName: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/view/{view-name}".withArguments(Map("view-name" -> viewName)))
-    .call[ArangoResponse]
+    .path(path"/_api/view/{view-name}".withArguments(Map("view-name" -> viewName)), append = true)
+    .call[Json]
 }

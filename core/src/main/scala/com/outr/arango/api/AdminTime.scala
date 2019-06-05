@@ -25,6 +25,6 @@ class AdminTime(client: HttpClient) {
   */
   def get(): Future[GetAdminTimeRc200] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/time".withArguments(Map()))
+    .path(path"/_admin/time", append = true) 
     .call[GetAdminTimeRc200]
 }

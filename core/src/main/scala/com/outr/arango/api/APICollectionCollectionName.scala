@@ -85,11 +85,11 @@ class APICollectionCollectionName(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def delete(collectionName: String, isSystem: Option[Boolean] = None): Future[ArangoResponse] = client
+  def delete(collectionName: String, isSystem: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_db/_system/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)))
+    .path(path"/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)), append = true)
     .param[Option[Boolean]]("isSystem", isSystem, None)
-    .call[ArangoResponse]
+    .call[Json]
 
   /**
   * The result is an object describing the collection with the following
@@ -126,8 +126,8 @@ class APICollectionCollectionName(client: HttpClient) {
   * 
   * <!-- Hints End -->
   */
-  def get(collectionName: String): Future[ArangoResponse] = client
+  def get(collectionName: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)))
-    .call[ArangoResponse]
+    .path(path"/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)), append = true)
+    .call[Json]
 }

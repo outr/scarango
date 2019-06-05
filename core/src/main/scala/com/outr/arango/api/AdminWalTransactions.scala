@@ -39,8 +39,8 @@ class AdminWalTransactions(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_admin/wal/transactions".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_admin/wal/transactions", append = true) 
+    .call[Json]
 }

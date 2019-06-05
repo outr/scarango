@@ -61,10 +61,10 @@ class APIUser(client: HttpClient) {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def post(body: UserHandlingCreate): Future[ArangoResponse] = client
+  def post(body: UserHandlingCreate): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/user".withArguments(Map()))
-    .restful[UserHandlingCreate, ArangoResponse](body)
+    .path(path"/_api/user", append = true) 
+    .restful[UserHandlingCreate, Json](body)
 
   /**
   * Fetches data about all users.  You need the *Administrate* server access level
@@ -116,8 +116,8 @@ class APIUser(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(): Future[ArangoResponse] = client
+  def get(): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/user/".withArguments(Map()))
-    .call[ArangoResponse]
+    .path(path"/_api/user/", append = true) 
+    .call[Json]
 }

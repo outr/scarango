@@ -29,8 +29,8 @@ class APIReplicationBatch(client: HttpClient) {
   * The very same request is forwarded synchronously to that DBserver.
   * It is an error if this attribute is not bound in the coordinator case.
   */
-  def post(body: PostBatchReplication): Future[ArangoResponse] = client
+  def post(body: PostBatchReplication): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/replication/batch".withArguments(Map()))
-    .restful[PostBatchReplication, ArangoResponse](body)
+    .path(path"/_api/replication/batch", append = true) 
+    .restful[PostBatchReplication, Json](body)
 }

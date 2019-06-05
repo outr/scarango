@@ -7,7 +7,7 @@ scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
 
-val youiVersion = "0.11.2"
+val youiVersion = "0.11.4-SNAPSHOT"
 val scalaTestVersion = "3.0.5"
 
 lazy val root = project.in(file("."))

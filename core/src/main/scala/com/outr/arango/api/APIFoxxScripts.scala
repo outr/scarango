@@ -14,9 +14,9 @@ class APIFoxxScripts(client: HttpClient) {
   * 
   * Returns an object mapping the raw script names to human-friendly names.
   */
-  def get(mount: String): Future[ArangoResponse] = client
+  def get(mount: String): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_db/_system/_api/foxx/scripts".withArguments(Map()))
+    .path(path"/_api/foxx/scripts", append = true) 
     .params("mount" -> mount.toString)
-    .call[ArangoResponse]
+    .call[Json]
 }

@@ -299,9 +299,9 @@ class APIImportjson(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(body: Json, `type`: String, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(body: Json, `type`: String, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_db/_system/_api/import#json".withArguments(Map()))
+    .path(path"/_api/import#json", append = true) 
     .params("type" -> `type`.toString)
     .params("collection" -> collection.toString)
     .param[Option[String]]("fromPrefix", fromPrefix, None)
@@ -311,5 +311,5 @@ class APIImportjson(client: HttpClient) {
     .param[Option[String]]("onDuplicate", onDuplicate, None)
     .param[Option[Boolean]]("complete", complete, None)
     .param[Option[Boolean]]("details", details, None)
-    .restful[Json, ArangoResponse](body)
+    .restful[Json, Json](body)
 }
