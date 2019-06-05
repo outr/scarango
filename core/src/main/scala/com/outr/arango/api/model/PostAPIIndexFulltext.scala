@@ -5,7 +5,7 @@ import io.circe.Json
 /**
   * PostAPIIndexFulltext
   *
-  * @param type must be equal to {@literal *}"fulltext"{@literal *}.
+  * @param type must be equal to *"fulltext"*.
   * @param fields an array of attribute names. Currently, the array is limited
   *        to exactly one attribute.
   * @param minLength Minimum character length of words to index. Will default

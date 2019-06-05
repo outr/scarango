@@ -10,7 +10,7 @@ import scribe.Execution.global
       
 class AdminStatisticsDescription(client: HttpClient) {
   /**
-  * Returns a description of the statistics returned by */_admin/statistics*.
+  * Returns a description of the statistics returned by {@literal *}/_admin/statistics*.
   * The returned objects contains an array of statistics groups in the attribute
   * *groups* and an array of statistics figures in the attribute *figures*.
   * 

@@ -5,13 +5,13 @@ import io.circe.Json
 /**
   * PutAPISimpleRemoveByKeysOpts
   *
-  * @param returnOld if set to {@literal *}true{@literal *} and {@literal *}silent{@literal *} above is {@literal *}false{@literal *}, then the above
+  * @param returnOld if set to *true* and *silent* above is *false*, then the above
   *        information about the removed documents contains the complete
   *        removed documents.
-  * @param silent if set to {@literal *}false{@literal *}, then the result will contain an additional
-  *        attribute {@literal *}old{@literal *} which contains an array with one entry for each
-  *        removed document. By default, these entries will have the {@literal *}_id{@literal *},
-  *        {@literal *}_key{@literal *} and {@literal *}_rev{@literal *} attributes.
+  * @param silent if set to *false*, then the result will contain an additional
+  *        attribute *old* which contains an array with one entry for each
+  *        removed document. By default, these entries will have the *_id*,
+  *        *_key* and *_rev* attributes.
   * @param waitForSync if set to true, then all removal operations will
   *        instantly be synchronized to disk. If this is not specified, then the
   *        collection's default sync behavior will be applied.

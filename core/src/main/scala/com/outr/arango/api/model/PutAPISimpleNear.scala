@@ -10,8 +10,8 @@ import io.circe.Json
   *        the given coordinate. (optional). If specified, distances are returned in meters.
   * @param geo If given, the identifier of the geo-index to use. (optional)
   * @param latitude The latitude of the coordinate.
-  * @param limit The maximal amount of documents to return. The {@literal *}skip{@literal *} is
-  *        applied before the {@literal *}limit{@literal *} restriction. The default is 100. (optional)
+  * @param limit The maximal amount of documents to return. The *skip* is
+  *        applied before the *limit* restriction. The default is 100. (optional)
   * @param longitude The longitude of the coordinate.
   * @param skip The number of documents to skip in the query. (optional)
   *

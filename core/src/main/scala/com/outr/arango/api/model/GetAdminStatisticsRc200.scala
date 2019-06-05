@@ -5,10 +5,10 @@ import io.circe.Json
 /**
   * GetAdminStatisticsRc200
   *
-  * @param error boolean flag to indicate whether an error occurred ({@literal *}false{@literal *} in this case)
+  * @param error boolean flag to indicate whether an error occurred (*false* in this case)
   * @param client *** No description ***
   * @param code the HTTP status code - 200 in this case
-  * @param enabled {@literal *}true{@literal *} if the server has the statistics module enabled. If not, don't expect any values.
+  * @param enabled *true* if the server has the statistics module enabled. If not, don't expect any values.
   * @param errorMessage a descriptive error message
   * @param http *** No description ***
   * @param server *** No description ***

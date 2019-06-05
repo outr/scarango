@@ -6,12 +6,12 @@ import io.circe.Json
   * PutAPISimpleUpdateByExampleOptions
   *
   * @param keepNull This parameter can be used to modify the behavior when
-  *        handling {@literal *}null{@literal *} values. Normally, {@literal *}null{@literal *} values are stored in the
-  *        database. By setting the {@literal *}keepNull{@literal *} parameter to {@literal *}false{@literal *}, this
-  *        behavior can be changed so that all attributes in {@literal *}data{@literal *} with {@literal *}null{@literal *}
+  *        handling *null* values. Normally, *null* values are stored in the
+  *        database. By setting the *keepNull* parameter to *false*, this
+  *        behavior can be changed so that all attributes in *data* with *null*
   *        values will be removed from the updated document.
   * @param limit an optional value that determines how many documents to
-  *        update at most. If {@literal *}limit{@literal *} is specified but is less than the number
+  *        update at most. If *limit* is specified but is less than the number
   *        of documents in the collection, it is undefined which of the documents
   *        will be updated.
   * @param mergeObjects Controls whether objects (not arrays) will be merged if present in both the

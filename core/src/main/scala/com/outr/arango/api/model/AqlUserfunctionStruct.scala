@@ -9,7 +9,7 @@ import io.circe.Json
   * @param isDeterministic an optional boolean value to indicate whether the function
   *        results are fully deterministic (function return value solely depends on
   *        the input value and return value is the same for repeated calls with same
-  *        input). The {@literal *}isDeterministic{@literal *} attribute is currently not used but may be
+  *        input). The *isDeterministic* attribute is currently not used but may be
   *        used later for optimizations.
   * @param name The fully qualified name of the user function
   *

@@ -6,7 +6,7 @@ import io.circe.Json
   * PutAPISimpleRemoveByExampleOpts
   *
   * @param limit an optional value that determines how many documents to
-  *        delete at most. If {@literal *}limit{@literal *} is specified but is less than the number
+  *        delete at most. If *limit* is specified but is less than the number
   *        of documents in the collection, it is undefined which of the documents
   *        will be deleted.
   * @param waitForSync if set to true, then all removal operations will

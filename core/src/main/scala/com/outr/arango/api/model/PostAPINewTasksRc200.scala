@@ -10,7 +10,7 @@ import io.circe.Json
   * @param command the javascript function for this task
   * @param created The timestamp when this task was created
   * @param database the database this task belongs to
-  * @param error {@literal *}false{@literal *} in this case
+  * @param error *false* in this case
   * @param offset time offset in seconds from the created timestamp
   * @param period this task should run each `period` seconds
   * @param type What type of task is this [ `periodic`, `timed`]

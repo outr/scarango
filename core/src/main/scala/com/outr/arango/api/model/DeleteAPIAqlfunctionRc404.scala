@@ -5,7 +5,7 @@ import io.circe.Json
 /**
   * DeleteAPIAqlfunctionRc404
   *
-  * @param error boolean flag to indicate whether an error occurred ({@literal *}true{@literal *} in this case)
+  * @param error boolean flag to indicate whether an error occurred (*true* in this case)
   * @param code the HTTP status code
   * @param errorMessage a descriptive error message
   * @param errorNum the server error number

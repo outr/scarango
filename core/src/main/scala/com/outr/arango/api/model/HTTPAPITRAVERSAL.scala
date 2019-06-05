@@ -5,44 +5,44 @@ import io.circe.Json
 /**
   * HTTPAPITRAVERSAL
   *
-  * @param startVertex id of the startVertex, e.g. {@literal *}"users/foo"{@literal *}.
+  * @param startVertex id of the startVertex, e.g. *"users/foo"*.
   * @param direction direction for traversal
-  *        - {@literal *}if set{@literal *}, must be either {@literal *}"outbound"{@literal *}, {@literal *}"inbound"{@literal *}, or {@literal *}"any"{@literal *}
-  *        - {@literal *}if not set{@literal *}, the {@literal *}expander{@literal *} attribute must be specified
+  *        - *if set*, must be either *"outbound"*, *"inbound"*, or *"any"*
+  *        - *if not set*, the *expander* attribute must be specified
   * @param edgeCollection name of the collection that contains the edges.
   * @param expander body (JavaScript) code of custom expander function
-  *        {@literal *}must{@literal *} be set if {@literal *}direction{@literal *} attribute is {@literal *}{@literal *}not{@literal *}{@literal *} set
-  *        function signature: {@literal *}(config, vertex, path) -> array{@literal *}
-  *        expander must return an array of the connections for {@literal *}vertex{@literal *}
-  *        each connection is an object with the attributes {@literal *}edge{@literal *} and {@literal *}vertex{@literal *}
+  *        *must* be set if *direction* attribute is **not** set
+  *        function signature: *(config, vertex, path) -> array*
+  *        expander must return an array of the connections for *vertex*
+  *        each connection is an object with the attributes *edge* and *vertex*
   * @param filter default is to include all nodes:
   *        body (JavaScript code) of custom filter function
-  *        function signature: {@literal *}(config, vertex, path) -> mixed{@literal *}
+  *        function signature: *(config, vertex, path) -> mixed*
   *        can return four different string values:
-  *        - {@literal *}"exclude"{@literal *} -> this vertex will not be visited.
-  *        - {@literal *}"prune"{@literal *} -> the edges of this vertex will not be followed.
-  *        - {@literal *}""{@literal *} or {@literal *}undefined{@literal *} -> visit the vertex and follow its edges.
-  *        - {@literal *}Array{@literal *} -> containing any combination of the above.
-  *          If there is at least one {@literal *}"exclude"{@literal *} or {@literal *}"prune"{@literal *} respectively
+  *        - *"exclude"* -> this vertex will not be visited.
+  *        - *"prune"* -> the edges of this vertex will not be followed.
+  *        - *""* or *undefined* -> visit the vertex and follow its edges.
+  *        - *Array* -> containing any combination of the above.
+  *          If there is at least one *"exclude"* or *"prune"* respectively
   *          is contained, it's effect will occur.
   * @param graphName name of the graph that contains the edges.
-  *        Either {@literal *}edgeCollection{@literal *} or {@literal *}graphName{@literal *} has to be given.
-  *        In case both values are set the {@literal *}graphName{@literal *} is preferred.
+  *        Either *edgeCollection* or *graphName* has to be given.
+  *        In case both values are set the *graphName* is preferred.
   * @param init body (JavaScript) code of custom result initialization function
-  *        function signature: {@literal *}(config, result) -> void{@literal *}
+  *        function signature: *(config, result) -> void*
   *        initialize any values in result with what is required
-  * @param itemOrder item iteration order can be {@literal *}"forward"{@literal *} or {@literal *}"backward"{@literal *}
+  * @param itemOrder item iteration order can be *"forward"* or *"backward"*
   * @param maxDepth ANDed with any existing filters visits only nodes in at most the given depth
   * @param maxIterations Maximum number of iterations in each traversal. This number can be
   *        set to prevent endless loops in traversal of cyclic graphs. When a traversal performs
-  *        as many iterations as the {@literal *}maxIterations{@literal *} value, the traversal will abort with an
-  *        error. If {@literal *}maxIterations{@literal *} is not set, a server-defined value may be used.
+  *        as many iterations as the *maxIterations* value, the traversal will abort with an
+  *        error. If *maxIterations* is not set, a server-defined value may be used.
   * @param minDepth ANDed with any existing filters):
   *        visits only nodes in at least the given depth
-  * @param order traversal order can be {@literal *}"preorder"{@literal *}, {@literal *}"postorder"{@literal *} or {@literal *}"preorder-expander"{@literal *}
+  * @param order traversal order can be *"preorder"*, *"postorder"* or *"preorder-expander"*
   * @param sort body (JavaScript) code of a custom comparison function
   *        for the edges. The signature of this function is
-  *        {@literal *}(l, r) -> integer{@literal *} (where l and r are edges) and must
+  *        *(l, r) -> integer* (where l and r are edges) and must
   *        return -1 if l is smaller than, +1 if l is greater than,
   *        and 0 if l and r are equal. The reason for this is the
   *        following: The order of edges returned for a certain
@@ -56,17 +56,17 @@ import io.circe.Json
   *        note that this attribute is only used for the standard
   *        expanders. If you use your custom expander you have to
   *        do the sorting yourself within the expander code.
-  * @param strategy traversal strategy can be {@literal *}"depthfirst"{@literal *} or {@literal *}"breadthfirst"{@literal *}
+  * @param strategy traversal strategy can be *"depthfirst"* or *"breadthfirst"*
   * @param uniqueness specifies uniqueness for vertices and edges visited.
   *        If set, must be an object like this:
   *        
   *        `"uniqueness": {"vertices": "none"|"global"|"path", "edges": "none"|"global"|"path"}`
   * @param visitor body (JavaScript) code of custom visitor function
-  *        function signature: {@literal *}(config, result, vertex, path, connected) -> void{@literal *}
+  *        function signature: *(config, result, vertex, path, connected) -> void*
   *        The visitor function can do anything, but its return value is ignored. To
-  *        populate a result, use the {@literal *}result{@literal *} variable by reference. Note that the
-  *        {@literal *}connected{@literal *} argument is only populated when the {@literal *}order{@literal *} attribute is set
-  *        to {@literal *}"preorder-expander"{@literal *}.
+  *        populate a result, use the *result* variable by reference. Note that the
+  *        *connected* argument is only populated when the *order* attribute is set
+  *        to *"preorder-expander"*.
   *
   * WARNING: This code is generated by youi-plugin's generateHttpClient. Do not modify directly.
   */

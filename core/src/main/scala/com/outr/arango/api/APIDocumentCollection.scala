@@ -454,10 +454,9 @@ class APIDocumentCollection(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def post(collection: String, body: Json, collection: Option[String] = None, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[ArangoResponse] = client
+  def post(collection: String, body: Json, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, overwrite: Option[Boolean] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Post)
     .path(path"/_db/_system/_api/document/{collection}".withArguments(Map("collection" -> collection)))
-    .param[Option[String]]("collection", collection, None)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)

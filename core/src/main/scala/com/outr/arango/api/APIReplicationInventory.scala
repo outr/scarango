@@ -41,27 +41,27 @@ class APIReplicationInventory(client: HttpClient) {
   * To create a full copy of the collections on the server, a replication client
   * can execute these steps:
   * 
-  * - call the */inventory* API method. This returns the *lastLogTick* value and the
+  * - call the {@literal *}/inventory* API method. This returns the *lastLogTick* value and the
   *   array of collections and indexes from the server.
   * 
-  * - for each collection returned by */inventory*, create the collection locally and
-  *   call */dump* to stream the collection data to the client, up to the value of
+  * - for each collection returned by {@literal *}/inventory*, create the collection locally and
+  *   call {@literal *}/dump* to stream the collection data to the client, up to the value of
   *   *lastLogTick*.
   *   After that, the client can create the indexes on the collections as they were
-  *   reported by */inventory*.
+  *   reported by {@literal *}/inventory*.
   * 
   * If the clients wants to continuously stream replication log events from the logger
   * server, the following additional steps need to be carried out:
   * 
-  * - the client should call */logger-follow* initially to fetch the first batch of
-  *   replication events that were logged after the client's call to */inventory*.
+  * - the client should call {@literal *}/logger-follow* initially to fetch the first batch of
+  *   replication events that were logged after the client's call to {@literal *}/inventory*.
   * 
-  *   The call to */logger-follow* should use a *from* parameter with the value of the
-  *   *lastLogTick* as reported by */inventory*. The call to */logger-follow* will return the
+  *   The call to {@literal *}/logger-follow* should use a *from* parameter with the value of the
+  *   *lastLogTick* as reported by {@literal *}/inventory*. The call to {@literal *}/logger-follow* will return the
   *   *x-arango-replication-lastincluded* which will contain the last tick value included
   *   in the response.
   * 
-  * - the client can then continuously call */logger-follow* to incrementally fetch new
+  * - the client can then continuously call {@literal *}/logger-follow* to incrementally fetch new
   *   replication events that occurred after the last transfer.
   * 
   *   Calls should use a *from* parameter with the value of the *x-arango-replication-lastincluded*
@@ -886,11 +886,11 @@ class APIReplicationInventory(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(includeSystem: Option[Boolean] = None, global: Option[Boolean] = None, batchId: Double): Future[ArangoResponse] = client
+  def get(includeSystem: Option[Boolean] = None, _global: Option[Boolean] = None, batchId: Double): Future[ArangoResponse] = client
     .method(HttpMethod.Get)
     .path(path"/_db/_system/_api/replication/inventory".withArguments(Map()))
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
-    .param[Option[Boolean]]("global", global, None)
+    .param[Option[Boolean]]("global", _global, None)
     .params("batchId" -> batchId.toString)
     .call[ArangoResponse]
 }

@@ -18,7 +18,7 @@ import io.circe.Json
   * @param rawRequestBody List of digits of the sent characters
   * @param rawSuffix *** No description ***
   * @param requestBody stringified version of the POST body we sent
-  * @param requestType In this case {@literal *}POST{@literal *}, if you use another HTTP-Verb, you will se that (GET/DELETE, ...)
+  * @param requestType In this case *POST*, if you use another HTTP-Verb, you will se that (GET/DELETE, ...)
   * @param server *** No description ***
   * @param suffix *** No description ***
   * @param url the raw request URL

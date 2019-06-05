@@ -5,12 +5,12 @@ import io.circe.Json
 /**
   * PostAPIExport
   *
-  * @param flush if set to {@literal *}true{@literal *}, a WAL flush operation will be executed prior to the
+  * @param flush if set to *true*, a WAL flush operation will be executed prior to the
   *        export. The flush operation will start copying documents from the WAL to the
   *        collection's datafiles. There will be an additional wait time of up
-  *        to {@literal *}flushWait{@literal *} seconds after the flush to allow the WAL collector to change
+  *        to *flushWait* seconds after the flush to allow the WAL collector to change
   *        the adjusted document meta-data to point into the datafiles, too.
-  *        The default value is {@literal *}false{@literal *} (i.e. no flush) so most recently inserted or
+  *        The default value is *false* (i.e. no flush) so most recently inserted or
   *        updated
   *        documents from the collection might be missing in the export.
   * @param batchSize maximum number of result documents to be transferred from
@@ -23,9 +23,9 @@ import io.circe.Json
   *        impact so this option is turned off by default, and "count" is only returned
   *        when requested.
   * @param flushWait maximum wait time in seconds after a flush operation. The default
-  *        value is 10. This option only has an effect when {@literal *}flush{@literal *} is set to {@literal *}true{@literal *}.
+  *        value is 10. This option only has an effect when *flush* is set to *true*.
   * @param limit an optional limit value, determining the maximum number of documents to
-  *        be included in the cursor. Omitting the {@literal *}limit{@literal *} attribute or setting it to 0 will
+  *        be included in the cursor. Omitting the *limit* attribute or setting it to 0 will
   *        lead to no limit being used. If a limit is used, it is undefined which documents
   *        from the collection will be included in the export and which will be excluded. 
   *        This is because there is no natural order of documents in a collection.

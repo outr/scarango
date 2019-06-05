@@ -5,7 +5,7 @@ import io.circe.Json
 /**
   * GetAPIAqlfunctionRc200
   *
-  * @param error boolean flag to indicate whether an error occurred ({@literal *}false{@literal *} in this case)
+  * @param error boolean flag to indicate whether an error occurred (*false* in this case)
   * @param code the HTTP status code
   * @param result *** No description ***
   *

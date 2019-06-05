@@ -5,7 +5,7 @@ import io.circe.Json
 /**
   * GetAdminTimeRc200
   *
-  * @param error boolean flag to indicate whether an error occurred ({@literal *}false{@literal *} in this case)
+  * @param error boolean flag to indicate whether an error occurred (*false* in this case)
   * @param code the HTTP status code
   * @param time The current system time as a Unix timestamp with microsecond precision of the server
   *

@@ -179,13 +179,13 @@ class APIWalTail(client: HttpClient) {
   * </code><code>}
   * </code></pre>
   */
-  def get(from: Option[Double] = None, to: Option[Double] = None, lastScanned: Option[Double] = None, global: Option[Boolean] = None, chunkSize: Option[Double] = None, serverId: Option[Double] = None, barrierId: Option[Double] = None): Future[ArangoResponse] = client
+  def get(from: Option[Double] = None, to: Option[Double] = None, lastScanned: Option[Double] = None, _global: Option[Boolean] = None, chunkSize: Option[Double] = None, serverId: Option[Double] = None, barrierId: Option[Double] = None): Future[ArangoResponse] = client
     .method(HttpMethod.Get)
     .path(path"/_db/_system/_api/wal/tail".withArguments(Map()))
     .param[Option[Double]]("from", from, None)
     .param[Option[Double]]("to", to, None)
     .param[Option[Double]]("lastScanned", lastScanned, None)
-    .param[Option[Boolean]]("global", global, None)
+    .param[Option[Boolean]]("global", _global, None)
     .param[Option[Double]]("chunkSize", chunkSize, None)
     .param[Option[Double]]("serverId", serverId, None)
     .param[Option[Double]]("barrierId", barrierId, None)

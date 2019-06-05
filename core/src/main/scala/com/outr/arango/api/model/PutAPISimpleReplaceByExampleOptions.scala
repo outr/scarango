@@ -6,7 +6,7 @@ import io.circe.Json
   * PutAPISimpleReplaceByExampleOptions
   *
   * @param limit an optional value that determines how many documents to
-  *        replace at most. If {@literal *}limit{@literal *} is specified but is less than the number
+  *        replace at most. If *limit* is specified but is less than the number
   *        of documents in the collection, it is undefined which of the documents
   *        will be replaced.
   * @param waitForSync if set to true, then all removal operations will

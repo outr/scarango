@@ -10,7 +10,7 @@ import io.circe.Json
   *        specified, this will default to true
   * @param extra An optional JSON object with arbitrary extra data about the user.
   * @param passwd The user password as a string. If no password is specified, the empty string
-  *        will be used. If you pass the special value {@literal *}ARANGODB_DEFAULT_ROOT_PASSWORD{@literal *},
+  *        will be used. If you pass the special value *ARANGODB_DEFAULT_ROOT_PASSWORD*,
   *        then the password will be set the value stored in the environment variable
   *        `ARANGODB_DEFAULT_ROOT_PASSWORD`. This can be used to pass an instance
   *        variable into ArangoDB. For example, the instance identifier from Amazon.

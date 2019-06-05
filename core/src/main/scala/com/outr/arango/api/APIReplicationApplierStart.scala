@@ -20,7 +20,7 @@ class APIReplicationApplierStart(client: HttpClient) {
   * method.
   * 
   * To detect replication applier errors after the applier was started, use the
-  * */_api/replication/applier-state* API instead.
+  * {@literal *}/_api/replication/applier-state* API instead.
   * 
   * 
   * 

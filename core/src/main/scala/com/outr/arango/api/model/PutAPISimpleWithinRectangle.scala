@@ -9,8 +9,8 @@ import io.circe.Json
   * @param geo If given, the identifier of the geo-index to use. (optional)
   * @param latitude1 The latitude of the first rectangle coordinate.
   * @param latitude2 The latitude of the second rectangle coordinate.
-  * @param limit The maximal amount of documents to return. The {@literal *}skip{@literal *} is
-  *        applied before the {@literal *}limit{@literal *} restriction. The default is 100. (optional)
+  * @param limit The maximal amount of documents to return. The *skip* is
+  *        applied before the *limit* restriction. The default is 100. (optional)
   * @param longitude1 The longitude of the first rectangle coordinate.
   * @param longitude2 The longitude of the second rectangle coordinate.
   * @param skip The number of documents to skip in the query. (optional)
