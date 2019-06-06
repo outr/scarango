@@ -5,10 +5,10 @@ import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
 
-class ArangoDBSpec extends AsyncWordSpec with Matchers {
+class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
 
-  "ArangoDB" should {
+  "ArangoDatabase" should {
     "initialize configuration" in {
       Profig.loadDefaults()
       succeed

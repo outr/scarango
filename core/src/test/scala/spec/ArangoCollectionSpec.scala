@@ -1,14 +1,14 @@
 package spec
 
-import com.outr.arango.{ArangoDB, Credentials, DatabaseState}
+import com.outr.arango.{ArangoDB, DatabaseState}
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
 
-class ArangoDBCollectionSpec extends AsyncWordSpec with Matchers {
+class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
 
-  "ArangoDBCollection" should {
+  "ArangoCollection" should {
     lazy val dbExample = db.api.db("collectionExample")
 
     "initialize configuration" in {
