@@ -1,6 +1,7 @@
 package com.outr.arango
 
-import com.outr.arango.api.{APIDatabase, APIDatabaseCurrent, APIDatabaseUser}
+import com.outr.arango.api.model.GetAPIDatabaseNew
+import com.outr.arango.api.{APIDatabase, APIDatabaseCurrent, APIDatabaseDatabaseName, APIDatabaseUser}
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
 import io.circe.Json
 import io.youi.client.{ClientException, HttpClient}
@@ -33,6 +34,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     val client = httpClient
       .url(baseURL)
       .path(Path.parse(s"/_db/$database/"))
+      .noFailOnHttpStatus
     val futureSession = credentials match {
       case Some(c) => client
         .path(path"/_open/auth")
@@ -68,12 +70,26 @@ class ArangoDB(val database: String = ArangoDB.config.db,
         }
         future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
       }
+
+      def apply(name: String): Database = Database(name)
     }
   }
 
   def dispose(): Unit = _state := DatabaseState.Uninitialized
 
   case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
+
+  case class Database(name: String) {
+    def create(): Future[ArangoResponse[Boolean]] = {
+      APIDatabase.post(client, GetAPIDatabaseNew(
+        name = name
+      )).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
+      // TODO: Support setting user
+    }
+    def drop(): Future[ArangoResponse[Boolean]] = {
+      APIDatabaseDatabaseName.delete(client, name).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
+    }
+  }
 }
 
 object ArangoDB {

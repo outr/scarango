@@ -35,17 +35,33 @@ class ArangoDBSpec extends AsyncWordSpec with Matchers {
     }
     "get the current database" in {
       db.api.db.current.map { response =>
-        response.result.name should be("_system")
+        response.value.name should be("_system")
       }
     }
     "list the databases" in {
       db.api.db.list().map { response =>
-        response.result should contain("_system")
+        response.value should contain("_system")
       }
     }
-    // TODO: create a test database
-    // TODO: verify the database was created
-    // TODO: drop the test database
-    // TODO: verify the database dropped
+    "create a test database" in {
+      db.api.db("databaseExample").create().map { response =>
+        response.value should be(true)
+      }
+    }
+    "verify the database was created" in {
+      db.api.db.list().map { response =>
+        response.value should contain("databaseExample")
+      }
+    }
+    "drop the test database" in {
+      db.api.db("databaseExample").drop().map { response =>
+        response.value should be(true)
+      }
+    }
+    "verify the database dropped" in {
+      db.api.db.list().map { response =>
+        response.value should not contain "databaseExample"
+      }
+    }
   }
 }
