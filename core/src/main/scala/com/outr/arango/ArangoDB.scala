@@ -1,10 +1,12 @@
 package com.outr.arango
 
-import com.outr.arango.api.APIDatabaseCurrent
+import com.outr.arango.api.{APIDatabase, APIDatabaseCurrent, APIDatabaseUser}
+import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
+import io.circe.Json
 import io.youi.client.HttpClient
 import io.youi.http.Headers
 import io.youi.net._
-import profig.Profig
+import profig.{JsonUtil, Profig}
 import reactify.{Val, Var}
 
 import scala.concurrent.Future
@@ -55,12 +57,26 @@ class ArangoDB(val database: String = ArangoDB.config.db,
   object api {
     object db {
       lazy val current = new APIDatabaseCurrent(client)
+      lazy val list = new APIDatabase(client)
+      object user {
+        lazy val list = new APIDatabaseUser(client)
+      }
     }
   }
 
   object db {
-    def current: Future[String] = api.db.current.get().map { json =>
-      ((json \\ "result").head \\ "name").head.asString.get
+    def current: Future[ArangoResponse[DatabaseInfo]] = api
+      .db
+      .current
+      .get()
+      .map(JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](_))
+    def list(accessibleOnly: Boolean = true): Future[ArangoResponse[List[String]]] = {
+      val future = if (accessibleOnly) {
+        api.db.user.list.get()
+      } else {
+        api.db.list.get()
+      }
+      future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
     }
   }
 

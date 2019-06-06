@@ -1,7 +1,6 @@
 package spec
 
 import com.outr.arango.{ArangoDB, DatabaseState}
-import io.circe.Json
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 
@@ -17,8 +16,13 @@ class ArangoDBSpec extends AsyncWordSpec with Matchers {
     }
     // TODO: reset and fail to login
     "get the current database" in {
-      db.db.current.map { dbName =>
-        dbName should be("_system")
+      db.db.current.map { response =>
+        response.result.name should be("_system")
+      }
+    }
+    "list the databases" in {
+      db.db.list().map { response =>
+        response.result should contain("_system")
       }
     }
   }
