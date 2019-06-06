@@ -1,6 +1,6 @@
 package spec
 
-import com.outr.arango.{ArangoDB, DatabaseState}
+import com.outr.arango.{ArangoDB, Credentials, DatabaseState}
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
@@ -9,23 +9,16 @@ class ArangoDBSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
 
   "ArangoDB" should {
-    lazy val originalPassword = ArangoDB.config.credentials.password
     "initialize configuration" in {
       Profig.loadDefaults()
-      originalPassword
       succeed
     }
     "fail to initialize with bad password" in {
-      Profig("arango.credentials.password").store("bad")
-      val db = new ArangoDB()
+      val db = new ArangoDB(credentials = Some(Credentials("root", "bad")))
       db.init().map { state =>
         state shouldBe a[DatabaseState.Error]
         succeed
       }
-    }
-    "reset credentials" in {
-      Profig("arango.credentials.password").store(originalPassword)
-      succeed
     }
     "initialize successfully" in {
       db.init().map { state =>
