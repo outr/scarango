@@ -11,19 +11,27 @@ val youiVersion = "0.11.4-SNAPSHOT"
 val scalaTestVersion = "3.0.5"
 
 lazy val root = project.in(file("."))
-  .aggregate(core)
+  .aggregate(api, core)
   .settings(
     publish := {},
     publishLocal := {}
   )
 
-lazy val core = project.in(file("core"))
+lazy val api = project.in(file("api"))
   .settings(
-    name := "scarango-core",
-    description := "Core objects shared without driver-specific dependencies.",
+    name := "scarango-api",
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "io.youi" %% "youi-client" % youiVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )
+
+lazy val core = project.in(file("core"))
+  .settings(
+    name := "scarango-core",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    )
+  )
+  .dependsOn(api)

@@ -16,12 +16,12 @@ class ArangoDBSpec extends AsyncWordSpec with Matchers {
     }
     // TODO: reset and fail to login
     "get the current database" in {
-      db.db.current.map { response =>
+      db.api.db.current.map { response =>
         response.result.name should be("_system")
       }
     }
     "list the databases" in {
-      db.db.list().map { response =>
+      db.api.db.list().map { response =>
         response.result should contain("_system")
       }
     }

@@ -56,27 +56,18 @@ class ArangoDB(val database: String = ArangoDB.config.db,
 
   object api {
     object db {
-      lazy val current = new APIDatabaseCurrent(client)
-      lazy val list = new APIDatabase(client)
-      object user {
-        lazy val list = new APIDatabaseUser(client)
-      }
-    }
-  }
+      def current: Future[ArangoResponse[DatabaseInfo]] = APIDatabaseCurrent
+        .get(client)
+        .map(JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](_))
 
-  object db {
-    def current: Future[ArangoResponse[DatabaseInfo]] = api
-      .db
-      .current
-      .get()
-      .map(JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](_))
-    def list(accessibleOnly: Boolean = true): Future[ArangoResponse[List[String]]] = {
-      val future = if (accessibleOnly) {
-        api.db.user.list.get()
-      } else {
-        api.db.list.get()
+      def list(accessibleOnly: Boolean = true): Future[ArangoResponse[List[String]]] = {
+        val future = if (accessibleOnly) {
+          APIDatabaseUser.get(client)
+        } else {
+          APIDatabase.get(client)
+        }
+        future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
       }
-      future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
     }
   }
 
