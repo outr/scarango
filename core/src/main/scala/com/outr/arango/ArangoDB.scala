@@ -1,6 +1,5 @@
 package com.outr.arango
 
-import com.outr.arango.api.model.GetAPIDatabaseNew
 import com.outr.arango.api._
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
 import io.youi.client.HttpClient
@@ -18,7 +17,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
                httpClient: HttpClient = HttpClient) {
   private val _state: Var[DatabaseState] = Var(DatabaseState.Uninitialized)
   def state: Val[DatabaseState] = _state
-  def session: ArangoDBSession = state() match {
+  def session: ArangoSession = state() match {
     case DatabaseState.Initialized(session, _) => session
     case DatabaseState.Error(t) => throw t
     case s => throw new RuntimeException(s"Not initialized: $s")
@@ -40,9 +39,9 @@ class ArangoDB(val database: String = ArangoDB.config.db,
         .post
         .restful[Credentials, AuthenticationResponse](c)
         .map { r =>
-          ArangoDBSession(client.header(Headers.Request.Authorization(s"bearer ${r.jwt}")))
+          ArangoSession(client.header(Headers.Request.Authorization(s"bearer ${r.jwt}")))
         }
-      case None => Future.successful(ArangoDBSession(client))
+      case None => Future.successful(ArangoSession(client))
     }
     futureSession
       .map(session => DatabaseState.Initialized(session, System.currentTimeMillis() - start))
