@@ -1,3 +1,3 @@
 package com.outr.arango
 
-case class Credentials(username: String = "root", password: String = "root")
+case class Credentials(username: String, password: String)
