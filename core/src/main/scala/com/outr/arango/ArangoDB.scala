@@ -3,7 +3,7 @@ package com.outr.arango
 import com.outr.arango.api.{APIDatabase, APIDatabaseCurrent, APIDatabaseUser}
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
 import io.circe.Json
-import io.youi.client.HttpClient
+import io.youi.client.{ClientException, HttpClient}
 import io.youi.http.Headers
 import io.youi.net._
 import profig.{JsonUtil, Profig}

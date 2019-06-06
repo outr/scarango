@@ -20,6 +20,7 @@ class ArangoDBSpec extends AsyncWordSpec with Matchers {
       val db = new ArangoDB()
       db.init().map { state =>
         state shouldBe a[DatabaseState.Error]
+        succeed
       }
     }
     "reset credentials" in {
