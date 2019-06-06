@@ -1,17 +1,16 @@
 package com.outr.arango
 
 import com.outr.arango.api.model.GetAPIDatabaseNew
-import com.outr.arango.api.{APIDatabase, APIDatabaseCurrent, APIDatabaseDatabaseName, APIDatabaseUser}
+import com.outr.arango.api._
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
-import io.circe.Json
-import io.youi.client.{ClientException, HttpClient}
+import io.youi.client.HttpClient
 import io.youi.http.Headers
 import io.youi.net._
 import profig.{JsonUtil, Profig}
 import reactify.{Val, Var}
+import scribe.Execution.global
 
 import scala.concurrent.Future
-import scribe.Execution.global
 
 class ArangoDB(val database: String = ArangoDB.config.db,
                baseURL: URL = ArangoDB.config.url,
@@ -71,25 +70,13 @@ class ArangoDB(val database: String = ArangoDB.config.db,
         future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
       }
 
-      def apply(name: String): Database = Database(name)
+      def apply(name: String): ArangoDatabase = new ArangoDatabase(client, name)
     }
   }
 
   def dispose(): Unit = _state := DatabaseState.Uninitialized
 
   case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
-
-  case class Database(name: String) {
-    def create(): Future[ArangoResponse[Boolean]] = {
-      APIDatabase.post(client, GetAPIDatabaseNew(
-        name = name
-      )).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
-      // TODO: Support setting user
-    }
-    def drop(): Future[ArangoResponse[Boolean]] = {
-      APIDatabaseDatabaseName.delete(client, name).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
-    }
-  }
 }
 
 object ArangoDB {
