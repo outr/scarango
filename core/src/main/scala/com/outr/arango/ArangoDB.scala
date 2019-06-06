@@ -1,5 +1,6 @@
 package com.outr.arango
 
+import com.outr.arango.api.APIDatabaseCurrent
 import io.youi.client.HttpClient
 import io.youi.http.Headers
 import io.youi.net._
@@ -20,7 +21,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     case DatabaseState.Error(t) => throw t
     case s => throw new RuntimeException(s"Not initialized: $s")
   }
-  def client(path: Path, append: Boolean = true): HttpClient = session.client.path(path, append)
+  def client: HttpClient = session.client
 
   def init(): Future[DatabaseState] = {
     assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")
@@ -51,13 +52,25 @@ class ArangoDB(val database: String = ArangoDB.config.db,
       }
   }
 
+  object api {
+    object db {
+      lazy val current = new APIDatabaseCurrent(client)
+    }
+  }
+
+  object db {
+    def current: Future[String] = api.db.current.get().map { json =>
+      ((json \\ "result").head \\ "name").head.asString.get
+    }
+  }
+
   def dispose(): Unit = _state := DatabaseState.Uninitialized
 
   case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
 }
 
 object ArangoDB {
-  lazy val config: Config = Profig("arango").as[Config]
+  def config: Config = Profig("arango").as[Config]
 
   def credentials: Option[Credentials] = if (config.authentication) {
     Some(config.credentials)
