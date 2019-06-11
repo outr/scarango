@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminExecute {
   /**
@@ -25,7 +24,7 @@ object AdminExecute {
   * user-defined code and disables this API endpoint entirely. 
   * This is also the recommended setting for production.
   */
-  def post(client: HttpClient, body: Json): Future[Json] = client
+  def post(client: HttpClient, body: Json)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_admin/execute", append = true) 
     .restful[Json, Json](body)

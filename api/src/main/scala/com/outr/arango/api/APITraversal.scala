@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APITraversal {
   /**
@@ -3207,7 +3206,7 @@ object APITraversal {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, body: HTTPAPITRAVERSAL): Future[Json] = client
+  def post(client: HttpClient, body: HTTPAPITRAVERSAL)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/traversal", append = true) 
     .restful[HTTPAPITRAVERSAL, Json](body)

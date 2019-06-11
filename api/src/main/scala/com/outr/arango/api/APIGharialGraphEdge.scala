@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdge {
   /**
@@ -57,7 +56,7 @@ object APIGharialGraphEdge {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, graph: String): Future[GeneralGraphListEdgeHttpExamplesRc200] = client
+  def get(client: HttpClient, graph: String)(implicit ec: ExecutionContext): Future[GeneralGraphListEdgeHttpExamplesRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)), append = true)
     .call[GeneralGraphListEdgeHttpExamplesRc200]
@@ -243,7 +242,7 @@ object APIGharialGraphEdge {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples): Future[Json] = client
+  def post(client: HttpClient, graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)), append = true)
     .restful[GeneralGraphEdgeDefinitionAddHttpExamples, Json](body)

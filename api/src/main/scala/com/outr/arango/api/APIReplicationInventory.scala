@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationInventory {
   /**
@@ -886,7 +885,7 @@ object APIReplicationInventory {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, includeSystem: Option[Boolean] = None, _global: Option[Boolean] = None, batchId: Double): Future[Json] = client
+  def get(client: HttpClient, includeSystem: Option[Boolean] = None, _global: Option[Boolean] = None, batchId: Double)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/replication/inventory", append = true) 
     .param[Option[Boolean]]("includeSystem", includeSystem, None)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIQueryProperties {
   /**
@@ -38,7 +37,7 @@ object APIQueryProperties {
   *   can be used to save memory in case very long query strings are used. The
   *   value is specified in bytes.
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/query/properties", append = true) 
     .call[Json]
@@ -75,7 +74,7 @@ object APIQueryProperties {
   * After the properties have been changed, the current set of properties will
   * be returned in the HTTP response.
   */
-  def put(client: HttpClient, body: PutApiQueryProperties): Future[Json] = client
+  def put(client: HttpClient, body: PutApiQueryProperties)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/query/properties", append = true) 
     .restful[PutApiQueryProperties, Json](body)

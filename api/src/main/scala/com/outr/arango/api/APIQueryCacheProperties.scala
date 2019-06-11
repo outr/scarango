@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIQueryCacheProperties {
   /**
@@ -28,7 +27,7 @@ object APIQueryCacheProperties {
   * - *includeSystem*: whether or not results of queries that involve system collections will be
   *   stored in the query results cache.
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/query-cache/properties", append = true) 
     .call[Json]
@@ -52,7 +51,7 @@ object APIQueryCacheProperties {
   *   - **maxResults**: the maximum number of query results that will be stored per database-specific cache.
   *   - **maxEntrySize**: the maximum individual size of query results that will be stored per database-specific cache.
   */
-  def put(client: HttpClient, body: PutApiQueryCacheProperties): Future[Json] = client
+  def put(client: HttpClient, body: PutApiQueryCacheProperties)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/query-cache/properties", append = true) 
     .restful[PutApiQueryCacheProperties, Json](body)

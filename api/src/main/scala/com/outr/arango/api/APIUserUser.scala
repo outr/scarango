@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIUserUser {
   /**
@@ -40,7 +39,7 @@ object APIUserUser {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def delete(client: HttpClient, user: String): Future[Json] = client
+  def delete(client: HttpClient, user: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
     .call[Json]
@@ -78,7 +77,7 @@ object APIUserUser {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def get(client: HttpClient, user: String): Future[Json] = client
+  def get(client: HttpClient, user: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
     .call[Json]
@@ -134,7 +133,7 @@ object APIUserUser {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def patch(client: HttpClient, user: String, body: UserHandlingModify): Future[Json] = client
+  def patch(client: HttpClient, user: String, body: UserHandlingModify)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
     .restful[UserHandlingModify, Json](body)
@@ -187,7 +186,7 @@ object APIUserUser {
   * 
   * <!-- ---------------------------------------------------------------------- -->
   */
-  def put(client: HttpClient, user: String, body: UserHandlingReplace): Future[Json] = client
+  def put(client: HttpClient, user: String, body: UserHandlingReplace)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/user/{user}".withArguments(Map("user" -> user)), append = true)
     .restful[UserHandlingReplace, Json](body)

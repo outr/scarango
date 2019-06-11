@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxService {
   /**
@@ -14,7 +13,7 @@ object APIFoxxService {
   * 
   * Returns an empty response on success.
   */
-  def delete(client: HttpClient, mount: String, teardown: Option[Boolean] = None): Future[Json] = client
+  def delete(client: HttpClient, mount: String, teardown: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
@@ -37,7 +36,7 @@ object APIFoxxService {
   * - *name*: a string identifying the service type
   * - *version*: a semver-compatible version string
   */
-  def get(client: HttpClient, mount: String): Future[Json] = client
+  def get(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
@@ -79,7 +78,7 @@ object APIFoxxService {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def patch(client: HttpClient, mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[Json] = client
+  def patch(client: HttpClient, mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)
@@ -125,7 +124,7 @@ object APIFoxxService {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def put(client: HttpClient, mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None): Future[Json] = client
+  def put(client: HttpClient, mount: String, teardown: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None, force: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/foxx/service", append = true) 
     .params("mount" -> mount.toString)

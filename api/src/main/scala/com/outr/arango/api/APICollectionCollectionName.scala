@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APICollectionCollectionName {
   /**
@@ -85,7 +84,7 @@ object APICollectionCollectionName {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, collectionName: String, isSystem: Option[Boolean] = None): Future[Json] = client
+  def delete(client: HttpClient, collectionName: String, isSystem: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)), append = true)
     .param[Option[Boolean]]("isSystem", isSystem, None)
@@ -126,7 +125,7 @@ object APICollectionCollectionName {
   * 
   * <!-- Hints End -->
   */
-  def get(client: HttpClient, collectionName: String): Future[Json] = client
+  def get(client: HttpClient, collectionName: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/collection/{collection-name}".withArguments(Map("collection-name" -> collectionName)), append = true)
     .call[Json]

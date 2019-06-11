@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIIndexgeneral {
   /**
@@ -62,7 +61,7 @@ object APIIndexgeneral {
   * insert a value into the index that already exists in the index will always fail,
   * regardless of the value of this attribute.
   */
-  def post(client: HttpClient, collection: String, body: Json): Future[Json] = client
+  def post(client: HttpClient, collection: String, body: Json)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/index", append = true)
     .params("collection" -> collection.toString)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APICursor {
   /**
@@ -738,7 +737,7 @@ object APICursor {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, body: PostAPICursor): Future[Json] = client
+  def post(client: HttpClient, body: PostAPICursor)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/cursor", append = true) 
     .restful[PostAPICursor, Json](body)

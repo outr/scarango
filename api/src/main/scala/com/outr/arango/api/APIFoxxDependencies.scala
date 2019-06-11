@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxDependencies {
   /**
@@ -15,7 +14,7 @@ object APIFoxxDependencies {
   * Returns an object mapping the dependency names to their definitions
   * including a human-friendly *title* and the *current* mount path (if any).
   */
-  def get(client: HttpClient, mount: String): Future[Json] = client
+  def get(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)
@@ -26,7 +25,7 @@ object APIFoxxDependencies {
   * 
   * Returns an object mapping all dependency names to their new mount paths.
   */
-  def patch(client: HttpClient, body: Json, mount: String): Future[Json] = client
+  def patch(client: HttpClient, body: Json, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)
@@ -37,7 +36,7 @@ object APIFoxxDependencies {
   * 
   * Returns an object mapping all dependency names to their new mount paths.
   */
-  def put(client: HttpClient, body: Json, mount: String): Future[Json] = client
+  def put(client: HttpClient, body: Json, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/foxx/dependencies", append = true) 
     .params("mount" -> mount.toString)

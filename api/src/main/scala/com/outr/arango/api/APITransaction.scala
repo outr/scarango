@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APITransaction {
   /**
@@ -214,7 +213,7 @@ object APITransaction {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, body: PostAPITransaction): Future[Json] = client
+  def post(client: HttpClient, body: PostAPITransaction)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/transaction", append = true) 
     .restful[PostAPITransaction, Json](body)

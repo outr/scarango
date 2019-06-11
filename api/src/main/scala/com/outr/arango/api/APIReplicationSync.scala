@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationSync {
   /**
@@ -71,7 +70,7 @@ object APIReplicationSync {
   * 
   * **Note**: this method is not supported on a coordinator in a cluster.
   */
-  def put(client: HttpClient, body: PutAPIReplicationSynchronize): Future[Json] = client
+  def put(client: HttpClient, body: PutAPIReplicationSynchronize)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/replication/sync", append = true) 
     .restful[PutAPIReplicationSynchronize, Json](body)

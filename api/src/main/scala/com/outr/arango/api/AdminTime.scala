@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminTime {
   /**
@@ -23,7 +22,7 @@ object AdminTime {
   * - **time**: The current system time as a Unix timestamp with microsecond precision of the server
   * - **error**: boolean flag to indicate whether an error occurred (*false* in this case)
   */
-  def get(client: HttpClient): Future[GetAdminTimeRc200] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[GetAdminTimeRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_admin/time", append = true) 
     .call[GetAdminTimeRc200]

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminLog {
   /**
@@ -27,7 +26,7 @@ object AdminLog {
   * - **text**: a list of the texts of all log entries
   * - **totalAmount**: the total amount of log entries before pagination.
   */
-  def get(client: HttpClient, upto: Option[String] = None, level: Option[String] = None, start: Option[Double] = None, size: Option[Double] = None, offset: Option[Double] = None, search: Option[String] = None, sort: Option[String] = None): Future[GetAdminLogRc200] = client
+  def get(client: HttpClient, upto: Option[String] = None, level: Option[String] = None, start: Option[Double] = None, size: Option[Double] = None, offset: Option[Double] = None, search: Option[String] = None, sort: Option[String] = None)(implicit ec: ExecutionContext): Future[GetAdminLogRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_admin/log", append = true) 
     .param[Option[String]]("upto", upto, None)

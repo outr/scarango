@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationClusterInventory {
   /**
@@ -19,7 +18,7 @@ object APIReplicationClusterInventory {
   * just that the *indexes* attribute there is relocated to adjust it to
   * the data format of arangodump.
   */
-  def get(client: HttpClient, includeSystem: Option[Boolean] = None): Future[Json] = client
+  def get(client: HttpClient, includeSystem: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/replication/clusterInventory", append = true) 
     .param[Option[Boolean]]("includeSystem", includeSystem, None)

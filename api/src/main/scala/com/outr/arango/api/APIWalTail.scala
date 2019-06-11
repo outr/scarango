@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIWalTail {
   /**
@@ -179,7 +178,7 @@ object APIWalTail {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, from: Option[Double] = None, to: Option[Double] = None, lastScanned: Option[Double] = None, _global: Option[Boolean] = None, chunkSize: Option[Double] = None, serverId: Option[Double] = None, barrierId: Option[Double] = None): Future[Json] = client
+  def get(client: HttpClient, from: Option[Double] = None, to: Option[Double] = None, lastScanned: Option[Double] = None, _global: Option[Boolean] = None, chunkSize: Option[Double] = None, serverId: Option[Double] = None, barrierId: Option[Double] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/wal/tail", append = true) 
     .param[Option[Double]]("from", from, None)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIJobType {
   /**
@@ -125,7 +124,7 @@ object APIJobType {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, `type`: String, stamp: Option[Double] = None): Future[Json] = client
+  def delete(client: HttpClient, `type`: String, stamp: Option[Double] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/job/{type}".withArguments(Map("type" -> `type`)), append = true)
     .param[Option[Double]]("stamp", stamp, None)
@@ -227,7 +226,7 @@ object APIJobType {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, `type`: String, count: Option[Double] = None): Future[Json] = client
+  def get(client: HttpClient, `type`: String, count: Option[Double] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/job/{type}".withArguments(Map("type" -> `type`)), append = true)
     .param[Option[Double]]("count", count, None)

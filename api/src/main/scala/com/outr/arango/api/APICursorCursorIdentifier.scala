@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APICursorCursorIdentifier {
   /**
@@ -77,7 +76,7 @@ object APICursorCursorIdentifier {
   * </code><code>
   * </code></pre>
   */
-  def delete(client: HttpClient, cursorIdentifier: String): Future[Json] = client
+  def delete(client: HttpClient, cursorIdentifier: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)), append = true)
     .call[Json]
@@ -193,7 +192,7 @@ object APICursorCursorIdentifier {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, cursorIdentifier: String): Future[Json] = client
+  def put(client: HttpClient, cursorIdentifier: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/cursor/{cursor-identifier}".withArguments(Map("cursor-identifier" -> cursorIdentifier)), append = true)
     .call[Json]

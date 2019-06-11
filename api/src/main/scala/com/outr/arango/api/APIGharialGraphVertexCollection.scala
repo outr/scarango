@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphVertexCollection {
   /**
@@ -174,7 +173,7 @@ object APIGharialGraphVertexCollection {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, graph: String, collection: String, dropCollection: Option[Boolean] = None): Future[GeneralGraphVertexCollectionRemoveHttpExamplesRc200] = client
+  def delete(client: HttpClient, graph: String, collection: String, dropCollection: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[GeneralGraphVertexCollectionRemoveHttpExamplesRc200] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("dropCollection", dropCollection, None)
@@ -275,7 +274,7 @@ object APIGharialGraphVertexCollection {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: Json): Future[Json] = client
+  def post(client: HttpClient, graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: Json)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/vertex/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIDatabase {
   /**
@@ -37,7 +36,7 @@ object APIDatabase {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/database", append = true) 
     .call[Json]
@@ -127,7 +126,7 @@ object APIDatabase {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, body: GetAPIDatabaseNew): Future[Json] = client
+  def post(client: HttpClient, body: GetAPIDatabaseNew)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/database", append = true) 
     .restful[GetAPIDatabaseNew, Json](body)

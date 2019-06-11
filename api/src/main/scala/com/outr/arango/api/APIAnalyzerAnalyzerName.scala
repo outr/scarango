@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIAnalyzerAnalyzerName {
   /**
@@ -77,7 +76,7 @@ object APIAnalyzerAnalyzerName {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, analyzerName: String, force: Option[Boolean] = None): Future[Json] = client
+  def delete(client: HttpClient, analyzerName: String, force: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)), append = true)
     .param[Option[Boolean]]("force", force, None)
@@ -113,7 +112,7 @@ object APIAnalyzerAnalyzerName {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, analyzerName: String): Future[Json] = client
+  def get(client: HttpClient, analyzerName: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/analyzer/{analyzer-name}".withArguments(Map("analyzer-name" -> analyzerName)), append = true)
     .call[Json]

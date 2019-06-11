@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxConfiguration {
   /**
@@ -15,7 +14,7 @@ object APIFoxxConfiguration {
   * Returns an object mapping the configuration option names to their definitions
   * including a human-friendly *title* and the *current* value (if any).
   */
-  def get(client: HttpClient, mount: String): Future[Json] = client
+  def get(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)
@@ -26,7 +25,7 @@ object APIFoxxConfiguration {
   * 
   * Returns an object mapping all configuration option names to their new values.
   */
-  def patch(client: HttpClient, body: Json, mount: String): Future[Json] = client
+  def patch(client: HttpClient, body: Json, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)
@@ -37,7 +36,7 @@ object APIFoxxConfiguration {
   * 
   * Returns an object mapping all configuration option names to their new values.
   */
-  def put(client: HttpClient, body: Json, mount: String): Future[Json] = client
+  def put(client: HttpClient, body: Json, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/foxx/configuration", append = true) 
     .params("mount" -> mount.toString)

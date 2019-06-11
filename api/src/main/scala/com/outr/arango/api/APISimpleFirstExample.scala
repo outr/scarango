@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APISimpleFirstExample {
   /**
@@ -109,7 +108,7 @@ object APISimpleFirstExample {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, body: PutAPISimpleFirstExample): Future[Json] = client
+  def put(client: HttpClient, body: PutAPISimpleFirstExample)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/simple/first-example", append = true) 
     .restful[PutAPISimpleFirstExample, Json](body)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APICollectionCollectionNameChecksum {
   /**
@@ -101,7 +100,7 @@ object APICollectionCollectionNameChecksum {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, collectionName: String, withRevisions: Option[Boolean] = None, withData: Option[Boolean] = None): Future[Json] = client
+  def get(client: HttpClient, collectionName: String, withRevisions: Option[Boolean] = None, withData: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/collection/{collection-name}/checksum".withArguments(Map("collection-name" -> collectionName)), append = true)
     .param[Option[Boolean]]("withRevisions", withRevisions, None)

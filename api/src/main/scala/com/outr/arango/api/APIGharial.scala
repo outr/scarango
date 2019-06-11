@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharial {
   /**
@@ -123,7 +122,7 @@ object APIGharial {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient): Future[GeneralGraphListHttpExamplesRc200] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[GeneralGraphListHttpExamplesRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/gharial", append = true) 
     .call[GeneralGraphListHttpExamplesRc200]
@@ -378,7 +377,7 @@ object APIGharial {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples): Future[Json] = client
+  def post(client: HttpClient, waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial", append = true) 
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

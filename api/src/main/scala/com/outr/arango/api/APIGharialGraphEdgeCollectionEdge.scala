@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdgeCollectionEdge {
   /**
@@ -107,7 +106,7 @@ object APIGharialGraphEdgeCollectionEdge {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ifMatch: Option[String] = None): Future[GeneralGraphEdgeDeleteHttpExamplesRc200] = client
+  def delete(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ifMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[GeneralGraphEdgeDeleteHttpExamplesRc200] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
@@ -218,7 +217,7 @@ object APIGharialGraphEdgeCollectionEdge {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, graph: String, collection: String, edge: String, rev: Option[String] = None, ifMatch: Option[String] = None, ifNoneMatch: Option[String] = None): Future[GeneralGraphEdgeGetHttpExamplesRc200] = client
+  def get(client: HttpClient, graph: String, collection: String, edge: String, rev: Option[String] = None, ifMatch: Option[String] = None, ifNoneMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[GeneralGraphEdgeGetHttpExamplesRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[String]]("rev", rev, None)
@@ -355,7 +354,7 @@ object APIGharialGraphEdgeCollectionEdge {
   * </code><code>}
   * </code></pre>
   */
-  def patch(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
+  def patch(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json)(implicit ec: ExecutionContext): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
@@ -506,7 +505,7 @@ object APIGharialGraphEdgeCollectionEdge {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples): Future[Json] = client
+  def put(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

@@ -5,14 +5,13 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminShutdown {
   /**
   * This call initiates a clean shutdown sequence. Requires administrive privileges
   */
-  def delete(client: HttpClient): Future[Json] = client
+  def delete(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_admin/shutdown", append = true) 
     .call[Json]

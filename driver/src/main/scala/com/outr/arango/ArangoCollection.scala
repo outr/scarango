@@ -6,7 +6,7 @@ import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
 import profig.JsonUtil
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ArangoCollection(client: HttpClient, dbName: String, collectionName: String) {
   def create(distributeShardsLike: Option[String] = None,
@@ -24,7 +24,8 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
              `type`: CollectionType = CollectionType.Document,
              waitForSync: Option[Boolean] = None,
              waitForSyncReplication: Option[Int] = None,
-             enforceReplicationFactor: Option[Int] = None): Future[CollectionInfo] = {
+             enforceReplicationFactor: Option[Int] = None)
+            (implicit ec: ExecutionContext): Future[CollectionInfo] = {
     val collectionType = `type` match {
       case CollectionType.Document => 2L
       case CollectionType.Edge => 3L
@@ -55,7 +56,7 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
 
   lazy val document: ArangoDocument = new ArangoDocument(client, dbName, collectionName)
 
-  def drop(isSystem: Boolean = false): Future[Boolean] = APICollectionCollectionName
+  def drop(isSystem: Boolean = false)(implicit ec: ExecutionContext): Future[Boolean] = APICollectionCollectionName
     .delete(client, collectionName, isSystem = Some(isSystem))
     .map(JsonUtil.fromJson[ArangoResponse[Option[Boolean]]](_))
     .map(!_.error)

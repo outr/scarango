@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationDump {
   /**
@@ -118,7 +117,7 @@ object APIReplicationDump {
   * </code><code>}&#x21A9;
   * </code></pre>
   */
-  def get(client: HttpClient, collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None): Future[Json] = client
+  def get(client: HttpClient, collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/replication/dump", append = true) 
     .params("collection" -> collection.toString)

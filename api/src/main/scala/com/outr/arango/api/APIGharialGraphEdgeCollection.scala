@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdgeCollection {
   /**
@@ -141,7 +140,7 @@ object APIGharialGraphEdgeCollection {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: GeneralGraphEdgeCreateHttpExamples): Future[Json] = client
+  def post(client: HttpClient, graph: String, collection: String, waitForSync: Option[Boolean] = None, returnNew: Option[Boolean] = None, body: GeneralGraphEdgeCreateHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/edge/{collection}".withArguments(Map("graph" -> graph, "collection" -> collection)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

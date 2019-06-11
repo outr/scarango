@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminLogLevel {
   /**
@@ -14,7 +13,7 @@ object AdminLogLevel {
   * The result is a JSON object with the log topics being the object keys, and
   * the log levels being the object values.
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_admin/log/level", append = true) 
     .call[Json]
@@ -81,7 +80,7 @@ object AdminLogLevel {
   *   - **heartbeat**: One of the possible log levels.
   *   - **requests**: One of the possible log levels.
   */
-  def put(client: HttpClient, body: PutAdminLoglevel): Future[Json] = client
+  def put(client: HttpClient, body: PutAdminLoglevel)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_admin/log/level", append = true) 
     .restful[PutAdminLoglevel, Json](body)

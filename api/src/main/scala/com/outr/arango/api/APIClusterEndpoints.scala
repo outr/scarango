@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIClusterEndpoints {
   /**
@@ -26,7 +25,7 @@ object APIClusterEndpoints {
   * - **code**: the HTTP status code - 200
   * - **error**: boolean flag to indicate whether an error occurred (*true* in this case)
   */
-  def get(client: HttpClient): Future[GetAPIClusterEndpointsRc200] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[GetAPIClusterEndpointsRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/cluster/endpoints", append = true) 
     .call[GetAPIClusterEndpointsRc200]

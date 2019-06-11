@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphVertexCollectionVertex {
   /**
@@ -103,7 +102,7 @@ object APIGharialGraphVertexCollectionVertex {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ifMatch: Option[String] = None): Future[GeneralGraphVertexDeleteHttpExamplesRc200] = client
+  def delete(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, ifMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[GeneralGraphVertexDeleteHttpExamplesRc200] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
@@ -209,7 +208,7 @@ object APIGharialGraphVertexCollectionVertex {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, graph: String, collection: String, vertex: String, rev: Option[String] = None, ifMatch: Option[String] = None, ifNoneMatch: Option[String] = None): Future[GeneralGraphVertexGetHttpExamplesRc200] = client
+  def get(client: HttpClient, graph: String, collection: String, vertex: String, rev: Option[String] = None, ifMatch: Option[String] = None, ifNoneMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[GeneralGraphVertexGetHttpExamplesRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)), append = true)
     .param[Option[String]]("rev", rev, None)
@@ -333,7 +332,7 @@ object APIGharialGraphVertexCollectionVertex {
   * </code><code>}
   * </code></pre>
   */
-  def patch(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphVertexModifyHttpExamplesRc200] = client
+  def patch(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json)(implicit ec: ExecutionContext): Future[GeneralGraphVertexModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
@@ -461,7 +460,7 @@ object APIGharialGraphVertexCollectionVertex {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json): Future[GeneralGraphVertexReplaceHttpExamplesRc200] = client
+  def put(client: HttpClient, graph: String, collection: String, vertex: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json)(implicit ec: ExecutionContext): Future[GeneralGraphVertexReplaceHttpExamplesRc200] = client
     .method(HttpMethod.Put)
     .path(path"/_api/gharial/{graph}/vertex/{collection}/{vertex}".withArguments(Map("graph" -> graph, "collection" -> collection, "vertex" -> vertex)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

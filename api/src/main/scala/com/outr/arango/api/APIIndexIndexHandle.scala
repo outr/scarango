@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIIndexIndexHandle {
   /**
@@ -31,7 +30,7 @@ object APIIndexIndexHandle {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, indexHandle: String): Future[Json] = client
+  def delete(client: HttpClient, indexHandle: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)), append = true)
     .call[Json]
@@ -73,7 +72,7 @@ object APIIndexIndexHandle {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, indexHandle: String): Future[Json] = client
+  def get(client: HttpClient, indexHandle: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)), append = true)
     .call[Json]

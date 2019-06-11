@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxx {
   /**
@@ -24,7 +23,7 @@ object APIFoxx {
   * - *name*: a string identifying the service type
   * - *version*: a semver-compatible version string
   */
-  def get(client: HttpClient, excludeSystem: Option[Boolean] = None): Future[Json] = client
+  def get(client: HttpClient, excludeSystem: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/foxx", append = true) 
     .param[Option[Boolean]]("excludeSystem", excludeSystem, None)
@@ -61,7 +60,7 @@ object APIFoxx {
   * Note that when using file system paths in a cluster with multiple coordinators
   * the file system path must resolve to equivalent files on every coordinator.
   */
-  def post(client: HttpClient, mount: String, development: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None): Future[Json] = client
+  def post(client: HttpClient, mount: String, development: Option[Boolean] = None, setup: Option[Boolean] = None, legacy: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/foxx", append = true) 
     .params("mount" -> mount.toString)

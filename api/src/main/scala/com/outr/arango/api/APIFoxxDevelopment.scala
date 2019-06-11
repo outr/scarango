@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxDevelopment {
   /**
@@ -16,7 +15,7 @@ object APIFoxxDevelopment {
   * replace the service on all other coordinators with the version on this
   * coordinator.
   */
-  def delete(client: HttpClient, mount: String): Future[Json] = client
+  def delete(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/foxx/development", append = true) 
     .params("mount" -> mount.toString)
@@ -34,7 +33,7 @@ object APIFoxxDevelopment {
   * coordinators. This means you should treat your coordinators as inconsistent
   * as long as any service is running in development mode.
   */
-  def post(client: HttpClient, mount: String): Future[Json] = client
+  def post(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/foxx/development", append = true) 
     .params("mount" -> mount.toString)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APISimpleReplaceByExample {
   /**
@@ -116,7 +115,7 @@ object APISimpleReplaceByExample {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, body: PutAPISimpleReplaceByExample): Future[Json] = client
+  def put(client: HttpClient, body: PutAPISimpleReplaceByExample)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/simple/replace-by-example", append = true) 
     .restful[PutAPISimpleReplaceByExample, Json](body)

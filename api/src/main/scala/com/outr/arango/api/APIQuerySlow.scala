@@ -5,14 +5,13 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIQuerySlow {
   /**
   * Clears the list of slow AQL queries
   */
-  def delete(client: HttpClient): Future[Json] = client
+  def delete(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/query/slow", append = true) 
     .call[Json]
@@ -42,7 +41,7 @@ object APIQuerySlow {
   * 
   * - *stream*: whether or not the query uses a streaming cursor
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/query/slow", append = true) 
     .call[Json]

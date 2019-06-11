@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APICollectionCollectionNameFigures {
   /**
@@ -186,7 +185,7 @@ object APICollectionCollectionNameFigures {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, collectionName: String): Future[GetAPICollectionFiguresRc200] = client
+  def get(client: HttpClient, collectionName: String)(implicit ec: ExecutionContext): Future[GetAPICollectionFiguresRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/collection/{collection-name}/figures".withArguments(Map("collection-name" -> collectionName)), append = true)
     .call[GetAPICollectionFiguresRc200]

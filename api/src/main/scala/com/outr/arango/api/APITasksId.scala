@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APITasksId {
   /**
@@ -70,7 +69,7 @@ object APITasksId {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, id: String): Future[DeleteAPITasksRc200] = client
+  def delete(client: HttpClient, id: String)(implicit ec: ExecutionContext): Future[DeleteAPITasksRc200] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
     .call[DeleteAPITasksRc200]
@@ -142,7 +141,7 @@ object APITasksId {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, id: String): Future[APITaskStruct] = client
+  def get(client: HttpClient, id: String)(implicit ec: ExecutionContext): Future[APITaskStruct] = client
     .method(HttpMethod.Get)
     .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
     .call[APITaskStruct]
@@ -196,7 +195,7 @@ object APITasksId {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, id: String, body: PutAPINewTasks): Future[Json] = client
+  def put(client: HttpClient, id: String, body: PutAPINewTasks)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
     .restful[PutAPINewTasks, Json](body)

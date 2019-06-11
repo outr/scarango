@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationLoggerFollow {
   /**
@@ -486,7 +485,7 @@ object APIReplicationLoggerFollow {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, from: Option[Double] = None, to: Option[Double] = None, chunkSize: Option[Double] = None, includeSystem: Option[Boolean] = None): Future[Json] = client
+  def get(client: HttpClient, from: Option[Double] = None, to: Option[Double] = None, chunkSize: Option[Double] = None, includeSystem: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/replication/logger-follow", append = true) 
     .param[Option[Double]]("from", from, None)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIAqlfunction {
   /**
@@ -61,7 +60,7 @@ object APIAqlfunction {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, namespace: Option[String] = None): Future[GetAPIAqlfunctionRc200] = client
+  def get(client: HttpClient, namespace: Option[String] = None)(implicit ec: ExecutionContext): Future[GetAPIAqlfunctionRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/aqlfunction", append = true) 
     .param[Option[String]]("namespace", namespace, None)
@@ -144,7 +143,7 @@ object APIAqlfunction {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, body: PostAPIAqlfunction): Future[PostAPIAqlfunctionRc200] = client
+  def post(client: HttpClient, body: PostAPIAqlfunction)(implicit ec: ExecutionContext): Future[PostAPIAqlfunctionRc200] = client
     .method(HttpMethod.Post)
     .path(path"/_api/aqlfunction", append = true) 
     .restful[PostAPIAqlfunction, PostAPIAqlfunctionRc200](body)

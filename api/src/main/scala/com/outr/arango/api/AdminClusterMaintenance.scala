@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminClusterMaintenance {
   /**
@@ -17,7 +16,7 @@ object AdminClusterMaintenance {
   * To enable the maintenance mode the request body must contain the string `"on"`. To disable it, send the string
   * `"off"` (Please note it _must_ be lowercase as well as include the quotes).
   */
-  def put(client: HttpClient): Future[Json] = client
+  def put(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_admin/cluster/maintenance", append = true) 
     .call[Json]

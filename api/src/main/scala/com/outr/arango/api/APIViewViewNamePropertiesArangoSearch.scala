@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIViewViewNamePropertiesArangoSearch {
   /**
@@ -129,7 +128,7 @@ object APIViewViewNamePropertiesArangoSearch {
   * </code><code>}
   * </code></pre>
   */
-  def patch(client: HttpClient, viewName: String, body: PatchAPIViewPropertiesIresearch): Future[Json] = client
+  def patch(client: HttpClient, viewName: String, body: PatchAPIViewPropertiesIresearch)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)), append = true)
     .restful[PatchAPIViewPropertiesIresearch, Json](body)
@@ -254,7 +253,7 @@ object APIViewViewNamePropertiesArangoSearch {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, viewName: String, body: PutAPIViewPropertiesIresearch): Future[Json] = client
+  def put(client: HttpClient, viewName: String, body: PutAPIViewPropertiesIresearch)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/view/{view-name}/properties#ArangoSearch".withArguments(Map("view-name" -> viewName)), append = true)
     .restful[PutAPIViewPropertiesIresearch, Json](body)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIViewViewNameRename {
   /**
@@ -46,7 +45,7 @@ object APIViewViewNameRename {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, viewName: String): Future[Json] = client
+  def put(client: HttpClient, viewName: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/view/{view-name}/rename".withArguments(Map("view-name" -> viewName)), append = true)
     .call[Json]

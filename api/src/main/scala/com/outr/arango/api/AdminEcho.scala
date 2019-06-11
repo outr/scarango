@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object AdminEcho {
   /**
@@ -40,7 +39,7 @@ object AdminEcho {
   * - **rawRequestBody** (anonymous json object): List of digits of the sent characters
   * - **user**: the currently user that sent this request
   */
-  def post(client: HttpClient, body: Json): Future[PostAdminEchoRc200] = client
+  def post(client: HttpClient, body: Json)(implicit ec: ExecutionContext): Future[PostAdminEchoRc200] = client
     .method(HttpMethod.Post)
     .path(path"/_admin/echo", append = true) 
     .restful[Json, PostAdminEchoRc200](body)

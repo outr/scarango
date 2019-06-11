@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationBatch {
   /**
@@ -29,7 +28,7 @@ object APIReplicationBatch {
   * The very same request is forwarded synchronously to that DBserver.
   * It is an error if this attribute is not bound in the coordinator case.
   */
-  def post(client: HttpClient, body: PostBatchReplication): Future[Json] = client
+  def post(client: HttpClient, body: PostBatchReplication)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/replication/batch", append = true) 
     .restful[PostBatchReplication, Json](body)

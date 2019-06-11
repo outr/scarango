@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIVersion {
   /**
@@ -140,7 +139,7 @@ object APIVersion {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, details: Option[Boolean] = None): Future[GetAPIReturnRc200] = client
+  def get(client: HttpClient, details: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[GetAPIReturnRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/version", append = true) 
     .param[Option[Boolean]]("details", details, None)

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIQueryCacheEntries {
   /**
@@ -34,7 +33,7 @@ object APIQueryCacheEntries {
   * 
   * - *dataSources*: an array of collections/views the query was using
   */
-  def get(client: HttpClient): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/query-cache/entries", append = true) 
     .call[Json]

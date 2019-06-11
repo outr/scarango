@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIIndex {
   /**
@@ -99,7 +98,7 @@ object APIIndex {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, collection: String): Future[Json] = client
+  def get(client: HttpClient, collection: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/index", append = true) 
     .params("collection" -> collection.toString)

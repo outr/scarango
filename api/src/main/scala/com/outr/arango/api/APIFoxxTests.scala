@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxTests {
   /**
@@ -33,7 +32,7 @@ object APIFoxxTests {
   * 
   * Otherwise the response body will be formatted as non-prettyprinted JSON.
   */
-  def post(client: HttpClient, mount: String, reporter: Option[String] = None, idiomatic: Option[Boolean] = None, filter: Option[String] = None): Future[Json] = client
+  def post(client: HttpClient, mount: String, reporter: Option[String] = None, idiomatic: Option[Boolean] = None, filter: Option[String] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/foxx/tests", append = true) 
     .params("mount" -> mount.toString)

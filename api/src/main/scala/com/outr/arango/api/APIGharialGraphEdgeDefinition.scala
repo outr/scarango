@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdgeDefinition {
   /**
@@ -132,7 +131,7 @@ object APIGharialGraphEdgeDefinition {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None): Future[Json] = client
+  def delete(client: HttpClient, graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
@@ -304,7 +303,7 @@ object APIGharialGraphEdgeDefinition {
   * </code><code>}
   * </code></pre>
   */
-  def put(client: HttpClient, graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None, body: GeneralGraphEdgeDefinitionModifyHttpExamples): Future[Json] = client
+  def put(client: HttpClient, graph: String, definition: String, waitForSync: Option[Boolean] = None, dropCollections: Option[Boolean] = None, body: GeneralGraphEdgeDefinitionModifyHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_api/gharial/{graph}/edge/{definition}".withArguments(Map("graph" -> graph, "definition" -> definition)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)

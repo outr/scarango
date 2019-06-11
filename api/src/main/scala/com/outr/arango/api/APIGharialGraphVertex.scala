@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphVertex {
   /**
@@ -58,7 +57,7 @@ object APIGharialGraphVertex {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, graph: String): Future[GeneralGraphListVertexHttpExamplesRc200] = client
+  def get(client: HttpClient, graph: String)(implicit ec: ExecutionContext): Future[GeneralGraphListVertexHttpExamplesRc200] = client
     .method(HttpMethod.Get)
     .path(path"/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)), append = true)
     .call[GeneralGraphListVertexHttpExamplesRc200]
@@ -214,7 +213,7 @@ object APIGharialGraphVertex {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, graph: String): Future[Json] = client
+  def post(client: HttpClient, graph: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)), append = true)
     .call[Json]

@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxScriptsName {
   /**
@@ -14,7 +13,7 @@ object APIFoxxScriptsName {
   * 
   * Returns the exports of the script, if any.
   */
-  def post(client: HttpClient, body: Json, name: String, mount: String): Future[Json] = client
+  def post(client: HttpClient, body: Json, name: String, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/foxx/scripts/{name}".withArguments(Map("name" -> name)), append = true)
     .params("mount" -> mount.toString)

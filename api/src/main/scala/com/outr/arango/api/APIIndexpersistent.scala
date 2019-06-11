@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIIndexpersistent {
   /**
@@ -110,7 +109,7 @@ object APIIndexpersistent {
   * </code><code>}
   * </code></pre>
   */
-  def post(client: HttpClient, collectionName: String, body: PostAPIIndexPersistent): Future[Json] = client
+  def post(client: HttpClient, collectionName: String, body: PostAPIIndexPersistent)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/index", append = true)
     .params("collection-name" -> collectionName.toString)

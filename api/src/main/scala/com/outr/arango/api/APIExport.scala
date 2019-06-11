@@ -5,8 +5,7 @@ import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
 import io.circe.Json
-import scala.concurrent.Future
-import scribe.Execution.global
+import scala.concurrent.{ExecutionContext, Future}
       
 object APIExport {
   /**
@@ -115,7 +114,7 @@ object APIExport {
   * 
   * Note: this API is currently not supported on cluster coordinators.
   */
-  def post(client: HttpClient, body: PostAPIExport, collection: String): Future[Json] = client
+  def post(client: HttpClient, body: PostAPIExport, collection: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/export", append = true) 
     .params("collection" -> collection.toString)
