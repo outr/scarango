@@ -1,14 +1,14 @@
 package com.outr.arango
 
-import com.outr.arango.api.{APIDatabase, APIDatabaseDatabaseName}
 import com.outr.arango.api.model.GetAPIDatabaseNew
+import com.outr.arango.api.{APIDatabase, APIDatabaseDatabaseName}
 import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
 import io.youi.net.Path
 import profig.JsonUtil
+import scribe.Execution.global
 
 import scala.concurrent.Future
-import scribe.Execution.global
 
 class ArangoDatabase(client: HttpClient, name: String) {
   def create(): Future[ArangoResponse[Boolean]] = {

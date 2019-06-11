@@ -1,3 +1,5 @@
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+
 name := "scarango"
 organization in ThisBuild := "com.outr"
 version in ThisBuild := "2.0.0-SNAPSHOT"
@@ -7,11 +9,11 @@ scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
 
-val youiVersion = "0.11.4-SNAPSHOT"
+val youiVersion = "0.11.4"
 val scalaTestVersion = "3.0.5"
 
 lazy val root = project.in(file("."))
-  .aggregate(api, core)
+  .aggregate(api, coreJS, coreJVM, driver)
   .settings(
     publish := {},
     publishLocal := {}
@@ -27,11 +29,24 @@ lazy val api = project.in(file("api"))
     )
   )
 
-lazy val core = project.in(file("core"))
+lazy val core = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("core"))
   .settings(
     name := "scarango-core",
+    libraryDependencies ++= Seq(
+      "io.youi" %% "youi-core" % youiVersion
+    )
+  )
+
+lazy val coreJS = core.js
+lazy val coreJVM = core.jvm
+
+lazy val driver = project.in(file("driver"))
+  .settings(
+    name := "scarango-driver",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )
-  .dependsOn(api)
+  .dependsOn(coreJVM, api)
