@@ -113,7 +113,7 @@ object APIIndexskiplist {
   */
   def post(client: HttpClient, collectionName: String, body: PostAPIIndexSkiplist): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/index#skiplist", append = true) 
+    .path(path"/_api/index", append = true)
     .params("collection-name" -> collectionName.toString)
     .restful[PostAPIIndexSkiplist, Json](body)
 }

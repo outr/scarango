@@ -1,6 +1,7 @@
 package spec
 
 import com.outr.arango.{ArangoDB, DatabaseState}
+import io.circe.Json
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
@@ -33,12 +34,37 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     }
     "create a new collection" in {
       dbExample.collection("test").create(waitForSync = Some(true)).map { info =>
-        scribe.info(s"Info: ${info.keyOptions}")
         info.name should be(Some("test"))
       }
     }
     // TODO: create a unique index on the collection
-    // TODO: insert a document
+    "insert a document" in {
+      dbExample.collection("test").document.create(Json.obj(
+        "_key" -> Json.fromString("john"),
+        "name" -> Json.fromString("John Doe")
+      ), returnOld = true).map { response =>
+        scribe.info(s"Response: $response")
+        succeed
+      }
+    }
+    "upsert a document" in {
+      dbExample.collection("test").document.create(Json.obj(
+        "_key" -> Json.fromString("john"),
+        "name" -> Json.fromString("Johnny Doe")
+      ), returnOld = true, overwrite = true).map { response =>
+        scribe.info(s"Response: $response")
+        succeed
+      }
+    }
+    "insert multiple documents" in {
+      dbExample.collection("test").document.create(Json.arr(
+        Json.obj("name" -> Json.fromString("Jane Doe")),
+        Json.obj("name" -> Json.fromString("Baby Doe"))
+      )).map { response =>
+        scribe.info(s"Response: $response")
+        succeed
+      }
+    }
     // TODO: mess up session token to force a reconnect
     // TODO: insert another document
     // TODO: check replication state

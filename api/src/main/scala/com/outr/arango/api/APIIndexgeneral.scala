@@ -64,7 +64,7 @@ object APIIndexgeneral {
   */
   def post(client: HttpClient, collection: String, body: Json): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/index#general", append = true) 
+    .path(path"/_api/index", append = true)
     .params("collection" -> collection.toString)
     .restful[Json, Json](body)
 }

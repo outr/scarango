@@ -122,7 +122,7 @@ object APIIndexgeo {
   */
   def post(client: HttpClient, collection: String, body: PostAPIIndexGeo): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/index#geo", append = true) 
+    .path(path"/_api/index", append = true)
     .params("collection" -> collection.toString)
     .restful[PostAPIIndexGeo, Json](body)
 }

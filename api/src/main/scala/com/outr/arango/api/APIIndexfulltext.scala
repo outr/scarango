@@ -65,7 +65,7 @@ object APIIndexfulltext {
   */
   def post(client: HttpClient, collectionName: String, body: PostAPIIndexFulltext): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/index#fulltext", append = true) 
+    .path(path"/_api/index", append = true)
     .params("collection-name" -> collectionName.toString)
     .restful[PostAPIIndexFulltext, Json](body)
 }

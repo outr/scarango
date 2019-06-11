@@ -5,7 +5,6 @@ import com.outr.arango.api.{APICollection, APICollectionCollectionName}
 import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
 import profig.JsonUtil
-import scribe.Execution.global
 
 import scala.concurrent.Future
 
@@ -53,6 +52,8 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
       enforceReplicationFactor = enforceReplicationFactor
     )
   }
+
+  lazy val document: ArangoDocument = new ArangoDocument(client, dbName, collectionName)
 
   def drop(isSystem: Boolean = false): Future[Boolean] = APICollectionCollectionName
     .delete(client, collectionName, isSystem = Some(isSystem))

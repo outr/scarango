@@ -63,7 +63,7 @@ object APIIndexttl {
   */
   def post(client: HttpClient, collectionName: String, body: PostAPIIndexTtl): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/index#ttl", append = true) 
+    .path(path"/_api/index", append = true)
     .params("collection-name" -> collectionName.toString)
     .restful[PostAPIIndexTtl, Json](body)
 }
