@@ -50,3 +50,10 @@ lazy val driver = project.in(file("driver"))
     )
   )
   .dependsOn(coreJVM, api)
+
+lazy val plugin = project.in(file("plugin"))
+  .settings(
+    name := "scarango-plugin",
+    sbtPlugin := true,
+    crossSbtVersions := Vector("0.13.18", "1.2.8")
+  )
