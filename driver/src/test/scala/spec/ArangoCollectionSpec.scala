@@ -1,6 +1,6 @@
 package spec
 
-import com.outr.arango.{ArangoDB, DatabaseState}
+import com.outr.arango.{ArangoDB, DatabaseState, Id, IndexType}
 import io.circe.Json
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -11,6 +11,8 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
 
   "ArangoCollection" should {
     lazy val dbExample = db.api.db("collectionExample")
+    lazy val collection = dbExample.collection("test")
+    var indexId: Option[String] = None
 
     "initialize configuration" in {
       Profig.loadDefaults()
@@ -33,13 +35,19 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "create a new collection" in {
-      dbExample.collection("test").create(waitForSync = Some(true)).map { info =>
+      collection.create(waitForSync = Some(true)).map { info =>
         info.name should be(Some("test"))
       }
     }
-    // TODO: create a unique index on the collection
+    "create a unique index on the collection" in {
+      collection.index.create(IndexType.Persistent, List("name"), unique = true, sparse = true).map { info =>
+        indexId = info.id.map(_.value)
+        scribe.info(s"IndexID: $indexId")
+        info.error should be(false)
+      }
+    }
     "insert a document" in {
-      dbExample.collection("test").document.create(Json.obj(
+      collection.document.create(Json.obj(
         "_key" -> Json.fromString("john"),
         "name" -> Json.fromString("John Doe")
       ), returnOld = true).map { response =>
@@ -48,11 +56,17 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "upsert a document" in {
-      dbExample.collection("test").document.create(Json.obj(
+      collection.document.create(Json.obj(
         "_key" -> Json.fromString("john"),
         "name" -> Json.fromString("Johnny Doe")
       ), returnOld = true, overwrite = true).map { response =>
         scribe.info(s"Response: $response")
+        succeed
+      }
+    }
+    "delete a document" in {
+      collection.document.deleteOne(Id[String]("john", "test")).map { json =>
+        scribe.info(s"Delete: $json")
         succeed
       }
     }

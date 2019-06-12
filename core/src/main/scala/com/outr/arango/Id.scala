@@ -11,9 +11,9 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
   * @param revision the revision if retrieved from the database
   * @tparam D the document type
   */
-case class Id[D <: Document[D]](value: String,
-                                collection: String,
-                                revision: Option[String]) {
+case class Id[D](value: String,
+                 collection: String,
+                 revision: Option[String] = None) {
   /**
     * Key represents the unique identifier within a collection.
     *
@@ -42,11 +42,11 @@ case class Id[D <: Document[D]](value: String,
 object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
 
-  implicit def encoder[D <: Document[D]]: Encoder[Id[D]] = new Encoder[Id[D]] {
+  implicit def encoder[D]: Encoder[Id[D]] = new Encoder[Id[D]] {
     override def apply(id: Id[D]): Json = Json.fromString(id._id)
   }
 
-  implicit def decoder[D <: Document[D]]: Decoder[Id[D]] = new Decoder[Id[D]] {
+  implicit def decoder[D]: Decoder[Id[D]] = new Decoder[Id[D]] {
     override def apply(c: HCursor): Result[Id[D]] = c.value.asString.get match {
       case ExtractorRegex(collection, value) => Right(Id[D](value, collection, None))
     }

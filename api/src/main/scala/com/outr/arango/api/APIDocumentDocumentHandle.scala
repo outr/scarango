@@ -488,9 +488,9 @@ object APIDocumentDocumentHandle {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, documentHandle: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, IfMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[Json] = client
+  def delete(client: HttpClient, collectionName: String, documentHandle: String, waitForSync: Option[Boolean] = None, returnOld: Option[Boolean] = None, silent: Option[Boolean] = None, IfMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_api/document/{document-handle}".withArguments(Map("document-handle" -> documentHandle)), append = true)
+    .path(path"/_api/document/{collection}/{document-handle}".withArguments(Map("collection" -> collectionName, "document-handle" -> documentHandle)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("silent", silent, None)

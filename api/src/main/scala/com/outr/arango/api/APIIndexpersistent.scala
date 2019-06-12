@@ -112,6 +112,6 @@ object APIIndexpersistent {
   def post(client: HttpClient, collectionName: String, body: PostAPIIndexPersistent)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/index", append = true)
-    .params("collection-name" -> collectionName.toString)
+    .params("collection" -> collectionName.toString)
     .restful[PostAPIIndexPersistent, Json](body)
 }

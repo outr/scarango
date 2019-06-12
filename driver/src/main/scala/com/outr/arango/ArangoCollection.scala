@@ -54,6 +54,7 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
     )
   }
 
+  lazy val index: ArangoIndex = new ArangoIndex(client, dbName, collectionName)
   lazy val document: ArangoDocument = new ArangoDocument(client, dbName, collectionName)
 
   def drop(isSystem: Boolean = false)(implicit ec: ExecutionContext): Future[Boolean] = APICollectionCollectionName
