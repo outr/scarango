@@ -34,27 +34,3 @@ class ArangoIndex(client: HttpClient, dbName: String, collectionName: String) {
     APIIndexIndexHandle.delete(client, collectionName, handle).map(JsonUtil.fromJson[IndexDelete](_))
   }
 }
-
-sealed trait IndexType
-
-object IndexType {
-  case object Hash extends IndexType
-  case object SkipList extends IndexType
-  case object Persistent extends IndexType
-  case object Geo extends IndexType
-  case object FullText extends IndexType
-}
-
-case class IndexInfo(`type`: String,
-                     fields: Option[List[String]] = None,
-                     unique: Option[Boolean] = None,
-                     sparse: Option[Boolean] = None,
-                     id: Option[Id[IndexInfo]] = None,
-                     isNewlyCreated: Option[Boolean] = None,
-                     selectivityEstimate: Option[Int] = None,
-                     error: Boolean = false,
-                     code: Int = 0)
-
-case class IndexList(indexes: List[IndexInfo], error: Boolean, code: Int)
-
-case class IndexDelete(id: String, error: Boolean, code: Int)

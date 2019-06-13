@@ -74,18 +74,3 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
     .map(JsonUtil.fromJson[ArangoResponse[Option[Boolean]]](_))
     .map(!_.error)
 }
-
-case class TruncateCollectionResponse(id: String,
-                                      name: String,
-                                      isSystem: Boolean,
-                                      status: Int,
-                                      `type`: Int,
-                                      error: Boolean,
-                                      code: Int)
-
-case class CollectionLoad(id: String,
-                          name: String,
-                          count: Option[Int],
-                          status: Int,
-                          `type`: Int,
-                          isSystem: Boolean)

@@ -100,37 +100,3 @@ class ArangoQuery(client: HttpClient) {
       .map(r => QueryResponsePagination[D](this, r))
   }
 }
-
-case class QueryResponse[T](id: Option[String],
-                            result: List[T],
-                            hasMore: Boolean,
-                            count: Option[Int],
-                            cached: Boolean,
-                            extra: QueryResponseExtras,
-                            error: Boolean,
-                            code: Int)
-
-case class QueryResponseExtras(stats: QueryResponseStats, warnings: List[String])
-
-case class QueryResponseStats(writesExecuted: Int,
-                              writesIgnored: Int,
-                              scannedFull: Int,
-                              scannedIndex: Int,
-                              filtered: Int,
-                              executionTime: Double)
-
-case class QueryResponsePagination[D](cursor: ArangoQuery,
-                                      response: QueryResponse[D],
-                                      offset: Int = 0)
-                                     (implicit ec: ExecutionContext, serialization: Serialization[D]) {
-  lazy val start: Int = offset
-  lazy val end: Int = math.max(offset, offset + response.result.size - 1)
-  def results: List[D] = response.result
-  def total: Int = response.count.get
-  def hasNext: Boolean = response.hasMore
-  def next(): Future[QueryResponsePagination[D]] = if (response.hasMore) {
-    cursor.get[D](response.id.get).map(r => copy(response = r, offset = end + 1))
-  } else {
-    Future.failed(throw new RuntimeException("No more results."))
-  }
-}

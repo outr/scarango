@@ -2,7 +2,7 @@ package com.outr.arango
 
 import com.outr.arango.api._
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
-import io.youi.client.HttpClient
+import io.youi.client.{HttpClient, HttpClientConfig}
 import io.youi.client.intercept.Interceptor
 import io.youi.http.{Headers, HttpRequest, HttpResponse}
 import io.youi.net._
@@ -12,6 +12,7 @@ import scribe.Execution.global
 import io.circe.parser._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class ArangoDB(val database: String = ArangoDB.config.db,
                baseURL: URL = ArangoDB.config.url,
@@ -95,6 +96,10 @@ class ArangoDB(val database: String = ArangoDB.config.db,
 }
 
 object ArangoDB {
+  HttpClientConfig.default := HttpClientConfig(
+    timeout = 5.minutes
+  )
+
   def config: Config = Profig("arango").as[Config]
 
   def credentials: Option[Credentials] = if (config.authentication) {
