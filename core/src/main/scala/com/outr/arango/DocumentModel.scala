@@ -4,7 +4,7 @@ import io.youi.Unique
 
 trait DocumentModel[D <: Document[D]] {
   def collectionName: String
-  def serialization: Serialization[D]
+  implicit def serialization: Serialization[D]
 
   protected def generateId(): String = Unique()
 

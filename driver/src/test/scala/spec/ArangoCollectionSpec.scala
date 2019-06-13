@@ -1,6 +1,6 @@
 package spec
 
-import com.outr.arango.{ArangoDB, DatabaseState, Id, IndexType}
+import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, IndexType, Serialization}
 import io.circe.Json
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -13,6 +13,7 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     lazy val dbExample = db.api.db("collectionExample")
     lazy val collection = dbExample.collection("test")
     var indexId: Option[String] = None
+    implicit val serialization: Serialization[User] = User.serialization
 
     "initialize configuration" in {
       Profig.loadDefaults()
@@ -42,45 +43,57 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     "create a unique index on the collection" in {
       collection.index.create(IndexType.Persistent, List("name"), unique = true, sparse = true).map { info =>
         indexId = info.id.map(_.value)
-        scribe.info(s"IndexID: $indexId")
         info.error should be(false)
       }
     }
     "insert a document" in {
-      collection.document.create(Json.obj(
-        "_key" -> Json.fromString("john"),
-        "name" -> Json.fromString("John Doe")
-      ), returnOld = true).map { response =>
-        scribe.info(s"Response: $response")
-        succeed
+      collection.document.insertOne(User("John Doe", User.id("john"))).map { insert =>
+        insert._identity._id should be("test/john")
+        insert._identity._key should be("john")
+        insert._identity._rev should not be None
+        insert._identity.collection should be("test")
+        insert._identity.value should be("john")
       }
     }
     "upsert a document" in {
-      collection.document.create(Json.obj(
-        "_key" -> Json.fromString("john"),
-        "name" -> Json.fromString("Johnny Doe")
-      ), returnOld = true, overwrite = true).map { response =>
-        scribe.info(s"Response: $response")
-        succeed
+      collection.document.upsertOne(User("Johnny Doe", User.id("john"))).map { upsert =>
+        upsert._identity._id should be("test/john")
+        upsert._identity._key should be("john")
+        upsert._identity._rev should not be None
+        upsert._identity.collection should be("test")
+        upsert._identity.value should be("john")
+      }
+    }
+    "query the document back" in {
+      collection.document.get[User](User.id("john")).map { user =>
+        user should not be None
+      }
+    }
+    "fail to insert a duplicate" in {
+      recoverToSucceededIf[ArangoException] {
+        collection.document.insertOne(User("Joe Doe", User.id("john")))
       }
     }
     "delete a document" in {
-      collection.document.deleteOne(Id[String]("john", "test")).map { json =>
-        scribe.info(s"Delete: $json")
-        succeed
+      collection.document.deleteOne(Id[String]("john", "test")).map { id =>
+        id._id should be("test/john")
+        id._key should be("john")
+        id._rev should not be None
+        id.collection should be("test")
+        id.value should be("john")
+      }
+    }
+    "query the document back and get nothing" in {
+      collection.document.get[User](User.id("john")).map { user =>
+        user should be(None)
       }
     }
     "insert multiple documents" in {
-      dbExample.collection("test").document.create(Json.arr(
-        Json.obj("name" -> Json.fromString("Jane Doe")),
-        Json.obj("name" -> Json.fromString("Baby Doe"))
-      )).map { response =>
-        scribe.info(s"Response: $response")
-        succeed
+      collection.document.insert(List(User("Jane Doe"), User("Baby Doe"))).map { inserts =>
+        inserts.length should be(2)
       }
     }
     // TODO: mess up session token to force a reconnect
-    // TODO: insert another document
     // TODO: check replication state
     // TODO: fail to insert a duplicate document
     // TODO: insert Jane Doe
@@ -111,5 +124,13 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
         response.value should not contain "collectionExample"
       }
     }
+  }
+
+  case class User(name: String, _identity: Id[User] = User.id()) extends Document[User]
+
+  object User extends DocumentModel[User] {
+    override def collectionName: String = "users"
+
+    override def serialization: Serialization[User] = Serialization.auto[User]
   }
 }

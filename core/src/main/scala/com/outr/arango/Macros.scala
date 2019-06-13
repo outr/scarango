@@ -5,8 +5,8 @@ import scala.reflect.macros.blackbox
 
 @compileTimeOnly("Enable macro paradise to expand compile-time macros")
 object Macros {
-  def serializationAuto[D <: Document[D]](c: blackbox.Context)
-                                         (implicit d: c.WeakTypeTag[D]): c.Expr[Serialization[D]] = {
+  def serializationAuto[D](c: blackbox.Context)
+                          (implicit d: c.WeakTypeTag[D]): c.Expr[Serialization[D]] = {
     import c.universe._
 
     c.Expr[Serialization[D]](

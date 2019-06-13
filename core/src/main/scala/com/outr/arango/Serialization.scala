@@ -1,34 +1,23 @@
 package com.outr.arango
 
-import io.circe.Json
+import io.circe.{Decoder, Encoder, Json}
 
 import scala.language.experimental.macros
 
-case class Serialization[D <: Document[D]](doc2Json: D => Json, json2Doc: Json => D) {
-  final def toJson(document: D): Json = {
-    val json = doc2Json(document)
-    val identity = document._identity
-    json.deepMerge(Json.obj(
-      "_id" -> Json.fromString(identity._id),
-      "_key" -> Json.fromString(identity._key),
-      "_rev" -> identity._rev.map(Json.fromString).getOrElse(Json.Null)
-    ))
-  }
+case class Serialization[D](private val doc2Json: D => Json, private val json2Doc: Json => D) {
+  final def toJson(document: D): Json = Id.update(doc2Json(document), removeIdentity = true)
 
-  final def fromJson(json: Json): D = {
-    val _id = (json \\ "_id").head.asString.get
-    val _key = (json \\ "_key").head.asString.get
-    val _rev = (json \\ "_rev").head.asString.get
-    json2Doc(json.deepMerge(Json.obj(
-      "_identity" -> Json.obj(
-        "_id" -> Json.fromString(_id),
-        "_key" -> Json.fromString(_key),
-        "_rev" -> Json.fromString(_rev)
-      )
-    )))
-  }
+  final def fromJson(json: Json): D = json2Doc(Id.update(json, removeIdentity = false))
 }
 
 object Serialization {
-  def auto[D <: Document[D]]: Serialization[D] = macro Macros.serializationAuto[D]
+  def auto[D]: Serialization[D] = macro Macros.serializationAuto[D]
+  def create[D](encoder: Encoder[D], decoder: Decoder[D]): Serialization[D] = {
+    val doc2Json = (d: D) => encoder(d)
+    val json2Doc = (json: Json) => decoder.decodeJson(json) match {
+      case Left(df) => throw df
+      case Right(d) => d
+    }
+    Serialization[D](doc2Json, json2Doc)
+  }
 }

@@ -10,6 +10,6 @@ case class ArangoResponse[R](error: Boolean,
   def value: R = if (!error) {
     result.getOrElse(throw new RuntimeException(s"No result defined for $this"))
   } else {
-    throw ArangoException(s"${errorMessage.getOrElse("-- No error message --")} ($errorNum)", code)
+    throw ArangoResponseException(s"${errorMessage.getOrElse("-- No error message --")} ($errorNum)", code)
   }
 }

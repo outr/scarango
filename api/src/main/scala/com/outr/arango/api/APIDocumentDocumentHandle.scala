@@ -553,9 +553,9 @@ object APIDocumentDocumentHandle {
   * </code><code>}
   * </code></pre>
   */
-  def get(client: HttpClient, documentHandle: String, IfNoneMatch: Option[String] = None, IfMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[Json] = client
+  def get(client: HttpClient, collection: String, documentHandle: String, IfNoneMatch: Option[String] = None, IfMatch: Option[String] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
-    .path(path"/_api/document/{document-handle}".withArguments(Map("document-handle" -> documentHandle)), append = true)
+    .path(path"/_api/document/{collection}/{document-handle}".withArguments(Map("collection" -> collection, "document-handle" -> documentHandle)), append = true)
     .call[Json]
 
   /**
