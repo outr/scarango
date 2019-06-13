@@ -30,9 +30,12 @@ class ArangoDatabase(client: HttpClient, name: String) {
 }
 
 class ArangoQuery(client: HttpClient) {
-  def validate(query: String): Future[ValidationResult] = {
-    APIQuery.post(client, PostApiQueryProperties(query)).map(JsonUtil.fromJson[ValidationResult](_))
-  }
+  def validate(query: String): Future[ValidationResult] = APIQuery
+    .post(client, PostApiQueryProperties(query))
+    .map(JsonUtil.fromJson[ValidationResult](_))
+    .recover {
+      case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
+    }
 }
 
 case class ValidationResult(error: Boolean,
