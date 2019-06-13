@@ -3,8 +3,8 @@ package com.outr.arango
 import io.youi.Unique
 
 trait DocumentModel[D <: Document[D]] {
-  def collectionName: String
-  implicit def serialization: Serialization[D]
+  val collectionName: String
+  implicit val serialization: Serialization[D]
 
   protected def generateId(): String = Unique()
 

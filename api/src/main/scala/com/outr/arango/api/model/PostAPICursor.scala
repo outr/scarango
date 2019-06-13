@@ -34,7 +34,7 @@ import io.circe.Json
   */
 case class PostAPICursor(query: String,
                          batchSize: Option[Long] = None,
-                         bindVars: Option[List[String]] = None,
+                         bindVars: Json,
                          cache: Option[Boolean] = None,
                          count: Option[Boolean] = None,
                          memoryLimit: Option[Long] = None,

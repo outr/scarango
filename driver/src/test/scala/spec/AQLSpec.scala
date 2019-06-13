@@ -7,6 +7,9 @@ import profig.Profig
 
 class AQLSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
+  private lazy val dbExample = db.api.db("aqlExample")
+  private lazy val collection = dbExample.collection(User.collectionName)
+  private implicit val serialization: Serialization[User] = User.serialization
 
   "AQL" should {
     "initialize configuration" in {
@@ -41,5 +44,128 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
       query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
     }
+    "create the database" in {
+      dbExample.create().map { response =>
+        response.value should be(true)
+      }
+    }
+    "create a new collection" in {
+      collection.create(waitForSync = Some(true)).map { info =>
+        info.name should be(Some(User.collectionName))
+      }
+    }
+    "insert a user" in {
+      collection.document.insertOne(User("John Doe", 21)).map { insert =>
+        insert._identity should not be null
+      }
+    }
+    "handle a simple query" in {
+      val query = aql"FOR user IN users RETURN user"
+      dbExample.query.cursor[User](query).map { response =>
+        response.id should be(None)
+        response.result.size should be(1)
+        val user = response.result.head
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "verify `first` returns the first entry" in {
+      val query = aql"FOR user IN users RETURN user"
+      dbExample.query.first[User](query).map { userOption =>
+        userOption shouldNot be(None)
+        val user = userOption.get
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "insert another user" in {
+      collection.document.insertOne(User("Jane Doe", 20, Some("Online"))).map { insert =>
+        insert._identity should not be null
+      }
+    }
+    "handle a two page cursor call" in {
+      val query = aql"FOR user IN users RETURN user"
+      dbExample.query.cursor[User](query, count = true, batchSize = 1).map { response =>
+        response.result.size should be(1)
+        response.count should be(Some(2))
+        response.id shouldNot be(None)
+
+        response.id.get
+      }.flatMap { id =>
+        dbExample.query.get[User](id).map { response =>
+          response.result.size should be(1)
+          response.count should be(Some(2))
+        }
+      }
+    }
+    "find a user from a list of names" in {
+      val names = List("John Doe")
+      val query = aql"FOR user IN users FILTER user.name IN $names RETURN user"
+      dbExample.query.cursor[User](query, count = true).map { result =>
+        result.count should be(Some(1))
+        val userOption = result.result.headOption
+        userOption shouldNot be(None)
+        val user = userOption.get
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "find a user from a list of ages" in {
+      val ages = List(21)
+      val query = aql"FOR user IN users FILTER user.age IN $ages RETURN user"
+      dbExample.query.cursor[User](query, count = true).map { result =>
+        result.count should be(Some(1))
+        val userOption = result.result.headOption
+        userOption shouldNot be(None)
+        val user = userOption.get
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "find a user where status is null" in {
+      val status: String = null
+      val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
+      dbExample.query.cursor[User](query, count = true).map { result =>
+        result.count should be(Some(1))
+        val userOption = result.result.headOption
+        userOption shouldNot be(None)
+        val user = userOption.get
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "find a user where status is None" in {
+      val status: Option[String] = None
+      val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
+      dbExample.query.cursor[User](query, count = true).map { result =>
+        result.count should be(Some(1))
+        val userOption = result.result.headOption
+        userOption shouldNot be(None)
+        val user = userOption.get
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._identity should not be null
+      }
+    }
+    "drop the test database" in {
+      dbExample.drop().map { response =>
+        response.value should be(true)
+      }
+    }
+  }
+
+  case class User(name: String,
+                  age: Int,
+                  status: Option[String] = None,
+                  _identity: Id[User] = User.id()) extends Document[User]
+
+  object User extends DocumentModel[User] {
+    override val collectionName: String = "users"
+    override implicit val serialization: Serialization[User] = Serialization.auto[User]
   }
 }

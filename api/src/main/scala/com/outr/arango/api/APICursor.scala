@@ -739,6 +739,6 @@ object APICursor {
   */
   def post(client: HttpClient, body: PostAPICursor)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/cursor", append = true) 
+    .path(path"/_api/cursor", append = true)
     .restful[PostAPICursor, Json](body)
 }

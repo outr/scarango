@@ -1,24 +1,25 @@
 package com.outr.arango
 
-import com.outr.arango.api.model.{GetAPIDatabaseNew, PostApiQueryProperties}
-import com.outr.arango.api.{APIDatabase, APIDatabaseDatabaseName, APIQuery}
+import com.outr.arango.Value.{BigDecimalValue, BooleanValue, DoubleValue, IntValue, LongValue, SeqBigDecimalValue, SeqBooleanValue, SeqDoubleValue, SeqIntValue, SeqLongValue, SeqStringValue, StringValue}
+import com.outr.arango.api.model.{GetAPIDatabaseNew, PostAPICursor, PostAPICursorOpts, PostApiQueryProperties}
+import com.outr.arango.api.{APICursor, APIDatabase, APIDatabaseDatabaseName, APIQuery}
 import com.outr.arango.model.{ArangoCode, ArangoResponse}
+import io.circe.{Decoder, Json}
 import io.youi.client.HttpClient
 import io.youi.net.Path
 import profig.JsonUtil
-import scribe.Execution.global
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ArangoDatabase(client: HttpClient, name: String) {
-  def create(): Future[ArangoResponse[Boolean]] = {
+  def create()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
     APIDatabase.post(client, GetAPIDatabaseNew(
       name = name
     )).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
     // TODO: Support setting user
   }
 
-  def drop(): Future[ArangoResponse[Boolean]] = {
+  def drop()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
     APIDatabaseDatabaseName.delete(client, name).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
   }
 
@@ -26,16 +27,7 @@ class ArangoDatabase(client: HttpClient, name: String) {
     new ArangoCollection(client.path(Path.parse(s"/_db/${this.name}/")), this.name, name)
   }
 
-  lazy val query: ArangoQuery = new ArangoQuery(client)
-}
-
-class ArangoQuery(client: HttpClient) {
-  def validate(query: String): Future[ValidationResult] = APIQuery
-    .post(client, PostApiQueryProperties(query))
-    .map(JsonUtil.fromJson[ValidationResult](_))
-    .recover {
-      case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
-    }
+  lazy val query: ArangoQuery = new ArangoQuery(client.path(Path.parse(s"/_db/${this.name}/")))
 }
 
 case class ValidationResult(error: Boolean,
