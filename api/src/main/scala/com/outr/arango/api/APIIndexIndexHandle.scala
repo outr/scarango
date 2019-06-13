@@ -30,9 +30,9 @@ object APIIndexIndexHandle {
   * </code><code>}
   * </code></pre>
   */
-  def delete(client: HttpClient, indexHandle: String)(implicit ec: ExecutionContext): Future[Json] = client
+  def delete(client: HttpClient, collection: String, indexHandle: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
-    .path(path"/_api/index/{index-handle}".withArguments(Map("index-handle" -> indexHandle)), append = true)
+    .path(path"/_api/index/{collection}/{index-handle}".withArguments(Map("collection" -> collection, "index-handle" -> indexHandle)), append = true)
     .call[Json]
 
   /**

@@ -1,11 +1,9 @@
 package com.outr.arango
 
 import com.outr.arango.api.{APIDocumentCollection, APIDocumentDocumentHandle}
-import com.outr.arango.JsonImplicits._
 import com.outr.arango.model.ArangoCode
 import io.circe.Json
 import io.youi.client.HttpClient
-import io.youi.http.HttpStatus
 import profig.JsonUtil
 
 import scala.concurrent.{ExecutionContext, Future}

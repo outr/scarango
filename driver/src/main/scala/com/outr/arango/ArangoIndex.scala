@@ -31,7 +31,7 @@ class ArangoIndex(client: HttpClient, dbName: String, collectionName: String) {
   }
 
   def delete(handle: String)(implicit ec: ExecutionContext): Future[IndexDelete] = {
-    APIIndexIndexHandle.delete(client, handle).map(JsonUtil.fromJson[IndexDelete](_))
+    APIIndexIndexHandle.delete(client, collectionName, handle).map(JsonUtil.fromJson[IndexDelete](_))
   }
 }
 

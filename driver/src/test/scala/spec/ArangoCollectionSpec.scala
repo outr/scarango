@@ -1,7 +1,6 @@
 package spec
 
 import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, IndexType, Serialization}
-import io.circe.Json
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
@@ -67,11 +66,17 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     "query the document back" in {
       collection.document.get[User](User.id("john")).map { user =>
         user should not be None
+        user.get.name should be("Johnny Doe")
       }
     }
-    "fail to insert a duplicate" in {
+    "fail to insert a duplicate id" in {
       recoverToSucceededIf[ArangoException] {
         collection.document.insertOne(User("Joe Doe", User.id("john")))
+      }
+    }
+    "fail to insert a duplicate name" in {
+      recoverToSucceededIf[ArangoException] {
+        collection.document.insertOne(User("Johnny Doe"))
       }
     }
     "delete a document" in {
@@ -94,21 +99,26 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     // TODO: mess up session token to force a reconnect
-    // TODO: check replication state
-    // TODO: fail to insert a duplicate document
-    // TODO: insert Jane Doe
-    // TODO: check replication follow
-    // TODO: insert Baby Doe
-    // TODO: check replication follow again
-    // TODO: get collection info
-    // TODO: get collection properties
-    // TODO: get collection count
-    // TODO: bulk import documents
-    // TODO: get collection count after bulk import
-    // TODO: get collection revision
-    // TODO: list all collections
-    // TODO: truncate the collection
-    // TODO: delete the unique index on name
+    "unload the collection" in {
+      collection.unload().map { load =>
+        load.status should be(2)
+      }
+    }
+    "load the collection" in {
+      collection.load().map { load =>
+        load.status should be(3)
+      }
+    }
+    "truncate the collection" in {
+      collection.truncate().map { response =>
+        response.error should be(false)
+      }
+    }
+    "delete the unique index on name" in {
+      collection.index.delete(indexId.get).map { delete =>
+        delete.error should be(false)
+      }
+    }
     "drop the collection" in {
       dbExample.collection("test").drop().map { success =>
         success should be(true)

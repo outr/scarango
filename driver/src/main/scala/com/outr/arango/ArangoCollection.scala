@@ -1,7 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.api.model.{CollectionInfo, PostAPICollection, PostAPICollectionOpts}
-import com.outr.arango.api.{APICollection, APICollectionCollectionName}
+import com.outr.arango.api.{APICollection, APICollectionCollectionName, APICollectionCollectionNameLoad, APICollectionCollectionNameTruncate, APICollectionCollectionNameUnload}
 import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
 import profig.JsonUtil
@@ -57,8 +57,35 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
   lazy val index: ArangoIndex = new ArangoIndex(client, dbName, collectionName)
   lazy val document: ArangoDocument = new ArangoDocument(client, dbName, collectionName)
 
+  def unload()(implicit ec: ExecutionContext): Future[CollectionLoad] = {
+    APICollectionCollectionNameUnload.put(client, collectionName).map(JsonUtil.fromJson[CollectionLoad](_))
+  }
+
+  def load()(implicit ec: ExecutionContext): Future[CollectionLoad] = {
+    APICollectionCollectionNameLoad.put(client, collectionName).map(JsonUtil.fromJson[CollectionLoad](_))
+  }
+
+  def truncate()(implicit ec: ExecutionContext): Future[TruncateCollectionResponse] = {
+    APICollectionCollectionNameTruncate.put(client, collectionName).map(JsonUtil.fromJson[TruncateCollectionResponse](_))
+  }
+
   def drop(isSystem: Boolean = false)(implicit ec: ExecutionContext): Future[Boolean] = APICollectionCollectionName
     .delete(client, collectionName, isSystem = Some(isSystem))
     .map(JsonUtil.fromJson[ArangoResponse[Option[Boolean]]](_))
     .map(!_.error)
 }
+
+case class TruncateCollectionResponse(id: String,
+                                      name: String,
+                                      isSystem: Boolean,
+                                      status: Int,
+                                      `type`: Int,
+                                      error: Boolean,
+                                      code: Int)
+
+case class CollectionLoad(id: String,
+                          name: String,
+                          count: Option[Int],
+                          status: Int,
+                          `type`: Int,
+                          isSystem: Boolean)
