@@ -8,20 +8,13 @@ import profig.JsonUtil
 import scala.concurrent.{ExecutionContext, Future}
 
 class ArangoIndex(client: HttpClient, dbName: String, collectionName: String) {
-  def create(`type`: IndexType,
-             fields: List[String],
-             sparse: Boolean = false,
-             unique: Boolean = false,
-             deduplicate: Boolean = true,
-             geoJson: Boolean = true,
-             minLength: Long = 3L)
-            (implicit ec: ExecutionContext): Future[IndexInfo] = {
-    val future = `type` match {
-      case IndexType.Hash => APIIndexhash.post(client, collectionName, PostAPIIndexHash("hash", Some(deduplicate), Some(fields), Some(sparse), Some(unique)))
-      case IndexType.SkipList => APIIndexskiplist.post(client, collectionName, PostAPIIndexSkiplist("skiplist", Some(deduplicate), Some(fields), Some(sparse), Some(unique)))
-      case IndexType.Persistent => APIIndexpersistent.post(client, collectionName, PostAPIIndexPersistent("persistent", Some(fields), Some(sparse), Some(unique)))
-      case IndexType.Geo => APIIndexgeo.post(client, collectionName, PostAPIIndexGeo("geo", Some(fields), Some(geoJson.toString)))
-      case IndexType.FullText => APIIndexfulltext.post(client, collectionName, PostAPIIndexFulltext("fulltext", Some(fields), Some(minLength)))
+  def create(index: Index)(implicit ec: ExecutionContext): Future[IndexInfo] = {
+    val future = index.`type` match {
+      case IndexType.Hash => APIIndexhash.post(client, collectionName, PostAPIIndexHash("hash", Some(index.deduplicate), Some(index.fields), Some(index.sparse), Some(index.unique)))
+      case IndexType.SkipList => APIIndexskiplist.post(client, collectionName, PostAPIIndexSkiplist("skiplist", Some(index.deduplicate), Some(index.fields), Some(index.sparse), Some(index.unique)))
+      case IndexType.Persistent => APIIndexpersistent.post(client, collectionName, PostAPIIndexPersistent("persistent", Some(index.fields), Some(index.sparse), Some(index.unique)))
+      case IndexType.Geo => APIIndexgeo.post(client, collectionName, PostAPIIndexGeo("geo", Some(index.fields), Some(index.geoJson.toString)))
+      case IndexType.FullText => APIIndexfulltext.post(client, collectionName, PostAPIIndexFulltext("fulltext", Some(index.fields), Some(index.minLength)))
     }
     future.map(JsonUtil.fromJson[IndexInfo](_))
   }
@@ -30,7 +23,7 @@ class ArangoIndex(client: HttpClient, dbName: String, collectionName: String) {
     APIIndex.get(client, collectionName).map(JsonUtil.fromJson[IndexList](_))
   }
 
-  def delete(handle: String)(implicit ec: ExecutionContext): Future[IndexDelete] = {
-    APIIndexIndexHandle.delete(client, collectionName, handle).map(JsonUtil.fromJson[IndexDelete](_))
+  def delete(id: Id[Index])(implicit ec: ExecutionContext): Future[IndexDelete] = {
+    APIIndexIndexHandle.delete(client, collectionName, id.value).map(JsonUtil.fromJson[IndexDelete](_))
   }
 }

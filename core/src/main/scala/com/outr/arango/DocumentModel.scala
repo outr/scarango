@@ -9,5 +9,9 @@ trait DocumentModel[D <: Document[D]] {
   protected def generateId(): String = Unique()
 
   def id(value: String = generateId(),
-         revision: Option[String] = None): Id[D] = Id[D](value, collectionName, revision)
+         revision: Option[String] = None): Id[D] = if (value.startsWith(collectionName)) {
+    Id[D](value.substring(collectionName.length + 1), collectionName, revision)
+  } else {
+    Id[D](value, collectionName, revision)
+  }
 }

@@ -23,12 +23,12 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       }
     }
     "parse a simple query with no args successfully" in {
-      db.api.db.query.validate("FOR user IN users RETURN user").map { parseResult =>
+      db.api.db.validate("FOR user IN users RETURN user").map { parseResult =>
         parseResult.error should be(false)
       }
     }
     "parse an invalid query with no args successfully" in {
-     db.api.db.query.validate("FOR user IN users RETURNING user").map { parseResult =>
+     db.api.db.validate("FOR user IN users RETURNING user").map { parseResult =>
         parseResult.error should be(true)
       }
     }
@@ -61,7 +61,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "handle a simple query" in {
       val query = aql"FOR user IN users RETURN user"
-      dbExample.query.cursor[User](query).map { response =>
+      dbExample.query(query).as[User].cursor.map { response =>
         response.id should be(None)
         response.result.size should be(1)
         val user = response.result.head
@@ -72,7 +72,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "verify `first` returns the first entry" in {
       val query = aql"FOR user IN users RETURN user"
-      dbExample.query.first[User](query).map { userOption =>
+      dbExample.query(query).as[User].first.map { userOption =>
         userOption shouldNot be(None)
         val user = userOption.get
         user.name should be("John Doe")
@@ -87,24 +87,25 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "handle a two page cursor call" in {
       val query = aql"FOR user IN users RETURN user"
-      dbExample.query.cursor[User](query, count = true, batchSize = 1).map { response =>
+      val b = dbExample.query(query).as[User].includeCount.batchSize(1)
+      b.cursor.map { response =>
         response.result.size should be(1)
-        response.count should be(Some(2))
+        response.count should be(2)
         response.id shouldNot be(None)
 
         response.id.get
       }.flatMap { id =>
-        dbExample.query.get[User](id).map { response =>
+        b.get(id).map { response =>
           response.result.size should be(1)
-          response.count should be(Some(2))
+          response.count should be(2)
         }
       }
     }
     "find a user from a list of names" in {
       val names = List("John Doe")
       val query = aql"FOR user IN users FILTER user.name IN $names RETURN user"
-      dbExample.query.cursor[User](query, count = true).map { result =>
-        result.count should be(Some(1))
+      dbExample.query(query).as[User].includeCount.cursor.map { result =>
+        result.count should be(1)
         val userOption = result.result.headOption
         userOption shouldNot be(None)
         val user = userOption.get
@@ -116,8 +117,8 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     "find a user from a list of ages" in {
       val ages = List(21)
       val query = aql"FOR user IN users FILTER user.age IN $ages RETURN user"
-      dbExample.query.cursor[User](query, count = true).map { result =>
-        result.count should be(Some(1))
+      dbExample.query(query).as[User].includeCount.cursor.map { result =>
+        result.count should be(1)
         val userOption = result.result.headOption
         userOption shouldNot be(None)
         val user = userOption.get
@@ -129,8 +130,8 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     "find a user where status is null" in {
       val status: String = null
       val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
-      dbExample.query.cursor[User](query, count = true).map { result =>
-        result.count should be(Some(1))
+      dbExample.query(query).as[User].includeCount.cursor.map { result =>
+        result.count should be(1)
         val userOption = result.result.headOption
         userOption shouldNot be(None)
         val user = userOption.get
@@ -142,8 +143,8 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     "find a user where status is None" in {
       val status: Option[String] = None
       val query = aql"FOR user IN users FILTER user.status == $status RETURN user"
-      dbExample.query.cursor[User](query, count = true).map { result =>
-        result.count should be(Some(1))
+      dbExample.query(query).as[User].includeCount.cursor.map { result =>
+        result.count should be(1)
         val userOption = result.result.headOption
         userOption shouldNot be(None)
         val user = userOption.get

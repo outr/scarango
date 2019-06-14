@@ -3,7 +3,7 @@ package com.outr.arango
 case class QueryResponse[T](id: Option[String],
                             result: List[T],
                             hasMore: Boolean,
-                            count: Option[Int],
+                            count: Int = -1,
                             cached: Boolean,
                             extra: QueryResponseExtras,
                             error: Boolean,

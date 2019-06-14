@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.api._
+import com.outr.arango.api.model.GetAPIDatabaseNew
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
 import io.youi.client.{HttpClient, HttpClientConfig}
 import io.youi.client.intercept.Interceptor
@@ -8,17 +9,16 @@ import io.youi.http.{Headers, HttpRequest, HttpResponse}
 import io.youi.net._
 import profig.{JsonUtil, Profig}
 import reactify.{Val, Var}
-import scribe.Execution.global
 import io.circe.parser._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class ArangoDB(val database: String = ArangoDB.config.db,
                baseURL: URL = ArangoDB.config.url,
                credentials: Option[Credentials] = ArangoDB.credentials,
                httpClient: HttpClient = HttpClient) extends Interceptor {
-  private val _state: Var[DatabaseState] = Var(DatabaseState.Uninitialized)
+  private[arango] val _state: Var[DatabaseState] = Var(DatabaseState.Uninitialized)
   def state: Val[DatabaseState] = _state
   def session: ArangoSession = state() match {
     case DatabaseState.Initialized(session, _) => session
@@ -27,10 +27,9 @@ class ArangoDB(val database: String = ArangoDB.config.db,
   }
   def client: HttpClient = session.client.interceptor(this)
 
-  def init(): Future[DatabaseState] = {
+  def init()(implicit ec: ExecutionContext): Future[DatabaseState] = scribe.async {
     assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")
     _state := DatabaseState.Initializing
-    // TODO: Do upgrade
     val start = System.currentTimeMillis()
     val client = httpClient
       .url(baseURL)
@@ -58,21 +57,14 @@ class ArangoDB(val database: String = ArangoDB.config.db,
   }
 
   object api {
-    object db extends ArangoDatabase(client, database) {
-      def current: Future[ArangoResponse[DatabaseInfo]] = APIDatabaseCurrent
+    val system = new SystemDatabase(ArangoDB.this)
+
+    object db extends ArangoDatabase(ArangoDB.this, client, database) {
+      def current(implicit ec: ExecutionContext): Future[ArangoResponse[DatabaseInfo]] = APIDatabaseCurrent
         .get(client)
         .map(JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](_))
 
-      def list(accessibleOnly: Boolean = true): Future[ArangoResponse[List[String]]] = {
-        val future = if (accessibleOnly) {
-          APIDatabaseUser.get(client)
-        } else {
-          APIDatabase.get(client)
-        }
-        future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
-      }
-
-      def apply(name: String): ArangoDatabase = new ArangoDatabase(client, name)
+      def apply(name: String): ArangoDatabase = new ArangoDatabase(ArangoDB.this, client.path(Path.parse(s"/_db/$name/")), name)
     }
   }
 
@@ -106,5 +98,18 @@ object ArangoDB {
     Some(config.credentials)
   } else {
     None
+  }
+}
+
+class SystemDatabase(db: ArangoDB) extends ArangoDatabase(db, db.client.path(Path.parse(s"/_db/_system")), "_system") {
+  def create(databaseName: String)(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
+    APIDatabase.post(client, GetAPIDatabaseNew(
+      name = databaseName
+    )).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
+    // TODO: Support setting user
+  }
+
+  def drop(databaseName: String)(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
+    APIDatabaseDatabaseName.delete(client, databaseName).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
   }
 }

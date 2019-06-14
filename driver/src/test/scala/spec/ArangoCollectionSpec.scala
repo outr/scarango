@@ -1,6 +1,6 @@
 package spec
 
-import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, IndexType, Serialization}
+import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, Index, IndexType, Serialization}
 import io.youi.http.Headers
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.Profig
@@ -11,7 +11,7 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
   "ArangoCollection" should {
     lazy val dbExample = db.api.db("collectionExample")
     lazy val collection = dbExample.collection("test")
-    var indexId: Option[String] = None
+    var indexId: Option[Id[Index]] = None
     implicit val serialization: Serialization[User] = User.serialization
 
     "initialize configuration" in {
@@ -40,27 +40,27 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
       }
     }
     "create a unique index on the collection" in {
-      collection.index.create(IndexType.Persistent, List("name"), unique = true, sparse = true).map { info =>
-        indexId = info.id.map(_.value)
+      collection.index.create(Index(IndexType.Persistent, List("name"), unique = true, sparse = true)).map { info =>
+        indexId = Some(info.id)
         info.error should be(false)
       }
     }
     "insert a document" in {
       collection.document.insertOne(User("John Doe", User.id("john"))).map { insert =>
-        insert._identity._id should be("test/john")
-        insert._identity._key should be("john")
-        insert._identity._rev should not be None
-        insert._identity.collection should be("test")
-        insert._identity.value should be("john")
+        insert._identity.get._id should be("test/john")
+        insert._identity.get._key should be("john")
+        insert._identity.get._rev should not be None
+        insert._identity.get.collection should be("test")
+        insert._identity.get.value should be("john")
       }
     }
     "upsert a document" in {
       collection.document.upsertOne(User("Johnny Doe", User.id("john"))).map { upsert =>
-        upsert._identity._id should be("test/john")
-        upsert._identity._key should be("john")
-        upsert._identity._rev should not be None
-        upsert._identity.collection should be("test")
-        upsert._identity.value should be("john")
+        upsert._identity.get._id should be("test/john")
+        upsert._identity.get._key should be("john")
+        upsert._identity.get._rev should not be None
+        upsert._identity.get.collection should be("test")
+        upsert._identity.get.value should be("john")
       }
     }
     "query the document back" in {

@@ -66,6 +66,14 @@ object AQLMacros {
                 c.Expr[Value](q"com.outr.arango.Value.doubles($value)")
               } else if (vt <:< typeOf[Seq[BigDecimal]]) {
                 c.Expr[Value](q"com.outr.arango.Value.bigDecimals($value)")
+              } else if (vt <:< typeOf[Id[_]]) {
+                c.Expr[Value](q"com.outr.arango.Value.string($value._id)")
+              } else if (vt <:< typeOf[Field[_]]) {
+                special = true
+                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
+              } else if (vt <:< typeOf[Collection[_]]) {
+                special = true
+                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
                 //              } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
                 //                special = true
                 //                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
@@ -89,7 +97,7 @@ object AQLMacros {
 
         val db = new ArangoDB()
         val future = db.init().flatMap { _ =>
-          db.api.db.query.validate(query)
+          db.api.db.validate(query)
         }
         future.onComplete(_ => db.dispose())
 
