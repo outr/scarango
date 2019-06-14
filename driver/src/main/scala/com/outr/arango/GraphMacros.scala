@@ -25,7 +25,6 @@ object GraphMacros {
     if (d.tpe <:< typeOf[Document[_]] && d.tpe.companion <:< typeOf[DocumentModel[_]]) {
       c.Expr[QueryBuilder[D]](q"$builder.as[$d](${d.tpe.typeSymbol.companion}.serialization)")
     } else {
-      c.warning(c.enclosingPosition, s"${d.tpe} is either not a Document type or the companion object is not of type DocumentModel. Auto-generating Serialization...")
       c.Expr[QueryBuilder[D]](q"$builder.as[$d](_root_.com.outr.arango.Serialization.auto[$d])")
     }
   }

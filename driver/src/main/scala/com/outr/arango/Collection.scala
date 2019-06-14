@@ -49,7 +49,7 @@ class Collection[D <: Document[D]](val graph: Graph,
   }
 
   def batch(iterator: Iterator[D],
-            batchSize: Int = 1000,
+            batchSize: Int = 5000,
             upsert: Boolean = false,
             waitForSync: Boolean = false,
             counter: Int = 0)

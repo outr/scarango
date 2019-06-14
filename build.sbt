@@ -46,6 +46,7 @@ lazy val driver = project.in(file("driver"))
   .settings(
     name := "scarango-driver",
     fork := true,
+    testOptions in Test += Tests.Argument("-oD"),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )

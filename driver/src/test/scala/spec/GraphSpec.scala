@@ -21,7 +21,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
     "have two collections" in {
       database.collections.map(_.name).toSet should be(Set("backingStore", "airports", "flights"))
     }
-    /*"import sample airport data" in {
+    "import sample airport data" in {
       val airports = csvToIterator("airports.csv").map { d =>
         Airport(
           name = d(1),
@@ -60,7 +60,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
       database.flights.batch(flights).map { inserted =>
         inserted should be(286463)
       }
-    }*/
+    }
     "query VIP airports" in {
       val query =
         aql"""
@@ -78,11 +78,66 @@ class GraphSpec extends AsyncWordSpec with Matchers {
         airport.name should be("John F Kennedy Intl")
       }
     }
-//    "drop the database" in {
-//      database.drop().map { _ =>
-//        succeed
-//      }
-//    }
+    "query just the airport's full name" in {
+      val keys = List("JFK", "LAX")
+      val query =
+        aql"""
+             FOR a IN ${database.airports}
+             FILTER a._key IN $keys
+             RETURN {fullName: a.name}
+           """
+      database.query(query).includeCount.as[AirportName].cursor.map { response =>
+        response.count should be(2)
+        response.result.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
+      }
+    }
+    "count all the airports" in {
+      val query = aql"RETURN COUNT(${database.airports})"
+      database.query(query).as[Int].one.map { count =>
+        count should be(3375)
+      }
+    }
+    "get all airport names reachable directly from LAX following edges" in {
+      val lax = Airport.id("LAX")
+      val query =
+        aql"""
+             FOR airport IN 1..1 OUTBOUND $lax ${database.flights}
+             RETURN DISTINCT airport.name
+           """
+      database.query(query).as[String].cursor.map { response =>
+        response.result.length should be(82)
+      }
+    }
+    "traverse all airports reachable from LAX" in {
+      val lax = Airport.id("LAX")
+      val query =
+        aql"""
+             FOR airport IN OUTBOUND $lax ${database.flights}
+             OPTIONS { bfs: true, uniqueVertices: 'global' }
+             RETURN airport
+           """
+      database.airports.query(query).cursor.map { response =>
+        response.result.length should be(82)
+      }
+    }
+    "find the shortest path between BIS and JFK" in {
+      val bis = Airport.id("BIS")
+      val jfk = Airport.id("JFK")
+      val query =
+        aql"""
+             FOR v IN OUTBOUND
+             SHORTEST_PATH $bis TO $jfk ${database.flights}
+             RETURN v.name
+           """
+      database.query(query).as[String].cursor.map { response =>
+        response.result should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
+      }
+    }
+    "drop the database" in {
+      database.drop().map { _ =>
+        succeed
+      }
+    }
   }
 
   def csvToIterator(fileName: String): Iterator[Vector[String]] = {
@@ -149,4 +204,6 @@ class GraphSpec extends AsyncWordSpec with Matchers {
     override val collectionName: String = "flights"
     override implicit val serialization: Serialization[Flight] = Serialization.auto[Flight]
   }
+
+  case class AirportName(fullName: String)
 }
