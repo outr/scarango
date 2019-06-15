@@ -133,11 +133,11 @@ class GraphSpec extends AsyncWordSpec with Matchers {
         response.result should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
       }
     }
-    "drop the database" in {
-      database.drop().map { _ =>
-        succeed
-      }
-    }
+//    "drop the database" in {
+//      database.drop().map { _ =>
+//        succeed
+//      }
+//    }
   }
 
   def csvToIterator(fileName: String): Iterator[Vector[String]] = {

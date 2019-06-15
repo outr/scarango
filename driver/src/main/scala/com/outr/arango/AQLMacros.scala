@@ -29,65 +29,60 @@ object AQLMacros {
               val value = args(index - 1)
               val vt = value.actualType
               val queryArg = if (vt <:< typeOf[String]) {
-                c.Expr[Value](q"com.outr.arango.Value.string($value)")
+                Some(q"string($value)")
               } else if (vt <:< typeOf[Boolean]) {
-                c.Expr[Value](q"com.outr.arango.Value.boolean($value)")
+                Some(q"boolean($value)")
               } else if (vt <:< typeOf[Int]) {
-                c.Expr[Value](q"com.outr.arango.Value.int($value)")
+                Some(q"int($value)")
               } else if (vt <:< typeOf[Long]) {
-                c.Expr[Value](q"com.outr.arango.Value.long($value)")
+                Some(q"long($value)")
               } else if (vt <:< typeOf[Double]) {
-                c.Expr[Value](q"com.outr.arango.Value.double($value)")
+                Some(q"double($value)")
               } else if (vt <:< typeOf[BigDecimal]) {
-                c.Expr[Value](q"com.outr.arango.Value.bigDecimal($value)")
+                Some(q"bigDecimal($value)")
               } else if (vt <:< typeOf[Option[String]]) {
-                c.Expr[Value](q"com.outr.arango.Value.string($value)")
+                Some(q"string($value)")
               } else if (vt <:< typeOf[Option[Boolean]]) {
-                c.Expr[Value](q"com.outr.arango.Value.boolean($value)")
+                Some(q"boolean($value)")
               } else if (vt <:< typeOf[Option[Int]]) {
-                c.Expr[Value](q"com.outr.arango.Value.int($value)")
+                Some(q"int($value)")
               } else if (vt <:< typeOf[Option[Long]]) {
-                c.Expr[Value](q"com.outr.arango.Value.long($value)")
+                Some(q"long($value)")
               } else if (vt <:< typeOf[Option[Double]]) {
-                c.Expr[Value](q"com.outr.arango.Value.double($value)")
+                Some(q"double($value)")
               } else if (vt <:< typeOf[Option[BigDecimal]]) {
-                c.Expr[Value](q"com.outr.arango.Value.bigDecimal($value)")
+                Some(q"bigDecimal($value)")
               } else if (vt <:< typeOf[Null]) {
-                c.Expr[Value](q"com.outr.arango.Value.Null")
+                Some(q"Null")
               } else if (vt <:< typeOf[Seq[String]]) {
-                c.Expr[Value](q"com.outr.arango.Value.strings($value)")
+                Some(q"strings($value)")
               } else if (vt <:< typeOf[Seq[Boolean]]) {
-                c.Expr[Value](q"com.outr.arango.Value.booleans($value)")
+                Some(q"booleans($value)")
               } else if (vt <:< typeOf[Seq[Int]]) {
-                c.Expr[Value](q"com.outr.arango.Value.ints($value)")
+                Some(q"ints($value)")
               } else if (vt <:< typeOf[Seq[Long]]) {
-                c.Expr[Value](q"com.outr.arango.Value.longs($value)")
+                Some(q"longs($value)")
               } else if (vt <:< typeOf[Seq[Double]]) {
-                c.Expr[Value](q"com.outr.arango.Value.doubles($value)")
+                Some(q"doubles($value)")
               } else if (vt <:< typeOf[Seq[BigDecimal]]) {
-                c.Expr[Value](q"com.outr.arango.Value.bigDecimals($value)")
+                Some(q"bigDecimals($value)")
               } else if (vt <:< typeOf[Id[_]]) {
-                c.Expr[Value](q"com.outr.arango.Value.string($value._id)")
+                Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
-                special = true
-                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
+                c.abort(c.enclosingPosition, s"Field needs fully-qualified name! $value")
               } else if (vt <:< typeOf[Collection[_]]) {
                 special = true
-                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
-                //              } else if (vt <:< typeOf[com.outr.arango.managed.VertexCollection[_]]) {
-                //                special = true
-                //                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
-                //              } else if (vt <:< typeOf[com.outr.arango.managed.EdgeCollection[_]]) {
-                //                special = true
-                //                c.Expr[Value](q"com.outr.arango.Value.string($value.name)")
+                Some(q"string($value.name)")
               } else {
                 c.abort(c.enclosingPosition, s"Unsupported Value: $vt.")
               }
               if (special) {
                 argName = s"@$argName"
               }
-              b.append(s"@$argName")
-              argsMap += argName -> queryArg
+              queryArg.foreach { arg =>
+                b.append(s"@$argName")
+                argsMap += argName -> c.Expr[Value](arg)
+              }
             }
             b.append(raw)
           }
@@ -105,7 +100,13 @@ object AQLMacros {
         if (result.error) {
           c.abort(c.enclosingPosition, s"Error: ${result.errorMessage.get} (${result.errorCode}). Bad syntax for AQL query: $query.")
         }
-        c.Expr[Query](q"""com.outr.arango.Query($query, $argsMap)""")
+        c.Expr[Query](
+          q"""
+              import _root_.com.outr.arango.Value._
+              import _root_.com.outr.arango.Query
+
+              Query($query, $argsMap)
+            """)
       }
       case _ => c.abort(c.enclosingPosition, "Bad usage of cypher interpolation.")
     }
