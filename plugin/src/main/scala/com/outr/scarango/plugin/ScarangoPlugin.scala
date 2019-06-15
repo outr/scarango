@@ -9,29 +9,22 @@ import Keys._
 import scala.collection.JavaConverters._
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 
-// TODO: Modify this from giant-scala plugin to apply to Scarango
 object ScarangoPlugin extends sbt.AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
   object autoImport {
-    lazy val generateDBModels = TaskKey[Unit]("generateDBModels", "Generates database models for giant-scala from case classes extending ModelObject")
-    lazy val dbModelsDirectory = SettingKey[File]("dbModelsDirectory", "The output directory for generated models")
+    lazy val updateModels = TaskKey[Unit]("updateModels", "Creates or updates DocumentModel companions for Document case classes")
   }
 
   import autoImport._
 
   override lazy val projectSettings: Seq[Def.Setting[_]] = Seq(
-    dbModelsDirectory := {
-      sourceDirectories.in(Runtime).value.find { file =>
-        file.isDirectory && file.listFiles().nonEmpty
-      }.getOrElse(sourceDirectory.in(Runtime).value)
-    },
-    generateDBModels := {
+    updateModels := {
       val classPath = fullClasspath.in(Runtime).value
       val urls = classPath.map(_.data.toURI.toURL)
       val classLoader = new URLClassLoader(urls, null)
       val dir = classPath.head.data.toPath
-      val modelObjectInterface = classLoader.loadClass("com.outr.giantscala.ModelObject")
+      val documentTrait = classLoader.loadClass("com.outr.arango.Document")
       val classes: List[String] = Files.find(dir, Int.MaxValue, (path: Path, _: BasicFileAttributes) => {
         path.toString.toLowerCase.endsWith(".class")
       })
@@ -43,12 +36,10 @@ object ScarangoPlugin extends sbt.AutoPlugin {
         .map(c => c.substring(0, c.length - 6))
         .filterNot(_.endsWith("$"))
         .distinct
-      val outDirectory = dbModelsDirectory.in(Runtime).value
-      outDirectory.mkdirs()
       classes.foreach { c =>
         val clazz = classLoader.loadClass(c)
-        val isModelObject = modelObjectInterface.isAssignableFrom(clazz)
-        if (isModelObject && !clazz.isInterface) {
+        val isDocument = documentTrait.isAssignableFrom(clazz)
+        if (isDocument && !clazz.isInterface) {
           import scala.reflect.runtime.universe._
 
           val m = runtimeMirror(classLoader)
@@ -64,7 +55,13 @@ object ScarangoPlugin extends sbt.AutoPlugin {
             .filter(_.asMethod.name.toTermName == TermName("apply"))
             .map(_.asMethod)
             .last
-          val params = apply.paramLists.head.map(_.asTerm)
+          println(s"Found: $clazz")
+          val paths = sourceDirectories.in(Runtime).value
+          val directories = paths.map(p => new File(p, clazz.getPackage.getName.replace('.', '/')))
+          val file = directories.map(new File(_, s"${clazz.getSimpleName}.scala")).find(_.exists())
+          println(s"File: $file")
+          // TODO: Find source code file
+          /*val params = apply.paramLists.head.map(_.asTerm)
           val fields = params.map { p =>
             val `type` = p.typeSignature.resultType.toString.replaceAllLiterally("Predef.", "")
             object CaseField {
@@ -115,7 +112,7 @@ object ScarangoPlugin extends sbt.AutoPlugin {
           Files.deleteIfExists(sourcePath)
           Files.createFile(sourcePath)
           Files.write(sourcePath, source.getBytes)
-          println(s"Created ${sourceFile.getCanonicalPath} successfully")
+          println(s"Created ${sourceFile.getCanonicalPath} successfully")*/
         }
       }
     }
