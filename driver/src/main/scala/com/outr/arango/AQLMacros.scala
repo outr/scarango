@@ -69,7 +69,7 @@ object AQLMacros {
               } else if (vt <:< typeOf[Id[_]]) {
                 Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
-                c.abort(c.enclosingPosition, s"Field needs fully-qualified name! $value")
+                Some(q"string($value.name)")
               } else if (vt <:< typeOf[Collection[_]]) {
                 special = true
                 Some(q"string($value.name)")
