@@ -3,7 +3,7 @@ package com.outr.scarango.plugin
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Path}
 
-import sbt._
+import sbt.{file, _}
 import Keys._
 
 import scala.collection.JavaConverters._
@@ -58,8 +58,21 @@ object ScarangoPlugin extends sbt.AutoPlugin {
           println(s"Found: $clazz")
           val paths = sourceDirectories.in(Runtime).value
           val directories = paths.map(p => new File(p, clazz.getPackage.getName.replace('.', '/')))
-          val file = directories.map(new File(_, s"${clazz.getSimpleName}.scala")).find(_.exists())
-          println(s"File: $file")
+          directories.map(new File(_, s"${clazz.getSimpleName}.scala")).find(_.exists()) match {
+            case Some(file) => {
+              println(s"File: $file")
+              val source = IO.read(file)
+              /*
+              object Stream extends DocumentModel[Stream] {
+  override val collectionName: String = "streams"
+  override implicit val serialization: Serialization[Stream] = Serialization.auto[Stream]
+}
+               */
+              val obj = extractObject(clazz.getSimpleName, source)
+              println(s"Object: [$obj]")
+            }
+            case None => println(s"No file found for $clazz")
+          }
           // TODO: Find source code file
           /*val params = apply.paramLists.head.map(_.asTerm)
           val fields = params.map { p =>
@@ -121,6 +134,33 @@ object ScarangoPlugin extends sbt.AutoPlugin {
   private def encodedName(name: String): String = name match {
     case "type" => "`type`"
     case _ => name
+  }
+
+  private def extractObject(className: String, source: String): String = {
+    val start = source.indexOf(s"object $className")
+    val b = new StringBuilder
+    var open = List.empty[Char]
+    var started = false
+    var ended = false
+    source.substring(start).foreach { c =>
+      if (!ended) {
+        if (c == '"') {
+          if (open.headOption.contains('"')) {
+            open = open.tail
+          } else {
+            open = c :: open
+          }
+        } else if (c == '{' && !open.headOption.contains('"')) {
+          started = true
+          open = c :: open
+        } else if (c == '}' && !open.headOption.contains('"')) {
+          open = open.tail
+          if (open.isEmpty) ended = true
+        }
+        b.append(c)
+      }
+    }
+    b.toString()
   }
 }
 
