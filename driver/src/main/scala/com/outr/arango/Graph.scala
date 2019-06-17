@@ -22,6 +22,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
             credentials: Option[Credentials] = ArangoDB.credentials,
             httpClient: HttpClient = HttpClient) {
   private var _collections: List[Collection[_]] = Nil
+  private var _views: List[View[_]] = Nil
   private val _initialized = new AtomicBoolean(false)
   private var versions = ListBuffer.empty[DatabaseUpgrade]
 
@@ -40,6 +41,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   def query(query: Query): QueryBuilder[Json] = arangoDatabase.query(query)
 
   def collections: List[Collection[_]] = _collections
+  def views: List[View[_]] = _views
   def initialized: Boolean = _initialized.get()
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
@@ -124,5 +126,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   private[arango] def add[D <: Document[D]](collection: Collection[D]): Unit = synchronized {
     _collections = _collections ::: List(collection)
+  }
+
+  private[arango] def add[D <: Document[D]](view: View[D]): Unit = synchronized {
+    _views = _views ::: List(view)
   }
 }

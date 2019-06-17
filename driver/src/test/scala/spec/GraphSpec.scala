@@ -144,6 +144,11 @@ class GraphSpec extends AsyncWordSpec with Matchers {
         response.result should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
       }
     }
+    "query the views and verify one exists" in {
+      database.arangoDatabase.views().map { views =>
+        views.map(_.name) should contain("flightSearch")
+      }
+    }
     "drop the database" in {
       if (doDrop) {
         database.drop().map { _ =>
@@ -183,6 +188,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   object database extends Graph(databaseName = "graphTest") {
     val airports: Collection[Airport] = new Collection[Airport](this, Airport, CollectionType.Document, Nil)
     val flights: Collection[Flight] = new Collection[Flight](this, Flight, CollectionType.Edge, Nil)
+    val flightSearch: View[Flight] = new View[Flight]("flightSearch", Nil, flights)
   }
 
   case class Airport(name: String,

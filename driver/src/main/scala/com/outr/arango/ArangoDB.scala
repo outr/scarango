@@ -25,7 +25,10 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     case DatabaseState.Error(t) => throw t
     case s => throw new RuntimeException(s"Not initialized: $s")
   }
-  def client: HttpClient = session.client.interceptor(this)
+  def client: HttpClient = session
+    .client
+    .interceptor(this)
+    .dropNullValuesInJson(true)
 
   def init()(implicit ec: ExecutionContext): Future[DatabaseState] = scribe.async {
     assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")

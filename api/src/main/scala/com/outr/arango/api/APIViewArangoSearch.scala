@@ -131,6 +131,6 @@ object APIViewArangoSearch {
   */
   def post(client: HttpClient, body: PostAPIViewIresearch)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
-    .path(path"/_api/view#ArangoSearch", append = true) 
+    .path(path"/_api/view", append = true)
     .restful[PostAPIViewIresearch, Json](body)
 }

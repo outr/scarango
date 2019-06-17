@@ -77,10 +77,10 @@ class Collection[D <: Document[D]](val graph: Graph,
   def query(query: Query): QueryBuilder[D] = graph.query(query).as[D](model.serialization)
 
   def deleteOne(id: Id[D],
-                   waitForSync: Boolean = false,
-                   returnOld: Boolean = false,
-                   silent: Boolean = false)
-                  (implicit ec: ExecutionContext): Future[Id[D]] = {
+                waitForSync: Boolean = false,
+                returnOld: Boolean = false,
+                silent: Boolean = false)
+               (implicit ec: ExecutionContext): Future[Id[D]] = {
     arangoCollection.document.deleteOne(id, waitForSync, returnOld, silent)
   }
 
@@ -93,7 +93,7 @@ class Collection[D <: Document[D]](val graph: Graph,
     }
     // List existing indexes
     existingIndexes <- if (createCollection) {
-      Future.successful(Nil)      // No indexes will exist if collection was just created, so don't waste the call
+      Future.successful(Nil) // No indexes will exist if collection was just created, so don't waste the call
     } else {
       arangoCollection.index.list().map(_.indexes)
     }

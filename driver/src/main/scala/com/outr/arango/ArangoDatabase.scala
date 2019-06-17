@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery}
+import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APIView}
 import com.outr.arango.JsonImplicits._
 import com.outr.arango.api.model.PostApiQueryProperties
 import com.outr.arango.model.ArangoResponse
@@ -33,6 +33,14 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
     }
   }
 
+  def views()(implicit ec: ExecutionContext): Future[List[ViewDetail]] = {
+    APIView.get(client).map(JsonUtil.fromJson[ArangoResponse[List[ViewDetail]]](_).result.getOrElse(Nil))
+  }
+
+  def searchView(name: String): ArangoView = {
+    new ArangoView(client, this.name, name, "arangosearch")
+  }
+
   def validate(query: String)(implicit ec: ExecutionContext): Future[ValidationResult] = APIQuery
     .post(client, PostApiQueryProperties(query))
     .map(JsonUtil.fromJson[ValidationResult](_))
@@ -44,9 +52,3 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
 
   def drop()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = db.api.system.drop(name)
 }
-
-case class CollectionDetail(id: String,
-                            name: String,
-                            isSystem: Boolean,
-                            status: Int,
-                            `type`: Int)

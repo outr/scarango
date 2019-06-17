@@ -18,7 +18,9 @@ object CreateDatabase extends DatabaseUpgrade {
         graph.arangoDatabase.create()     // Database needs to be created
       }
       collections <- graph.arangoDatabase.collections().map(_.map(_.name).toSet)
+      views <- graph.arangoDatabase.views().map(_.map(_.name).toSet)
       _ <- Future.sequence(graph.collections.map(c => c.create(!collections.contains(c.name))))   // Create collections
+      _ <- Future.sequence(graph.views.map(v => v.create(!views.contains(v.name))))
     } yield {
       ()
     }
