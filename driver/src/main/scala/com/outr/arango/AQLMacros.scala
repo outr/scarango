@@ -73,6 +73,9 @@ object AQLMacros {
               } else if (vt <:< typeOf[Collection[_]]) {
                 special = true
                 Some(q"string($value.name)")
+              } else if (vt <:< typeOf[View[_]]) {
+                special = true
+                Some(q"string($value.name)")
               } else {
                 c.abort(c.enclosingPosition, s"Unsupported Value: $vt.")
               }

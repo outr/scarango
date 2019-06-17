@@ -71,4 +71,4 @@ case class ArangoLinkProperties(analyzers: List[String],
                                 storeValues: String,
                                 trackListPositions: Boolean)
 
-case class ArangoLinkFieldProperties()
+case class ArangoLinkFieldProperties(analyzers: List[String])

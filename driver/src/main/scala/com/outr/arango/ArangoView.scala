@@ -39,7 +39,7 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
       l.collectionName -> ArangoLinkProperties(
         analyzers = l.analyzers,
         fields = l.fields.map { name =>
-          name -> ArangoLinkFieldProperties()
+          name -> ArangoLinkFieldProperties(analyzers = l.analyzers)
         }.toMap,
         includeAllFields = l.fields.isEmpty,
         storeValues = if (l.allowExists) "id" else "none",
@@ -62,7 +62,7 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
 
 case class ViewLink(collectionName: String,
                     fields: List[String],
-                    analyzers: List[String] = List("identity"),
+                    analyzers: List[String] = List("text_en"),     // TODO: better support config and default back to List("identity")
                     allowExists: Boolean = false,
                     trackListPositions: Boolean = false)
 

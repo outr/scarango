@@ -146,7 +146,18 @@ class GraphSpec extends AsyncWordSpec with Matchers {
     }
     "query the views and verify one exists" in {
       database.arangoDatabase.views().map { views =>
-        views.map(_.name) should contain("flightSearch")
+        views.map(_.name) should contain("airportSearch")
+      }
+    }
+    "search the view" in {
+      val word = "navajo"
+      val query =
+        aql"""
+             FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, "text_en") RETURN a
+           """
+      database.airports.query(query).cursor.map { response =>
+        val names = response.result.map(_.name)
+        names should be(List("Navajo State Park"))
       }
     }
     "drop the database" in {
@@ -188,7 +199,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   object database extends Graph(databaseName = "graphTest") {
     val airports: Collection[Airport] = new Collection[Airport](this, Airport, CollectionType.Document, Nil)
     val flights: Collection[Flight] = new Collection[Flight](this, Flight, CollectionType.Edge, Nil)
-    val flightSearch: View[Flight] = new View[Flight]("flightSearch", Nil, flights)
+
+    val airportSearch: View[Airport] = new View[Airport]("airportSearch", Nil, airports)
   }
 
   case class Airport(name: String,
