@@ -28,4 +28,32 @@ object GraphMacros {
       c.Expr[QueryBuilder[D]](q"$builder.as[$d](_root_.com.outr.arango.Serialization.auto[$d])")
     }
   }
+
+  def vertex[D <: Document[D]](c: blackbox.Context)
+                              (indexes: c.Expr[com.outr.arango.Index]*)
+                              (implicit d: c.WeakTypeTag[D]): c.Expr[Collection[D]] = {
+    import c.universe._
+
+    val graph = c.prefix
+    c.Expr[Collection[D]](
+      q"""
+         import com.outr.arango._
+
+         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Document, List(..$indexes))
+       """)
+  }
+
+  def edge[D <: Document[D]](c: blackbox.Context)
+                            (indexes: c.Expr[com.outr.arango.Index]*)
+                            (implicit d: c.WeakTypeTag[D]): c.Expr[Collection[D]] = {
+    import c.universe._
+
+    val graph = c.prefix
+    c.Expr[Collection[D]](
+      q"""
+         import com.outr.arango._
+
+         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Edge, List(..$indexes))
+       """)
+  }
 }

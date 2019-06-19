@@ -46,6 +46,12 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
 
+  def vertex[D <: Document[D]](indexes: Index*): Collection[D] = macro GraphMacros.vertex[D]
+  def edge[D <: Document[D]](indexes: Index*): Collection[D] = macro GraphMacros.edge[D]
+  def view[D <: Document[D]](name: String,
+                             collection: Collection[D],
+                             fields: Field[_]*): View[D] = new View[D](name, fields.toList, collection)
+
   def register(upgrade: DatabaseUpgrade): Unit = synchronized {
     assert(!initialized, "Database is already initialized. Cannot register upgrades after initialization.")
     if (!versions.contains(upgrade)) {

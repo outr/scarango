@@ -48,7 +48,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
       case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
     }
 
-  def query(query: Query): QueryBuilder[Json] = QueryBuilder[Json](client, query, identity)
+  def query(query: Query): QueryBuilder[Json] = QueryBuilder[Json](client, query.fixed(), identity)
 
   def drop()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = db.api.system.drop(name)
 }
