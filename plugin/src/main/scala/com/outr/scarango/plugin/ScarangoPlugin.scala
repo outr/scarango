@@ -55,77 +55,80 @@ object ScarangoPlugin extends sbt.AutoPlugin {
             .filter(_.asMethod.name.toTermName == TermName("apply"))
             .map(_.asMethod)
             .last
-          println(s"Found: $clazz")
+          println(s"Updating model for $clazz")
           val paths = sourceDirectories.in(Runtime).value
           val directories = paths.map(p => new File(p, clazz.getPackage.getName.replace('.', '/')))
           directories.map(new File(_, s"${clazz.getSimpleName}.scala")).find(_.exists()) match {
             case Some(file) => {
-              println(s"File: $file")
               val source = IO.read(file)
-              /*
-              object Stream extends DocumentModel[Stream] {
-  override val collectionName: String = "streams"
-  override implicit val serialization: Serialization[Stream] = Serialization.auto[Stream]
-}
-               */
               val obj = extractObject(clazz.getSimpleName, source)
-              println(s"Object: [$obj]")
+              var modified = obj
+
+              // Remove all fields
+              val FieldRegex = """val (.+): Field\[(.+?)\] = Field\[(.+?)\]\("(.+)"\)\n""".r
+              modified = FieldRegex.replaceAllIn(modified, "")
+
+              // Generate fields
+              val params = apply.paramLists.head.map(_.asTerm)
+              val fields = params.map { p =>
+                val `type` = p.typeSignature.resultType.toString.replaceAllLiterally("Predef.", "")
+                object CaseField {
+                  def unapply(trmSym: TermSymbol): Option[(Name, Type)] = {
+                    if (trmSym.isVal && trmSym.isCaseAccessor)
+                      Some((TermName(trmSym.name.toString.trim), trmSym.typeSignature))
+                    else
+                      None
+                  }
+                }
+                val caseEntries = p.typeSignature.resultType.decls.collect {
+                  case CaseField(n, tpe) => (n, tpe)
+                }.toList
+                val name = p.name.decodedName.toString
+                val encName = encodedName(name)
+                if (caseEntries.isEmpty || `type`.startsWith("com.outr.arango.Id[")) {
+                  val n = name match {
+                    case "_identity" => "_id"
+                    case _ => name
+                  }
+                  s"""val $encName: Field[${`type`}] = Field[${`type`}]("$n")"""
+                } else {
+                  val subFields = caseEntries.map {
+                    case (n, tpe) => {
+                      val subType = tpe.toString.replaceAllLiterally("Predef.", "")
+                      s"""val ${encodedName(n.decodedName.toString)}: Field[$subType] = Field[$subType]("$name.$n")"""
+                    }
+                  }
+                  s"""object $encName extends Field[${`type`}]("$name") {
+                     |    ${subFields.mkString("\n    ")}
+                     |  }""".stripMargin
+                }
+              }
+              val openIndex = modified.indexOf('{')
+              val prefix = modified.substring(0, openIndex + 1)
+              val postfix = modified.substring(openIndex + 1)
+              modified = s"$prefix${fields.map(f => s"\n  $f").mkString}$postfix"
+
+              val hasImport = "import com[.]outr[.]arango[.].*?Field".r.findFirstIn(source).nonEmpty ||
+                "import com[.]outr[.]arango[.]_".r.findFirstIn(source).nonEmpty
+
+              var modifiedSource = source
+              modifiedSource = modifiedSource.replaceAllLiterally(obj, modified)
+
+              if (!hasImport) {
+                val index = modifiedSource.indexOf('\n')
+                val pre = modifiedSource.substring(0, index + 1)
+                val post = modifiedSource.substring(index + 1)
+                modifiedSource =
+                  s"""$pre
+                     |import com.outr.arango.Field
+                     |$post
+                   """.stripMargin
+              }
+
+              IO.write(file, modifiedSource.trim.getBytes)
             }
             case None => println(s"No file found for $clazz")
           }
-          // TODO: Find source code file
-          /*val params = apply.paramLists.head.map(_.asTerm)
-          val fields = params.map { p =>
-            val `type` = p.typeSignature.resultType.toString.replaceAllLiterally("Predef.", "")
-            object CaseField {
-              def unapply(trmSym: TermSymbol): Option[(Name, Type)] = {
-                if (trmSym.isVal && trmSym.isCaseAccessor)
-                  Some((TermName(trmSym.name.toString.trim), trmSym.typeSignature))
-                else
-                  None
-              }
-            }
-            val caseEntries = p.typeSignature.resultType.decls.collect {
-              case CaseField(nme, tpe) => (nme, tpe)
-            }.toList
-            val name = p.name.decodedName.toString
-            val encName = encodedName(name)
-            if (caseEntries.isEmpty) {
-              s"""val $encName: Field[${`type`}] = Field[${`type`}]("$name")"""
-            } else {
-              val subFields = caseEntries.map {
-                case (nme, tpe) => {
-                  val subType = tpe.toString.replaceAllLiterally("Predef.", "")
-                  s"""val ${encodedName(nme.decodedName.toString)}: Field[$subType] = Field[$subType]("$name.$nme")"""
-                }
-              }
-              s"""object $encName extends Field[${`type`}]("$name") {
-                 |    ${subFields.mkString("\n    ")}
-                 |  }""".stripMargin
-            }
-          }
-          val source =
-            s"""
-               |package ${clazz.getPackage.getName}
-               |
-               |import com.outr.giantscala._
-               |
-               |/**
-               | * WARNING: This file was generated by giant-scala's SBT plugin generateDBModels. Do not edit directly.
-               | */
-               |abstract class ${clazz.getSimpleName}Model(collectionName: String, db: MongoDatabase) extends DBCollection[${clazz.getSimpleName}](collectionName, db) {
-               |  override val converter: Converter[${clazz.getSimpleName}] = Converter.auto[${clazz.getSimpleName}]
-               |
-               |  ${fields.mkString("\n  ")}
-               |}
-             """.stripMargin.trim
-          val sourceDir = new File(outDirectory, clazz.getPackage.getName.replace('.', '/'))
-          val sourceFile = new File(sourceDir, s"${clazz.getSimpleName}Model.scala")
-          val sourcePath = sourceFile.toPath
-          Files.deleteIfExists(sourcePath)
-          Files.createFile(sourcePath)
-          Files.write(sourcePath, source.getBytes)
-          println(s"Created ${sourceFile.getCanonicalPath} successfully")*/
         }
       }
     }
