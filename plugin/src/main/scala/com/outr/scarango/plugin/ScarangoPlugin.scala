@@ -17,6 +17,7 @@ object ScarangoPlugin extends sbt.AutoPlugin {
   }
 
   import autoImport._
+  import scala.reflect.runtime.universe._
 
   override lazy val projectSettings: Seq[Def.Setting[_]] = Seq(
     updateModels := {
@@ -40,8 +41,6 @@ object ScarangoPlugin extends sbt.AutoPlugin {
         val clazz = classLoader.loadClass(c)
         val isDocument = documentTrait.isAssignableFrom(clazz)
         if (isDocument && !clazz.isInterface) {
-          import scala.reflect.runtime.universe._
-
           val m = runtimeMirror(classLoader)
 
           // TODO: support recursively built fields list, breaking into sub-objects supporting Option[case class] and Seq[case class]
@@ -65,8 +64,9 @@ object ScarangoPlugin extends sbt.AutoPlugin {
               var modified = obj
 
               // Remove all fields
-              val FieldRegex = """val (.+): Field\[(.+?)\] = Field\[(.+?)\]\("(.+)"\)\n""".r
-              modified = FieldRegex.replaceAllIn(modified, "")
+              val FieldRegex1 = """val (.+): Field\[(.+?)\] = Field\[(.+?)\]\("(.+)"\)""".r
+              val FieldRegex2 = """(?s)object (\S+) extends Field.+?[}]""".r
+              modified = FieldRegex2.replaceAllIn(FieldRegex1.replaceAllIn(modified, ""), "")
 
               // Generate fields
               val params = apply.paramLists.head.map(_.asTerm)
@@ -82,10 +82,15 @@ object ScarangoPlugin extends sbt.AutoPlugin {
                 }
                 val caseEntries = p.typeSignature.resultType.decls.collect {
                   case CaseField(n, tpe) => (n, tpe)
-                }.toList
+                }.toList match {
+                  case Nil => p.typeSignature.resultType.typeArgs.headOption.map(_.decls.collect {
+                    case CaseField(n, tpe) => (n, tpe)
+                  }).getOrElse(Nil)
+                  case e => e
+                }
                 val name = p.name.decodedName.toString
                 val encName = encodedName(name)
-                if (caseEntries.isEmpty || `type`.startsWith("com.outr.arango.Id[")) {
+                if (caseEntries.isEmpty || `type`.contains("com.outr.arango.Id[")) {
                   val n = name match {
                     case "_identity" => "_id"
                     case _ => name
@@ -106,7 +111,7 @@ object ScarangoPlugin extends sbt.AutoPlugin {
               val openIndex = modified.indexOf('{')
               val prefix = modified.substring(0, openIndex + 1)
               val postfix = modified.substring(openIndex + 1)
-              modified = s"$prefix${fields.map(f => s"\n  $f").mkString}$postfix"
+              modified = s"$prefix\n  ${fields.mkString("\n  ").trim}\n\n  ${postfix.trim}"
 
               val hasImport = "import com[.]outr[.]arango[.].*?Field".r.findFirstIn(source).nonEmpty ||
                 "import com[.]outr[.]arango[.]_".r.findFirstIn(source).nonEmpty
@@ -164,6 +169,18 @@ object ScarangoPlugin extends sbt.AutoPlugin {
       }
     }
     b.toString()
+  }
+
+  private def recurse(tpe: Type): ModelDetails = {
+    val className = tpe.resultType.toString
+    val params = tpe.companion.decls.filter(_.isMethod)
+      .filter(_.asMethod.name.toTermName == TermName("apply"))
+      .map(_.asMethod)
+      .last
+      .paramLists
+      .head
+      .map(_.asTerm)
+    throw new RuntimeException(s"Class: $className, Params: $params")
   }
 }
 
