@@ -155,6 +155,6 @@ object APIIndexhash {
   def post(client: HttpClient, collectionName: String, body: PostAPIIndexHash)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/index", append = true)
-    .params("collection-name" -> collectionName.toString)
+    .params("collection" -> collectionName.toString)
     .restful[PostAPIIndexHash, Json](body)
 }
