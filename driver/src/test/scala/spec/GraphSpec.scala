@@ -35,7 +35,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
             lat = d(5).toDouble,
             long = d(6).toDouble,
             vip = d(7).toBoolean,
-            _identity = Airport.id(d(0))
+            _id = Airport.id(d(0))
           )
         }
         database.airports.batch(airports).map { inserted =>
@@ -80,7 +80,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
              RETURN airport
            """
       database.airports.query(query).cursor.map { response =>
-        response.result.map(_._identity.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
+        response.result.map(_._id.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
       }
     }
     "query JFK airport" in {
@@ -209,7 +209,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
                      lat: Double,
                      long: Double,
                      vip: Boolean,
-                     _identity: Id[Airport] = Airport.id()) extends Document[Airport]
+                     _id: Id[Airport] = Airport.id()) extends Document[Airport]
 
   object Airport extends DocumentModel[Airport] {
     val name: Field[String] = Field[String]("name")
@@ -232,7 +232,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
                     flightNum: Int,
                     tailNum: String,
                     distance: Int,
-                    _identity: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
+                    _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
 
   object Flight extends DocumentModel[Flight] {
     override val collectionName: String = "flights"

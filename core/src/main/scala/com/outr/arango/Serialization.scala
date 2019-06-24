@@ -6,9 +6,9 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 import scala.language.experimental.macros
 
 case class Serialization[D](private val doc2Json: D => Json, private val json2Doc: Json => D) {
-  final def toJson(document: D): Json = Id.update(doc2Json(document), removeIdentity = true)
+  final def toJson(document: D): Json = Id.update(doc2Json(document))
 
-  final def fromJson(json: Json): D = json2Doc(Id.update(json, removeIdentity = false))
+  final def fromJson(json: Json): D = json2Doc(Id.update(json))
 
   lazy val decoder: Decoder[D] = new Decoder[D] {
     override def apply(c: HCursor): Result[D] = Right(fromJson(c.value))

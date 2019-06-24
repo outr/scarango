@@ -56,7 +56,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "insert a user" in {
       collection.document.insertOne(User("John Doe", 21)).map { insert =>
-        insert._identity should not be null
+        insert._id should not be null
       }
     }
     "handle a simple query" in {
@@ -67,7 +67,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = response.result.head
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "verify `first` returns the first entry" in {
@@ -77,12 +77,12 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = userOption.get
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "insert another user" in {
       collection.document.insertOne(User("Jane Doe", 20, Some("Online"))).map { insert =>
-        insert._identity should not be null
+        insert._id should not be null
       }
     }
     "handle a two page cursor call" in {
@@ -111,7 +111,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = userOption.get
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "find a user from a list of ages" in {
@@ -124,7 +124,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = userOption.get
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "find a user where status is null" in {
@@ -137,7 +137,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = userOption.get
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "find a user where status is None" in {
@@ -150,7 +150,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         val user = userOption.get
         user.name should be("John Doe")
         user.age should be(21)
-        user._identity should not be null
+        user._id should not be null
       }
     }
     "drop the test database" in {
@@ -163,7 +163,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
   case class User(name: String,
                   age: Int,
                   status: Option[String] = None,
-                  _identity: Id[User] = User.id()) extends Document[User]
+                  _id: Id[User] = User.id()) extends Document[User]
 
   object User extends DocumentModel[User] {
     override val collectionName: String = "users"

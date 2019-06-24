@@ -26,8 +26,8 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
     overwrite = Some(overwrite)
   ).map { json =>
     json.asArray match {
-      case Some(array) => array.toList.map(json => JsonUtil.fromJson[DocumentInsert](Id.update(json, removeIdentity = false)))
-      case None => List(JsonUtil.fromJson[DocumentInsert](Id.update(json, removeIdentity = false)))
+      case Some(array) => array.toList.map(json => JsonUtil.fromJson[DocumentInsert](Id.update(json)))
+      case None => List(JsonUtil.fromJson[DocumentInsert](Id.update(json)))
     }
   }
 

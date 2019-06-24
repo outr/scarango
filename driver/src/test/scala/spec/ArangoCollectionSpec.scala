@@ -47,20 +47,18 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     }
     "insert a document" in {
       collection.document.insertOne(User("John Doe", User.id("john"))).map { insert =>
-        insert._identity.get._id should be("test/john")
-        insert._identity.get._key should be("john")
-        insert._identity.get._rev should not be None
-        insert._identity.get.collection should be("test")
-        insert._identity.get.value should be("john")
+        insert._id.get._id should be("test/john")
+        insert._id.get._key should be("john")
+        insert._id.get.collection should be("test")
+        insert._id.get.value should be("john")
       }
     }
     "upsert a document" in {
       collection.document.upsertOne(User("Johnny Doe", User.id("john"))).map { upsert =>
-        upsert._identity.get._id should be("test/john")
-        upsert._identity.get._key should be("john")
-        upsert._identity.get._rev should not be None
-        upsert._identity.get.collection should be("test")
-        upsert._identity.get.value should be("john")
+        upsert._id.get._id should be("test/john")
+        upsert._id.get._key should be("john")
+        upsert._id.get.collection should be("test")
+        upsert._id.get.value should be("john")
       }
     }
     "query the document back" in {
@@ -83,7 +81,6 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
       collection.document.deleteOne(Id[String]("john", "test")).map { id =>
         id._id should be("test/john")
         id._key should be("john")
-        id._rev should not be None
         id.collection should be("test")
         id.value should be("john")
       }
@@ -136,7 +133,7 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     }
   }
 
-  case class User(name: String, _identity: Id[User] = User.id()) extends Document[User]
+  case class User(name: String, _id: Id[User] = User.id()) extends Document[User]
 
   object User extends DocumentModel[User] {
     override val collectionName: String = "users"
