@@ -109,4 +109,11 @@ class Collection[D <: Document[D]](val graph: Graph,
   } yield {
     ()
   }
+
+  def truncate()(implicit ec: ExecutionContext): Future[Unit] = arangoCollection.truncate().map { r =>
+    if (r.error) {
+      throw new RuntimeException(s"Error attempting to truncate $name")
+    }
+    ()
+  }
 }

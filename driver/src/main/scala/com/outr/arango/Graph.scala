@@ -76,6 +76,14 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     }
   }
 
+  def truncate()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
+    for {
+      _ <- Future.sequence(collections.map(_.truncate()))
+    } yield {
+      ()
+    }
+  }
+
   def drop()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
     arangoDatabase.drop().map(_ => ())
   }

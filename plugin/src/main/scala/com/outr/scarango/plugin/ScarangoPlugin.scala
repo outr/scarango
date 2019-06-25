@@ -91,11 +91,7 @@ object ScarangoPlugin extends sbt.AutoPlugin {
                 val name = p.name.decodedName.toString
                 val encName = encodedName(name)
                 if (caseEntries.isEmpty || `type`.contains("com.outr.arango.Id[")) {
-                  val n = name match {
-                    case "_identity" => "_id"
-                    case _ => name
-                  }
-                  s"""val $encName: Field[${`type`}] = Field[${`type`}]("$n")"""
+                  s"""val $encName: Field[${`type`}] = Field[${`type`}]("$name")"""
                 } else {
                   val subFields = caseEntries.map {
                     case (n, tpe) => {
