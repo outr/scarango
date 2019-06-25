@@ -2,12 +2,28 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.0.0-SNAPSHOT"
+version in ThisBuild := "2.0.0"
 scalaVersion in ThisBuild := "2.12.8"
 crossScalaVersions in ThisBuild := List("2.12.8", "2.11.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
+
+publishTo in ThisBuild := sonatypePublishTo.value
+sonatypeProfileName in ThisBuild := "com.outr"
+publishMavenStyle in ThisBuild := true
+licenses in ThisBuild := Seq("MIT" -> url("https://github.com/outr/scarango/blob/master/LICENSE"))
+sonatypeProjectHosting in ThisBuild := Some(xerial.sbt.Sonatype.GitHubHosting("outr", "scarango", "matt@outr.com"))
+homepage in ThisBuild := Some(url("https://github.com/outr/scarango"))
+scmInfo in ThisBuild := Some(
+  ScmInfo(
+    url("https://github.com/outr/scarango"),
+    "scm:git@github.com:outr/scarango.git"
+  )
+)
+developers in ThisBuild := List(
+  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
+)
 
 val youiVersion = "0.11.9"
 val scalaTestVersion = "3.0.5"

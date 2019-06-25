@@ -8,11 +8,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxScriptsName {
-  /**
-  * Runs the given script for the service at the given mount path.
-  * 
-  * Returns the exports of the script, if any.
-  */
+
   def post(client: HttpClient, body: Json, name: String, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Post)
     .path(path"/_api/foxx/scripts/{name}".withArguments(Map("name" -> name)), append = true)

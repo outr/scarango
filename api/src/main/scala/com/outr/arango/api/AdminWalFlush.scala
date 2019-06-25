@@ -8,13 +8,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
       
 object AdminWalFlush {
-  /**
-  * Flushes the write-ahead log. By flushing the currently active write-ahead
-  * logfile, the data in it can be transferred to collection journals and
-  * datafiles. This is useful to ensure that all data for a collection is
-  * present in the collection journals and datafiles, for example, when dumping
-  * the data of a collection.
-  */
+
   def put(client: HttpClient, waitForSync: Option[Boolean] = None, waitForCollector: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Put)
     .path(path"/_admin/wal/flush", append = true) 

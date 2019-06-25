@@ -8,9 +8,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
       
 object AdminShutdown {
-  /**
-  * This call initiates a clean shutdown sequence. Requires administrive privileges
-  */
+
   def delete(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_admin/shutdown", append = true) 

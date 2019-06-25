@@ -8,11 +8,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIFoxxScripts {
-  /**
-  * Fetches a list of the scripts defined by the service.
-  * 
-  * Returns an object mapping the raw script names to human-friendly names.
-  */
+
   def get(client: HttpClient, mount: String)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Get)
     .path(path"/_api/foxx/scripts", append = true) 

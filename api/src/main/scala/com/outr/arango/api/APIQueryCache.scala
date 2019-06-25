@@ -8,9 +8,7 @@ import io.circe.Json
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIQueryCache {
-  /**
-  * clears the query results cache for the current database
-  */
+
   def delete(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
     .method(HttpMethod.Delete)
     .path(path"/_api/query-cache", append = true) 
