@@ -1,0 +1,13 @@
+package com.outr.arango.api.model
+
+import io.circe.Json
+
+
+case class APITaskStruct(command: Option[String] = None,
+                         created: Option[Double] = None,
+                         database: Option[String] = None,
+                         id: Option[String] = None,
+                         name: Option[String] = None,
+                         offset: Option[Double] = None,
+                         period: Option[Double] = None,
+                         `type`: Option[String] = None)
