@@ -1,9 +1,0 @@
-{
-  "arango": {
-    "db": "_system",
-    "url": "http://localhost:8529",
-    "authentication": true,
-    "username": "root",
-    "password": "root"
-  }
-}

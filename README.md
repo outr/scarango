@@ -17,19 +17,8 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "0.8.6"
+libraryDependencies += "com.outr" %% "scarango-driver" % "2.0.0"
 ```
-
-## Dependencies
-
-Bringing in any new library is always risky as it contains its own baggage of third-party dependencies. In Scarango we
-try to keep the number of third-party dependencies to a minimum. Here are the main dependencies currently being used in
-Scarango:
-
-- Circe: JSON parsing and class encoding and decoding.
-- Reactify: Functional reactive paradigms. This is mostly manifested in the triggers.
-- Scribe: Logging framework.
-- YouI: HTTP restful calls are managed through the HttpClient.
 
 ## Introduction
 
@@ -42,150 +31,21 @@ for examples of the first layer take a look at the tests for simple and straight
 
 ## Getting Started
 
-### Imports
-
-For the basics of Scarango you'll need:
-
-```
-import com.outr.arango._
-```
-
-Because we're using the higher level abstraction we also need the `managed` package as well:
-
-```
-import com.outr.arango.managed._
-```
-
-### Case Classes
-
-Scarango relies primarily on case classes to represent documents (vertex and edges), so we can easily map to and from the
-database. We can extend from `DocumentOption` to access the extra information that an Arango document includes (_key, _id, and _rev):
-
-```
-case class Fruit(name: String,
-                 _key: Option[String] = None,
-                 _id: Option[String] = None,
-                 _rev: Option[String] = None) extends DocumentOption
-```
-
-Notice that we define `_key`, `_id`, and `_rev` as `Option[String]` and default them to `None`. This allows them to be
-populated by ArangoDB when they are inserted into the database. If you prefer to define the key yourself you may set the
-`_key` value before insert and Arango will accept it accordingly.
-
-### Graph and Collection
-
-The next thing we need is a representation of our database. We can do this easily with our managed `Graph`:
-
-```
-object Database extends Graph("example") {
-  val fruit: VertexCollection[Fruit] = vertex[Fruit]("fruit")
-}
-```
-
-The code above creates a representation of our database, graph, and maps the `Fruit` class as a vertex collection in Arango.
-
-The `Graph` class has default options for `db`, `url`, `username`, and `password` but can be set in the constructor as necessary.
-
-### Initializing the Credentials
-
-Now that we have our mapping representation of a database we need to initialize to verify credentials and get a token
-that we can use for all communication to the database:
-
-```
-val future: Future[Boolean] = Database.init()
-```
-
-The result will be true if the credentials were accepted and no errors occurred.
-
-### Creating the Database
-
-Now that we're authenticated we need to create our graph and collection:
-
-```
-val future: Future[GraphResponse] = Database.fruit.create()
-```
-
-The `GraphResponse` contains a lot more information about what happened, but the primary thing to check in this situation
-is `error` and making sure it's `false`.
-
-### Inserting Fruit
-
-We're finally ready to insert some content into our graph. Let's start with an Apple:
-
-```
-val future: Future[Fruit] = Database.fruit.insert(Fruit("Apple"))
-```
-
-Notice in the above we didn't include `_id`, `_key`, or `_rev` as these will be populated by the database. However, the
-`Future[Fruit]` we get back will include all the values generated from the database.
-
-### Querying with AQL
-
-Scarango provides a compile-time validated AQL interpolator to give you proper compile-time errors if the query is invalid.
-
-Let's create a query to get all the fruit back:
-
-```
-val query = aql"FOR f IN fruit RETURN f"
-```
-
-In order to use this query we can call `cursor` on the `fruit` collection:
-
-```
-val response: Future[QueryResponse[Fruit]] = Database.fruit.cursor(query)
-```
-
-The `QueryResponse` object has several useful pieces of information, but for our immediate needs calling `result` on it
-will give us a `List[Fruit]` of the results of the query.
-
-
-### Real-time / Streaming Changes
-
-Scarango adds support for real-time events from the database to be handled. This was inspired by https://github.com/baslr/arangochair.
-
-Simply start the monitor:
-
-```
-Database.realTime.start()
-```
-
-Then you can listen to upserts and deletes on any collection:
-
-```
-Database.fruit.triggers.upsert.attach { f =>
-    println(s"Fruit was upserted: $f")
-}
-Database.fruit.triggers.deletion.attach { f =>
-    println(s"Fruit was deleted: $f")
-}
-```
-
-Finally, you can listen to the raw stream of events if you'd rather do something more generic:
-
-```
-Database.realTime.events.attach { logEvent =>
-    println(s"Real-time event: $logEvent")
-}
-```
-
-### Further Reading
-
-For more examples using managed graphs take a look at the `ManagedSpec` (https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/ManagedSpec.scala).
+This needs to be updated with instructions for 2.0, but for now, take a look at 
 
 ## Versions
 
-### Features for 2.0.0 (Future)
+### Features for 2.1.0 (In-Progress)
 
-* [ ] Scala.js wrapper for Foxx framework
-* [ ] Transactions
-
-### Features for 1.0.0 (In-Progress)
-
-* [ ] Migrate all case classes to `core` for better re-use in Scala.js
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
-* [ ] Proper support for differentiating `null` and exclusion of values
-* [ ] Better support for `_key`, `_id`, and `_rev` as references and in case classes
+* [ ] Scala.js wrapper for Foxx framework
+
+### Features for 2.0.0 (Released 2019.06.25)
+
+* [X] Generated integration with ArangoDB via Swagger
+* [X] Scala.js core
+* [X] Cleaner structure and functionality
 
 ### Features for 0.8.0 (Released 2017.08.31)
 
