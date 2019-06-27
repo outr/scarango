@@ -2,7 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.0.0"
+version in ThisBuild := "2.0.1-SNAPSHOT"
 scalaVersion in ThisBuild := "2.12.8"
 crossScalaVersions in ThisBuild := List("2.12.8", "2.11.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -25,7 +25,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.11.9"
+val youiVersion = "0.11.10-SNAPSHOT"
 val scalaTestVersion = "3.0.5"
 
 lazy val root = project.in(file("."))

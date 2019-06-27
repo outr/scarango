@@ -28,7 +28,10 @@ object AQLMacros {
               var argName = s"arg$index"
               val value = args(index - 1)
               val vt = value.actualType
-              val queryArg = if (vt <:< typeOf[String]) {
+              // TODO: use implicits instead?
+              val queryArg = if (vt <:< typeOf[Value]) {
+                Some(value.tree)
+              } else if (vt <:< typeOf[String]) {
                 Some(q"string($value)")
               } else if (vt <:< typeOf[Boolean]) {
                 Some(q"boolean($value)")

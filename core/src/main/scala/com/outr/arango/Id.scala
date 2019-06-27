@@ -12,7 +12,7 @@ import com.outr.arango.JsonImplicits._
   * @tparam D the document type
   */
 case class Id[D](value: String,
-                 collection: String) {
+                 collection: String) extends Ordered[Id[D]] {
   /**
     * Key represents the unique identifier within a collection.
     *
@@ -28,6 +28,8 @@ case class Id[D](value: String,
     * @see https://www.arangodb.com/docs/stable/http/document-address-and-etag.html#document-handle
     */
   lazy val _id: String = s"$collection/$value"
+
+  override def compare(that: Id[D]): Int = this._id.compare(that._id)
 
   override def toString: String = _id
 }

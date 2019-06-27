@@ -37,6 +37,7 @@ This needs to be updated with instructions for 2.0, but for now, take a look at 
 
 ### Features for 2.1.0 (In-Progress)
 
+* [ ] "Modify" convenience functionality to use `Field` to filter and set values without having to modify individually or replace the entire document (generates AQL)
 * [ ] DSL for creating AQL queries
 * [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
 * [ ] Scala.js wrapper for Foxx framework
