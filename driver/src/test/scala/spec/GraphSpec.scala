@@ -1,7 +1,8 @@
 package spec
 
 import com.outr.arango._
-import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.Matchers
+import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 import scala.collection.mutable.ListBuffer

@@ -2,7 +2,8 @@ package spec
 
 import com.outr.arango._
 import io.youi.http.Headers
-import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.Matchers
+import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 class AQLSpec extends AsyncWordSpec with Matchers {

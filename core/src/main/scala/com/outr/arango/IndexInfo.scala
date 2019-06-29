@@ -6,6 +6,6 @@ case class IndexInfo(`type`: String,
                      sparse: Option[Boolean] = None,
                      id: Id[Index],
                      isNewlyCreated: Option[Boolean] = None,
-                     selectivityEstimate: Option[Int] = None,
+                     selectivityEstimate: Option[Double] = None,
                      error: Boolean = false,
                      code: Int = 0)

@@ -3,8 +3,8 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 name := "scarango"
 organization in ThisBuild := "com.outr"
 version in ThisBuild := "2.0.1-SNAPSHOT"
-scalaVersion in ThisBuild := "2.12.8"
-crossScalaVersions in ThisBuild := List("2.12.8", "2.11.12")
+scalaVersion in ThisBuild := "2.13.0"
+crossScalaVersions in ThisBuild := List("2.13.0", "2.12.8", "2.11.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
@@ -25,8 +25,8 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.11.10-SNAPSHOT"
-val scalaTestVersion = "3.0.5"
+val youiVersion = "0.11.11"
+val scalaTestVersion = "3.1.0-SNAP13"
 
 lazy val root = project.in(file("."))
   .aggregate(api, coreJS, coreJVM, driver)

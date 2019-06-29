@@ -17,7 +17,7 @@ case class CollectionInfo(keyOptions: KeyGeneratorType,
                           shardKeys: Option[List[String]] = None,
                           shardingStrategy: Option[String] = None,
                           smartGraphAttribute: Option[String] = None,
-                          status: Option[String] = None,
+                          status: Option[Int] = None,
                           statusString: Option[String] = None,
                           `type`: Option[Int] = None,
                           waitForSync: Option[Boolean] = None)
