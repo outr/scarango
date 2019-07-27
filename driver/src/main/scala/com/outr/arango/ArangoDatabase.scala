@@ -19,7 +19,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
     } else {
       APIDatabase.get(client)
     }
-    future.map(JsonUtil.fromJson[ArangoResponse[List[String]]](_))
+    future.map(json => JsonUtil.fromJson[ArangoResponse[List[String]]](json))
   }
 
   def collection(name: String): ArangoCollection = {
@@ -43,7 +43,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
 
   def validate(query: String)(implicit ec: ExecutionContext): Future[ValidationResult] = APIQuery
     .post(client, PostApiQueryProperties(query))
-    .map(JsonUtil.fromJson[ValidationResult](_))
+    .map(json => JsonUtil.fromJson[ValidationResult](json))
     .recover {
       case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
     }
