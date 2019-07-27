@@ -51,6 +51,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
   def transaction(queries: List[Query],
                   writeCollections: List[String] = Nil,
                   readCollections: List[String] = Nil,
+                  exclusiveCollections: List[String] = Nil,
                   waitForSync: Boolean = false,
                   lockTimeout: Option[Long] = None,
                   maxTransactionSize: Option[Long] = None)
@@ -70,7 +71,8 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
     APITransaction.post(client, PostAPITransaction(
       collections = Json.obj(
         "write" -> Json.arr(writeCollections.map(Json.fromString): _*),
-        "read" -> Json.arr(readCollections.map(Json.fromString): _*)
+        "read" -> Json.arr(readCollections.map(Json.fromString): _*),
+        "exclusive" -> Json.arr(exclusiveCollections.map(Json.fromString): _*)
       ),
       action = Some(function),
       lockTimeout = lockTimeout,
