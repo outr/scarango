@@ -34,26 +34,7 @@ case class QueryBuilder[R](client: HttpClient,
   private lazy val qrDecoder: Decoder[QueryResponse[R]] = JsonUtil.decoder[QueryResponse[R]]
 
   def cursor(implicit ec: ExecutionContext): Future[QueryResponse[R]] = {
-    val bindVars = Json.obj(query.args.map {
-      case (key, value) => {
-        val argValue: Json = value match {
-          case Value.Null => Json.Null
-          case StringValue(s) => Json.fromString(s)
-          case BooleanValue(b) => Json.fromBoolean(b)
-          case IntValue(i) => Json.fromInt(i)
-          case LongValue(l) => Json.fromLong(l)
-          case DoubleValue(d) => Json.fromDoubleOrNull(d)
-          case BigDecimalValue(d) => Json.fromBigDecimal(d)
-          case SeqStringValue(l) => Json.fromValues(l.map(Json.fromString))
-          case SeqBooleanValue(l) => Json.fromValues(l.map(Json.fromBoolean))
-          case SeqIntValue(l) => Json.fromValues(l.map(Json.fromInt))
-          case SeqLongValue(l) => Json.fromValues(l.map(Json.fromLong))
-          case SeqDoubleValue(l) => Json.fromValues(l.map(Json.fromDoubleOrNull))
-          case SeqBigDecimalValue(l) => Json.fromValues(l.map(Json.fromBigDecimal))
-        }
-        key -> argValue
-      }
-    }.toSeq: _*)
+    val bindVars = query.bindVars
     APICursor
       .post(
         client = client,

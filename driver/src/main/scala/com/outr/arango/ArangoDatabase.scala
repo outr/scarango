@@ -1,8 +1,8 @@
 package com.outr.arango
 
-import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APIView}
+import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APITransaction, APIView}
 import com.outr.arango.JsonImplicits._
-import com.outr.arango.api.model.PostApiQueryProperties
+import com.outr.arango.api.model.{PostAPITransaction, PostApiQueryProperties}
 import com.outr.arango.model.ArangoResponse
 import io.circe.Json
 import io.youi.client.HttpClient
@@ -47,6 +47,38 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
     .recover {
       case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
     }
+
+  def transaction(queries: List[Query],
+                  writeCollections: List[String] = Nil,
+                  readCollections: List[String] = Nil,
+                  waitForSync: Boolean = false,
+                  lockTimeout: Option[Long] = None,
+                  maxTransactionSize: Option[Long] = None)
+                 (implicit ec: ExecutionContext): Future[ArangoResponse[Vector[Json]]] = {
+    assert(queries.nonEmpty, "Cannot create a transaction with no queries!")
+    val queryString = queries.map(_.fixed()).map { q =>
+      val params = q.bindVars.spaces2
+      s"""results.push(db._query("${q.value}", $params));"""
+    }.mkString("\n  ")
+    val function =
+      s"""function() {
+         |  var db = require("org/arangodb").db;
+         |  var results = [];
+         |  $queryString
+         |  return results;
+         |}""".stripMargin
+    APITransaction.post(client, PostAPITransaction(
+      collections = Json.obj(
+        "write" -> Json.arr(writeCollections.map(Json.fromString): _*),
+        "read" -> Json.arr(readCollections.map(Json.fromString): _*)
+      ),
+      action = Some(function),
+      lockTimeout = lockTimeout,
+      maxTransactionSize = maxTransactionSize,
+      params = None,
+      waitForSync = Some(waitForSync)
+    )).map(json => JsonUtil.fromJson[ArangoResponse[Vector[Json]]](json))
+  }
 
   def query(query: Query): QueryBuilder[Json] = QueryBuilder[Json](client, query.fixed(), identity)
 

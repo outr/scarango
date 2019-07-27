@@ -3,7 +3,7 @@ package com.outr.arango.api.model
 import io.circe.Json
 
 
-case class PostAPITransaction(collections: String,
+case class PostAPITransaction(collections: Json,
                               action: Option[String] = None,
                               lockTimeout: Option[Long] = None,
                               maxTransactionSize: Option[Long] = None,

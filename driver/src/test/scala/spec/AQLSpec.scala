@@ -1,6 +1,7 @@
 package spec
 
 import com.outr.arango._
+import com.outr.arango.api.APITransaction
 import io.youi.http.Headers
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -152,6 +153,24 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         user.name should be("John Doe")
         user.age should be(21)
         user._id should not be null
+      }
+    }
+    "list all user names" in {
+      val query = aql"FOR user IN users SORT user.name ASC RETURN user.name"
+      dbExample.query(query).as[String].cursor.map { response =>
+        response.result should be(List("Jane Doe", "John Doe"))
+      }
+    }
+    "delete Jane in a transaction" in {
+      val query = aql"FOR user IN users FILTER user.name == 'Jane Doe' REMOVE user IN users RETURN user"
+      dbExample.transaction(List(query), writeCollections = List("users")).map { response =>
+        response.error should be(false)
+      }
+    }
+    "list all user names and verify Jane is gone" in {
+      val query = aql"FOR user IN users SORT user.name ASC RETURN user.name"
+      dbExample.query(query).as[String].cursor.map { response =>
+        response.result should be(List("John Doe"))
       }
     }
     "drop the test database" in {
