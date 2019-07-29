@@ -9,7 +9,7 @@ package com.outr.arango
   * @tparam Left the left-side connection
   * @tparam Right the right-side connection
   */
-trait Edge[E <: Document[E], Left <: Document[Left], Right <: Document[Right]] extends Document[E] {
+trait Edge[E <: Document[E], Left, Right] extends Document[E] {
   def _from: Id[Left]
   def _to: Id[Right]
 }
