@@ -52,10 +52,12 @@ class Graph(val databaseName: String = ArangoDB.config.db,
                              collection: Collection[D],
                              fields: Field[_]*): View[D] = new View[D](name, fields.toList, collection)
 
-  def register(upgrade: DatabaseUpgrade): Unit = synchronized {
+  def register(upgrades: DatabaseUpgrade*): Unit = synchronized {
     assert(!initialized, "Database is already initialized. Cannot register upgrades after initialization.")
-    if (!versions.contains(upgrade)) {
-      versions += upgrade
+    upgrades.foreach { upgrade =>
+      if (!versions.contains(upgrade)) {
+        versions += upgrade
+      }
     }
     ()
   }

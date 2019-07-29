@@ -84,4 +84,15 @@ case class QueryBuilder[R](client: HttpClient,
   def paged(implicit ec: ExecutionContext): Future[Pagination[R]] = {
     includeCount.cursor.map(Pagination(this, _))
   }
+
+  /**
+    * Utilizes pagination to process through all pages of data
+    *
+    * @param f the function to handle processing of each page of data
+    * @param ec the ExecutionContext
+    * @return List[Return]
+    */
+  def process[Return](f: QueryResponse[R] => Future[Return])(implicit ec: ExecutionContext): Future[List[Return]] = {
+    paged(ec).flatMap(_.process(f))
+  }
 }

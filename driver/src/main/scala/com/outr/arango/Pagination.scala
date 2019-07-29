@@ -16,4 +16,20 @@ case class Pagination[D](builder: QueryBuilder[D],
   } else {
     Future.failed(throw new RuntimeException("No more results."))
   }
+  def isEmpty: Boolean = results.isEmpty
+  def nonEmpty: Boolean = results.nonEmpty
+
+  def process[R](f: QueryResponse[D] => Future[R]): Future[List[R]] = if (isEmpty) {
+    Future.successful(Nil)
+  } else {
+    f(response).flatMap { r =>
+      if (hasNext) {
+        next().flatMap { nextPage =>
+          nextPage.process(f).map(tail => r :: tail)
+        }
+      } else {
+        Future.successful(List(r))
+      }
+    }
+  }
 }
