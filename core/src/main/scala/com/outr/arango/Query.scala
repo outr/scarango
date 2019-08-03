@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.Value.{BigDecimalValue, BooleanValue, DoubleValue, IntValue, LongValue, SeqBigDecimalValue, SeqBooleanValue, SeqDoubleValue, SeqIntValue, SeqLongValue, SeqStringValue, StringValue}
+import com.outr.arango.Value.{BigDecimalValue, BooleanValue, DoubleValue, IntValue, JsonValue, LongValue, SeqBigDecimalValue, SeqBooleanValue, SeqDoubleValue, SeqIntValue, SeqLongValue, SeqStringValue, StringValue}
 import io.circe.Json
 
 case class Query(value: String, args: Map[String, Value]) {
@@ -37,6 +37,7 @@ case class Query(value: String, args: Map[String, Value]) {
         case SeqLongValue(l) => Json.fromValues(l.map(Json.fromLong))
         case SeqDoubleValue(l) => Json.fromValues(l.map(Json.fromDoubleOrNull))
         case SeqBigDecimalValue(l) => Json.fromValues(l.map(Json.fromBigDecimal))
+        case JsonValue(value) => value
       }
       key -> argValue
     }

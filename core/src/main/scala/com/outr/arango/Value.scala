@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import io.circe.Json
+
 sealed trait Value
 
 object Value {
@@ -21,6 +23,7 @@ object Value {
   def longs(value: Seq[Long]): Value = SeqLongValue(value)
   def doubles(value: Seq[Double]): Value = SeqDoubleValue(value)
   def bigDecimals(value: Seq[BigDecimal]): Value = SeqBigDecimalValue(value)
+  def json(value: Json): Value = JsonValue(value)
 
   case class StringValue(value: String) extends Value
   case class BooleanValue(value: Boolean) extends Value
@@ -34,5 +37,6 @@ object Value {
   case class SeqLongValue(value: Seq[Long]) extends Value
   case class SeqDoubleValue(value: Seq[Double]) extends Value
   case class SeqBigDecimalValue(value: Seq[BigDecimal]) extends Value
+  case class JsonValue(value: Json) extends Value
   case object Null extends Value
 }

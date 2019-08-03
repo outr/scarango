@@ -80,7 +80,7 @@ object AQLMacros {
                 special = true
                 Some(q"string($value.name)")
               } else {
-                c.abort(c.enclosingPosition, s"Unsupported Value: $vt.")
+                Some(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
               }
               if (special) {
                 argName = s"@$argName"
