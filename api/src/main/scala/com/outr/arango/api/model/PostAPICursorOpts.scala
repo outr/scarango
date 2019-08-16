@@ -1,8 +1,5 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
-
 case class PostAPICursorOpts(failOnWarning: Option[Boolean] = None,
                              fullCount: Option[Boolean] = None,
                              intermediateCommitCount: Option[Long] = None,

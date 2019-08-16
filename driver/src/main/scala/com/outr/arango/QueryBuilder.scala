@@ -1,6 +1,5 @@
 package com.outr.arango
 
-import com.outr.arango.Value._
 import com.outr.arango.api.model.{PostAPICursor, PostAPICursorOpts}
 import com.outr.arango.api.{APICursor, APICursorCursorIdentifier}
 import io.circe.Decoder.Result
@@ -19,14 +18,31 @@ case class QueryBuilder[R](client: HttpClient,
                            count: Boolean = false,
                            memoryLimit: Option[Long] = None,
                            options: Option[PostAPICursorOpts] = None,
-                           ttl: Option[Long] = None) {
+                           ttl: Option[Long] = None,
+                           logQuery: Option[Json => Unit] = None,
+                           logResponse: Option[Json => Unit] = None) {
   def as[D](conversion: Json => D): QueryBuilder[D] = copy[D](conversion = conversion)
-  def as[D](serialization: Serialization[D]): QueryBuilder[D] = as[D](serialization.fromJson(_))
+  def as[D](serialization: Serialization[D]): QueryBuilder[D] = as[D](json => serialization.fromJson(json))
   def as[D]: QueryBuilder[D] = macro GraphMacros.queryBuilderAs[D]
 
   def batchSize(batchSize: Int): QueryBuilder[R] = copy(batchSize = batchSize)
+  def withCache: QueryBuilder[R] = copy(cache = true)
+  def withoutCache: QueryBuilder[R] = copy(cache = false)
   def includeCount: QueryBuilder[R] = copy(count = true)
   def excludeCount: QueryBuilder[R] = copy(count = false)
+  def withMemoryLimit(limit: Long): QueryBuilder[R] = copy(memoryLimit = Some(limit))
+  def withoutMemoryLimit: QueryBuilder[R] = copy(memoryLimit = None)
+  def cursorTimeout(timeInSeconds: Int = 30): QueryBuilder[R] = copy(ttl = Some(timeInSeconds))
+  def failOnWarning(b: Boolean): QueryBuilder[R] = opt(_.copy(failOnWarning = Some(b)))
+  def fullCount(b: Boolean): QueryBuilder[R] = opt(_.copy(fullCount = Some(b)))
+  def maxWarningCount(n: Int): QueryBuilder[R] = opt(_.copy(maxWarningCount = Some(n)))
+  def satelliteSyncWait(b: Boolean): QueryBuilder[R] = opt(_.copy(satelliteSyncWait = Some(b)))
+  def stream(b: Boolean): QueryBuilder[R] = opt(_.copy(stream = Some(b)))
+
+  private def opt(f: PostAPICursorOpts => PostAPICursorOpts): QueryBuilder[R] = {
+    val opts = options.getOrElse(PostAPICursorOpts())
+    copy(options = Some(f(opts)))
+  }
 
   private implicit lazy val dDecoder: Decoder[R] = new Decoder[R] {
     override def apply(c: HCursor): Result[R] = Right(conversion(c.value))
@@ -35,21 +51,26 @@ case class QueryBuilder[R](client: HttpClient,
 
   def cursor(implicit ec: ExecutionContext): Future[QueryResponse[R]] = {
     val bindVars = query.bindVars
+    val apiCursor = PostAPICursor(
+      query = query.value,
+      bindVars = bindVars,
+      batchSize = Some(batchSize.toLong),
+      cache = Some(cache),
+      count = Some(count),
+      memoryLimit = memoryLimit,
+      options = options,
+      ttl = ttl
+    )
+    logQuery.foreach(f => f(JsonUtil.toJson(apiCursor)))
     APICursor
       .post(
         client = client,
-        body = PostAPICursor(
-          query = query.value,
-          bindVars = bindVars,
-          batchSize = Some(batchSize.toLong),
-          cache = Some(cache),
-          count = Some(count),
-          memoryLimit = memoryLimit,
-          options = options,
-          ttl = ttl
-        )
+        body = apiCursor
       )
-      .map(_.as[QueryResponse[R]](qrDecoder))
+      .map { response =>
+        logResponse.foreach(f => f(response))
+        response.as[QueryResponse[R]](qrDecoder)
+      }
       .map {
         case Left(df) => throw df
         case Right(r) => r
