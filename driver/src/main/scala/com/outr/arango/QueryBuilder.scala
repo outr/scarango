@@ -56,6 +56,8 @@ case class QueryBuilder[R](client: HttpClient,
       }
   }
 
+  def results(implicit ec: ExecutionContext): Future[List[R]] = cursor(ec).map(_.result)
+
   def get(id: String)(implicit ec: ExecutionContext): Future[QueryResponse[R]] = APICursorCursorIdentifier
     .put(client, id)
     .map(_.as[QueryResponse[R]](qrDecoder))
