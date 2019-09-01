@@ -56,7 +56,7 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
         consolidationPolicy = consolidationPolicy,
         links = map
       )
-    ).map(JsonUtil.fromJson[ViewInfo](_))
+    ).map(json => JsonUtil.fromJson[ViewInfo](json))
   }
 }
 
@@ -78,7 +78,7 @@ case class ViewInfo(globallyUniqueId: String,
                     writebufferSizeMax: Long,
                     links: Map[String, ArangoLinkProperties])
 
-case class ViewConsolidationPolicy(`type`: String, threshold: BigDecimal)
+case class ViewConsolidationPolicy(`type`: String, threshold: Option[BigDecimal])
 
 case class ViewDetail(globallyUniqueId: String,
                       id: String,

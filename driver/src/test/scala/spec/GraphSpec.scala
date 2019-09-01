@@ -10,7 +10,7 @@ import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with Matchers {
   "Graph" should {
-    val doImport: Boolean = false
+    val doImport: Boolean = true
     val doDrop: Boolean = false
 
     "initialize configuration" in {
