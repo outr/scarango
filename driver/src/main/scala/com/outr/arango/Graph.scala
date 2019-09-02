@@ -27,13 +27,24 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   private val _initialized = new AtomicBoolean(false)
   private var versions = ListBuffer.empty[DatabaseUpgrade]
 
-  protected def transaction: Option[Transaction] = None
-  lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, transaction match {
-    case Some(t) => httpClient.header("x-arango-trx-id", t.id)
-    case None => httpClient
-  })
+  lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil)
+  lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
+
+  def transaction(write: List[Collection[_]] = Nil,
+                  read: List[Collection[_]] = Nil,
+                  exclusive: List[Collection[_]] = Nil,
+                  waitForSync: Boolean = false,
+                  allowImplicit: Boolean = false,
+                  maxTransactionSize: Long = -1L)
+                 (implicit ec: ExecutionContext): Future[Transaction] = arangoDatabase.transactionCreate(
+    writeCollections = write.map(_.name),
+    readCollections = read.map(_.name),
+    exclusiveCollections = exclusive.map(_.name),
+    waitForSync = waitForSync,
+    allowImplicit = allowImplicit,
+    maxTransactionSize = maxTransactionSize
+  ).map(_.withGraph(Some(this)))
 
   private lazy val databaseVersion: DatabaseStore[DatabaseVersion] = DatabaseStore[DatabaseVersion](
     key = "databaseVersion",
@@ -43,7 +54,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   register(CreateDatabase)
 
-  def query(query: Query): QueryBuilder[Json] = arangoDatabase.query(query)
+  def query(query: Query, transaction: Option[Transaction] = None): QueryBuilder[Json] = {
+    arangoDatabase.query(query, transaction.map(_.id))
+  }
 
   def collections: List[Collection[_]] = _collections
   def views: List[View[_]] = _views
