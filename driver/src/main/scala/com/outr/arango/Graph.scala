@@ -3,6 +3,7 @@ package com.outr.arango
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.outr.arango.model.ArangoCode
+import com.outr.arango.transaction.Transaction
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
 import io.circe.Json
 import io.youi.client.HttpClient
@@ -26,7 +27,11 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   private val _initialized = new AtomicBoolean(false)
   private var versions = ListBuffer.empty[DatabaseUpgrade]
 
-  lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
+  protected def transaction: Option[Transaction] = None
+  lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, transaction match {
+    case Some(t) => httpClient.header("x-arango-trx-id", t.id)
+    case None => httpClient
+  })
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
   lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil)
 
