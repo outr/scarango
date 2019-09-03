@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import scala.concurrent.duration.FiniteDuration
+
 case class Field[F](name: String) {
   object index {
     def hash(sparse: Boolean = false,
@@ -21,6 +23,10 @@ case class Field[F](name: String) {
     }
     def fullText(minLength: Long = 3L): Index = {
       Index(IndexType.FullText, List(name), minLength = minLength)
+    }
+    def ttl(expireAfter: FiniteDuration): Index = {
+      val seconds = expireAfter.toSeconds.toInt
+      Index(IndexType.TTL, List(name), expireAfterSeconds = seconds)
     }
   }
 
