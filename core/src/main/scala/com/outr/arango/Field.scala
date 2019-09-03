@@ -4,16 +4,6 @@ import scala.concurrent.duration.FiniteDuration
 
 case class Field[F](name: String) {
   object index {
-    def hash(sparse: Boolean = false,
-             unique: Boolean = false,
-             deduplicate: Boolean = true): Index = {
-      Index(IndexType.Hash, List(name), sparse, unique, deduplicate)
-    }
-    def skipList(sparse: Boolean = false,
-                 unique: Boolean = false,
-                 deduplicate: Boolean = true): Index = {
-      Index(IndexType.SkipList, List(name), sparse, unique, deduplicate)
-    }
     def persistent(sparse: Boolean = false,
                  unique: Boolean = false): Index = {
       Index(IndexType.Persistent, List(name), sparse, unique)
