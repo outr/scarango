@@ -39,7 +39,7 @@ object GraphMacros {
       q"""
          import com.outr.arango._
 
-         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Document, List(..$indexes))
+         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Document, List(..$indexes), None)
        """)
   }
 
@@ -53,7 +53,7 @@ object GraphMacros {
       q"""
          import com.outr.arango._
 
-         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Edge, List(..$indexes))
+         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Edge, List(..$indexes), None)
        """)
   }
 }

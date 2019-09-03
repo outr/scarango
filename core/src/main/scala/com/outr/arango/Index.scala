@@ -6,7 +6,8 @@ case class Index(`type`: IndexType,
                  unique: Boolean = false,
                  deduplicate: Boolean = true,
                  geoJson: Boolean = true,
-                 minLength: Long = 3L) {
+                 minLength: Long = 3L,
+                 expireAfterSeconds: Int = -1) {
   def typeAndFields(info: IndexInfo): Boolean = info.`type` == `type`.toString.toLowerCase &&
     info.fields.contains(fields)
   def matches(info: IndexInfo): Boolean = typeAndFields(info) &&

@@ -1,16 +1,23 @@
 package com.outr.arango
 
+import com.outr.arango.transaction.Transaction
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class Collection[D <: Document[D]](val graph: Graph,
                                    val model: DocumentModel[D],
                                    val `type`: CollectionType,
-                                   val indexes: List[Index]) {
+                                   val indexes: List[Index],
+                                   val transaction: Option[Transaction]) {
   lazy val arangoCollection: ArangoCollection = graph.arangoDatabase.collection(name)
 
   graph.add(this)
 
   def name: String = model.collectionName
+
+  private def transactionId: Option[String] = transaction.map(_.id)
+
+  def apply(transaction: Transaction): Collection[D] = new Collection[D](graph, model, `type`, indexes, Some(transaction))
 
   def insertOne(document: D,
                 waitForSync: Boolean = false,
@@ -18,7 +25,7 @@ class Collection[D <: Document[D]](val graph: Graph,
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.insertOne(document, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    arangoCollection.document.insertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
   }
 
   def upsertOne(document: D,
@@ -27,7 +34,7 @@ class Collection[D <: Document[D]](val graph: Graph,
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.upsertOne(document, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    arangoCollection.document.upsertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
   }
 
   def insert(documents: List[D],
@@ -36,7 +43,7 @@ class Collection[D <: Document[D]](val graph: Graph,
              returnOld: Boolean = false,
              silent: Boolean = false)
             (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.insert(documents, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    arangoCollection.document.insert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
   }
 
   def upsert(documents: List[D],
@@ -45,7 +52,7 @@ class Collection[D <: Document[D]](val graph: Graph,
              returnOld: Boolean = false,
              silent: Boolean = false)
             (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.upsert(documents, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
   }
 
   def batch(iterator: Iterator[D],
@@ -71,17 +78,17 @@ class Collection[D <: Document[D]](val graph: Graph,
   }
 
   def get(id: Id[D])(implicit ec: ExecutionContext): Future[Option[D]] = {
-    arangoCollection.document.get(id)(ec, model.serialization)
+    arangoCollection.document.get(id, transactionId)(ec, model.serialization)
   }
 
-  def query(query: Query): QueryBuilder[D] = graph.query(query).as[D](model.serialization)
+  def query(query: Query): QueryBuilder[D] = graph.query(query, transaction).as[D](model.serialization)
 
   def deleteOne(id: Id[D],
                 waitForSync: Boolean = false,
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[Id[D]] = {
-    arangoCollection.document.deleteOne(id, waitForSync, returnOld, silent)
+    arangoCollection.document.deleteOne(id, transactionId, waitForSync, returnOld, silent)
   }
 
   protected[arango] def create(createCollection: Boolean)(implicit ec: ExecutionContext): Future[Unit] = for {
