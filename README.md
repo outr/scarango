@@ -12,7 +12,7 @@ ArangoDB client written in Scala
 
 ## Setup
 
-Scarango is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js (core only) on 2.11, 2.12, and 2.13.
+Scarango is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js (core only) on 2.12 and 2.13.
 
 Tested and supporting ArangoDB 3.5.
 

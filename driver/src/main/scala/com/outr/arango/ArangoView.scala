@@ -27,7 +27,7 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
       )),
       `type` = Some(`type`)
     )
-  ).map(JsonUtil.fromJson[ViewInfo](_))
+  ).map(json => JsonUtil.fromJson[ViewInfo](json))
 
   def update(links: Option[List[ViewLink]] = None,
              cleanupIntervalStep: Option[Int] = None,
@@ -59,28 +59,3 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
     ).map(json => JsonUtil.fromJson[ViewInfo](json))
   }
 }
-
-case class ViewLink(collectionName: String,
-                    fields: List[String],
-                    analyzers: List[String] = List("text_en"),     // TODO: better support config and default back to List("identity")
-                    allowExists: Boolean = false,
-                    trackListPositions: Boolean = false)
-
-case class ViewInfo(globallyUniqueId: String,
-                    id: String,
-                    name: String,
-                    `type`: String,
-                    cleanupIntervalStep: Int,
-                    consolidationIntervalMsec: Long,
-                    consolidationPolicy: ViewConsolidationPolicy,
-                    writebufferActive: Long,
-                    writebufferIdle: Long,
-                    writebufferSizeMax: Long,
-                    links: Map[String, ArangoLinkProperties])
-
-case class ViewConsolidationPolicy(`type`: String, threshold: Option[BigDecimal])
-
-case class ViewDetail(globallyUniqueId: String,
-                      id: String,
-                      name: String,
-                      `type`: String)

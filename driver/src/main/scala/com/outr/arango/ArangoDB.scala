@@ -65,7 +65,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     object db extends ArangoDatabase(ArangoDB.this, client, database) {
       def current(implicit ec: ExecutionContext): Future[ArangoResponse[DatabaseInfo]] = APIDatabaseCurrent
         .get(client)
-        .map(JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](_))
+        .map(json => JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](json))
 
       def apply(name: String): ArangoDatabase = new ArangoDatabase(ArangoDB.this, client.path(Path.parse(s"/_db/$name/")), name)
     }
@@ -101,18 +101,5 @@ object ArangoDB {
     Some(config.credentials)
   } else {
     None
-  }
-}
-
-class SystemDatabase(db: ArangoDB) extends ArangoDatabase(db, db.client.path(Path.parse(s"/_db/_system")), "_system") {
-  def create(databaseName: String)(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
-    APIDatabase.post(client, GetAPIDatabaseNew(
-      name = databaseName
-    )).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
-    // TODO: Support setting user
-  }
-
-  def drop(databaseName: String)(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = {
-    APIDatabaseDatabaseName.delete(client, databaseName).map(JsonUtil.fromJson[ArangoResponse[Boolean]](_))
   }
 }
