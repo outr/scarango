@@ -14,8 +14,6 @@ case class Query(value: String, args: Map[String, Value]) {
         true
       }
     }
-//    scribe.info(s"From: $value, To: $updated")
-//    scribe.info(s"Args: ${args.keySet}, To: ${filteredArgs.keySet}")
     copy(updated, filteredArgs)
   } else {
     this
@@ -37,7 +35,7 @@ case class Query(value: String, args: Map[String, Value]) {
         case SeqLongValue(l) => Json.fromValues(l.map(Json.fromLong))
         case SeqDoubleValue(l) => Json.fromValues(l.map(Json.fromDoubleOrNull))
         case SeqBigDecimalValue(l) => Json.fromValues(l.map(Json.fromBigDecimal))
-        case JsonValue(value) => value
+        case JsonValue(json) => json
       }
       key -> argValue
     }

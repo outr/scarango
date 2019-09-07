@@ -14,3 +14,5 @@ trait DocumentModel[D <: Document[D]] {
     Id[D](value, collectionName)
   }
 }
+
+case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model, id: String = Unique())
