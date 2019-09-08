@@ -72,6 +72,18 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         user._id should not be null
       }
     }
+    "handle a simple query in partial AQL" in {
+      var query = aqlu"FOR user IN users"
+      query += aqlu"RETURN user"
+      dbExample.query(query).as[User].cursor.map { response =>
+        response.id should be(None)
+        response.result.size should be(1)
+        val user = response.result.head
+        user.name should be("John Doe")
+        user.age should be(21)
+        user._id should not be null
+      }
+    }
     "verify `first` returns the first entry" in {
       val query = aql"FOR user IN users RETURN user"
       dbExample.query(query).as[User].first.map { userOption =>

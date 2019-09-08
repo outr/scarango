@@ -10,6 +10,12 @@ import scala.concurrent.duration._
 @compileTimeOnly("Enable macro paradise to expand compile-time macros")
 object AQLMacros {
   def aql(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {
+    process(c)(validate = true, args = args)
+  }
+  def aqlu(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {
+    process(c)(validate = false, args = args)
+  }
+  def process(c: blackbox.Context)(validate: Boolean, args: Seq[c.Expr[Any]]): c.Expr[Query] = {
     import c.universe._
 
     // Make sure that Profig is initialized
@@ -96,15 +102,17 @@ object AQLMacros {
 
         val query = b.toString().trim
 
-        val db = new ArangoDB()
-        val future = db.init().flatMap { _ =>
-          db.api.db.validate(query)
-        }
-        future.onComplete(_ => db.dispose())
+        if (validate) {
+          val db = new ArangoDB()
+          val future = db.init().flatMap { _ =>
+            db.api.db.validate(query)
+          }
+          future.onComplete(_ => db.dispose())
 
-        val result = Await.result(future, 30.seconds)
-        if (result.error) {
-          c.abort(c.enclosingPosition, s"Error: ${result.errorMessage.get} (${result.errorCode}). Bad syntax for AQL query: $query.")
+          val result = Await.result(future, 30.seconds)
+          if (result.error) {
+            c.abort(c.enclosingPosition, s"Error: ${result.errorMessage.get} (${result.errorCode}). Bad syntax for AQL query: $query.")
+          }
         }
         c.Expr[Query](
           q"""
@@ -114,7 +122,7 @@ object AQLMacros {
               Query($query, $argsMap)
             """)
       }
-      case _ => c.abort(c.enclosingPosition, "Bad usage of cypher interpolation.")
+      case _ => c.abort(c.enclosingPosition, "Bad usage of AQL interpolation.")
     }
   }
 }
