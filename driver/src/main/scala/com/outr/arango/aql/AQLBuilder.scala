@@ -32,6 +32,7 @@ class AQLBuilder(val parts: List[QueryPart] = Nil) {
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
     ForPartial(ref, this)
   }
+  def FILTER(filter: Filter): AQLBuilder = withPart(FilterPart(filter))
   def SORT[T](f: => (Field[T], SortDirection)): AQLBuilder = withPart(SortPart[T](() => f))
   def RETURN[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): AQLBuilder = {
     withPart(ReturnPart(ref))
@@ -40,9 +41,7 @@ class AQLBuilder(val parts: List[QueryPart] = Nil) {
   def withPart(part: QueryPart): AQLBuilder = new AQLBuilder(parts ::: List(part))
   def toQuery: Query = {
     val queries = parts.map(_.build(this))
-    val value = queries.map(_.value).mkString("\n")
-    val args = queries.flatMap(_.args)
-    Query(value, args.toMap)
+    Query.merge(queries)
   }
 }
 
@@ -79,6 +78,25 @@ case class ForPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef
   override def build(builder: AQLBuilder): Query = {
     val name = builder.ref2Name(ref)
     Query(s"FOR $name IN ${collection.name}", Map.empty)
+  }
+}
+
+case class FilterPart(filter: Filter) extends QueryPart {
+  override def build(builder: AQLBuilder): Query = {
+    val query = filter.build(builder)
+    query.copy(value = s"FILTER ${query.value}")
+  }
+}
+
+class Filter(left: AQLBuilder => Query, condition: String, right: AQLBuilder => Query) {
+  def &&(filter: Filter): Filter = {
+    new Filter(build, "&&", filter.build)
+  }
+
+  def build(builder: AQLBuilder): Query = {
+    val l = left(builder)
+    val r = right(builder)
+    Query(s"${l.value} $condition ${r.value}", l.args ++ r.args)
   }
 }
 

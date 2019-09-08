@@ -25,6 +25,20 @@ class DSLSpec extends AsyncWordSpec with Matchers {
           |SORT p1.age DESC
           |RETURN p1""".stripMargin, Map.empty))
     }
+    "build a query with a filter" in {
+      val p = Person.ref
+
+      val query = (
+        FOR (p) IN Database.people
+        FILTER (p.age is 21) && (p.name isNot "Adam")
+        RETURN p
+      )
+      query.toQuery should be(Query(
+        """FOR p1 IN people
+          |FILTER p1.age == @a1 && p1.name != @a2
+          |RETURN p1""".stripMargin, Map("a1" -> 21, "a2" -> "Adam")
+      ))
+    }
   }
 
   object Database extends Graph(databaseName = "advanced") {
@@ -41,5 +55,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
 
     override val collectionName: String = "people"
     override implicit val serialization: Serialization[Person] = Serialization.auto[Person]
+
+    val q2 = (
+
+    )
   }
 }

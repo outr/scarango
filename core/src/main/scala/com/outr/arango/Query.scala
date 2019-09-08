@@ -41,3 +41,11 @@ case class Query(value: String, args: Map[String, Value]) {
     }
   }: _*)
 }
+
+object Query {
+  def merge(queries: List[Query], concat: String = "\n"): Query = {
+    val value = queries.map(_.value).mkString(concat)
+    val args = queries.flatMap(_.args)
+    Query(value, args.toMap)
+  }
+}
