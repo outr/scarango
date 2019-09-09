@@ -96,10 +96,9 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
     }
   }
 
-  class Database extends Graph(databaseName = "advanced") {
+  object database extends Graph(databaseName = "advanced") {
     val people: Collection[Person] = vertex[Person]()
   }
-  object database extends Database
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
 

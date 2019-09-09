@@ -25,6 +25,7 @@ object Value {
   implicit def longs(value: Seq[Long]): Value = SeqLongValue(value)
   implicit def doubles(value: Seq[Double]): Value = SeqDoubleValue(value)
   implicit def bigDecimals(value: Seq[BigDecimal]): Value = SeqBigDecimalValue(value)
+  implicit def id[T](value: Id[T]): Value = StringValue(value._id)
   implicit def json(value: Json): Value = JsonValue(value)
 
   case class StringValue(value: String) extends Value

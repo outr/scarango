@@ -55,9 +55,5 @@ class DSLSpec extends AsyncWordSpec with Matchers {
 
     override val collectionName: String = "people"
     override implicit val serialization: Serialization[Person] = Serialization.auto[Person]
-
-    val q2 = (
-
-    )
   }
 }

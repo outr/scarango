@@ -38,6 +38,8 @@ case class QueryBuilder[R](client: HttpClient,
   def maxWarningCount(n: Int): QueryBuilder[R] = opt(_.copy(maxWarningCount = Some(n)))
   def satelliteSyncWait(b: Boolean): QueryBuilder[R] = opt(_.copy(satelliteSyncWait = Some(b)))
   def stream(b: Boolean): QueryBuilder[R] = opt(_.copy(stream = Some(b)))
+  def logQuery(f: Json => Unit): QueryBuilder[R] = copy(logQuery = Some(f))
+  def logResponse(f: Json => Unit): QueryBuilder[R] = copy(logResponse = Some(f))
 
   private def opt(f: PostAPICursorOpts => PostAPICursorOpts): QueryBuilder[R] = {
     val opts = options.getOrElse(PostAPICursorOpts())

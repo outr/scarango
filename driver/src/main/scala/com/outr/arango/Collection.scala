@@ -81,6 +81,10 @@ class Collection[D <: Document[D]](val graph: Graph,
     arangoCollection.document.get(id, transactionId)(ec, model.serialization)
   }
 
+  def apply(id: Id[D])(implicit ec: ExecutionContext): Future[D] = {
+    get(id).map(_.getOrElse(throw new RuntimeException(s"Unable to find $name by id: $id")))
+  }
+
   def query(query: Query): QueryBuilder[D] = graph.query(query, transaction).as[D](model.serialization)
 
   def deleteOne(id: Id[D],
