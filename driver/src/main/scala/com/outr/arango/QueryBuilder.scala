@@ -120,4 +120,20 @@ case class QueryBuilder[R](client: HttpClient,
   def process[Return](f: QueryResponse[R] => Future[Return])(implicit ec: ExecutionContext): Future[List[Return]] = {
     paged(ec).flatMap(_.process(f))
   }
+
+  /**
+    * Simplification of process to iteratively handle one result at a time through all pages of data
+    *
+    * @param f the function to handle processing of each data element
+    * @param ec the ExecutionContext
+    * @return Future[Unit]
+    */
+  def iterate(f: R => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] = process { response =>
+    def recurse(list: List[R]): Future[Unit] = if (list.isEmpty) {
+      Future.successful(())
+    } else {
+      f(list.head).flatMap(_ => recurse(list.tail))
+    }
+    recurse(response.result)
+  }.map(_ => ())
 }

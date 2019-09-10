@@ -87,7 +87,7 @@ class Collection[D <: Document[D]](val graph: Graph,
 
   def query(query: Query): QueryBuilder[D] = graph.query(query, transaction).as[D](model.serialization)
 
-  lazy val all: QueryBuilder[D] = graph.query(Query(s"FOR c IN $name", Map.empty), transaction).as[D](model.serialization)
+  lazy val all: QueryBuilder[D] = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
 
   def deleteOne(id: Id[D],
                 waitForSync: Boolean = false,
