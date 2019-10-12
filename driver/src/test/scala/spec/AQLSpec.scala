@@ -115,6 +115,14 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         }
       }
     }
+    "handle a cursor call with LIMIT 1" in {
+      val query = aql"FOR user IN users LIMIT 1 RETURN user"
+      val b = dbExample.query(query).as[User].includeCount.includeFullCount
+      b.cursor.map { response =>
+        response.result.size should be(1)
+        response.count should be(2)
+      }
+    }
     "find a user from a list of names" in {
       val names = List("John Doe")
       val query = aql"FOR user IN users FILTER user.name IN $names RETURN user"

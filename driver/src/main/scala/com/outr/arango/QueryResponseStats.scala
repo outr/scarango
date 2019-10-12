@@ -5,4 +5,7 @@ case class QueryResponseStats(writesExecuted: Int,
                               scannedFull: Int,
                               scannedIndex: Int,
                               filtered: Int,
-                              executionTime: Double)
+                              httpRequests: Int = -1,
+                              fullCount: Int = -1,
+                              executionTime: Double,
+                              peakMemoryUsage: Long = -1L)

@@ -34,7 +34,8 @@ case class QueryBuilder[R](client: HttpClient,
   def withoutMemoryLimit: QueryBuilder[R] = copy(memoryLimit = None)
   def cursorTimeout(timeInSeconds: Int = 30): QueryBuilder[R] = copy(ttl = Some(timeInSeconds))
   def failOnWarning(b: Boolean): QueryBuilder[R] = opt(_.copy(failOnWarning = Some(b)))
-  def fullCount(b: Boolean): QueryBuilder[R] = opt(_.copy(fullCount = Some(b)))
+  def includeFullCount: QueryBuilder[R] = opt(_.copy(fullCount = Some(true)))
+  def excludeFullCount: QueryBuilder[R] = opt(_.copy(fullCount = Some(false)))
   def maxWarningCount(n: Int): QueryBuilder[R] = opt(_.copy(maxWarningCount = Some(n)))
   def satelliteSyncWait(b: Boolean): QueryBuilder[R] = opt(_.copy(satelliteSyncWait = Some(b)))
   def stream(b: Boolean): QueryBuilder[R] = opt(_.copy(stream = Some(b)))
@@ -75,7 +76,13 @@ case class QueryBuilder[R](client: HttpClient,
       }
       .map {
         case Left(df) => throw df
-        case Right(r) => r
+        case Right(r) => {
+          if (options.flatMap(_.fullCount).getOrElse(false)) {
+            r.copy(count = r.extra.stats.fullCount)
+          } else {
+            r
+          }
+        }
       }
   }
 
