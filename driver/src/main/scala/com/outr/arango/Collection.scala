@@ -97,6 +97,15 @@ class Collection[D <: Document[D]](val graph: Graph,
     arangoCollection.document.deleteOne(id, transactionId, waitForSync, returnOld, silent)
   }
 
+  def delete(ids: List[Id[D]],
+             transactionId: Option[String] = None,
+             waitForSync: Boolean = false,
+             returnOld: Boolean = false,
+             ignoreRevs: Boolean = true)
+            (implicit ec: ExecutionContext): Future[List[Id[D]]] = {
+    arangoCollection.document.delete(ids, transactionId, waitForSync, returnOld)
+  }
+
   protected[arango] def create(createCollection: Boolean)(implicit ec: ExecutionContext): Future[Unit] = for {
     // Create the collection if it doesn't already exist
     _ <- if (createCollection) {

@@ -124,7 +124,7 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
                 waitForSync: Boolean = false,
                 returnOld: Boolean = false,
                 ignoreRevs: Boolean = true)
-               (implicit ec: ExecutionContext): Future[Json] = {
+               (implicit ec: ExecutionContext): Future[List[Id[D]]] = {
     val c = transactionId match {
       case Some(tId) => client.header("x-arango-trx-id", tId)
       case None => client
@@ -136,6 +136,8 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
       waitForSync = Some(waitForSync),
       returnOld = Some(returnOld),
       ignoreRevs = Some(ignoreRevs)
-    )
+    ).map { json =>
+      json.asArray.getOrElse(throw new RuntimeException(s"Not an array: $json")).toList.map(Id.extract[D])
+    }
   }
 }
