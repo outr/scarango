@@ -25,7 +25,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.11.28"
+val youiVersion = "0.12.0"
 val scalaTestVersion = "3.1.0-SNAP13"
 
 lazy val root = project.in(file("."))
