@@ -72,9 +72,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
                              includeAllFields: Boolean,
                              analyzers: List[Analyzer],
                              fields: (Field[_], List[Analyzer])*): View[D] = {
-    val fieldsMap = fields.map {
+    val fieldsMap: Map[Field[_], ArangoLinkFieldProperties] = Map(fields.map {
       case (f, a) => f -> ArangoLinkFieldProperties(a)
-    }.toMap
+    }: _*)
     new View[D](name, includeAllFields, fieldsMap, collection, analyzers)
   }
 
