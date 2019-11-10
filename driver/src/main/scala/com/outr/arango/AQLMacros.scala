@@ -79,6 +79,8 @@ object AQLMacros {
                 Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
                 Some(q"string($value.name)")
+              } else if (vt <:< typeOf[Analyzer]) {
+                Some(q"string($value.name)")
               } else if (vt <:< typeOf[Collection[_]]) {
                 special = true
                 Some(q"string($value.name)")

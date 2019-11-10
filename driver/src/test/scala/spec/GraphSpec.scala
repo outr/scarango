@@ -154,7 +154,7 @@ class GraphSpec extends AsyncWordSpec with Matchers {
       val word = "navajo"
       val query =
         aql"""
-             FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, "text_en") RETURN a
+             FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, ${Analyzer.TextEnglish}) RETURN a
            """
       database.airports.query(query).cursor.map { response =>
         val names = response.result.map(_.name)
@@ -200,7 +200,13 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   object database extends Graph(databaseName = "graphTest") {
     val airports: Collection[Airport] = vertex[Airport]()
     val flights: Collection[Flight] = edge[Flight]()
-    val airportSearch: View[Airport] = view("airportSearch", airports)
+    val airportSearch: View[Airport] = view(
+      name = "airportSearch",
+      collection = airports,
+      analyzers = List(Analyzer.Identity),
+      includeAllFields = true,
+      fields = Airport.name -> List(Analyzer.TextEnglish)
+    )
   }
 
   case class Airport(name: String,

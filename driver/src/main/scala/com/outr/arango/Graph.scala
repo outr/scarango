@@ -2,6 +2,7 @@ package com.outr.arango
 
 import java.util.concurrent.atomic.AtomicBoolean
 
+import com.outr.arango.api.model.ArangoLinkFieldProperties
 import com.outr.arango.model.ArangoCode
 import com.outr.arango.transaction.Transaction
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
@@ -68,7 +69,14 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   def edge[D <: Document[D]](indexes: Index*): Collection[D] = macro GraphMacros.edge[D]
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
-                             fields: Field[_]*): View[D] = new View[D](name, fields.toList, collection)
+                             includeAllFields: Boolean,
+                             analyzers: List[Analyzer],
+                             fields: (Field[_], List[Analyzer])*): View[D] = {
+    val fieldsMap = fields.map {
+      case (f, a) => f -> ArangoLinkFieldProperties(a)
+    }.toMap
+    new View[D](name, includeAllFields, fieldsMap, collection, analyzers)
+  }
 
   def register(upgrades: DatabaseUpgrade*): Unit = synchronized {
     assert(!initialized, "Database is already initialized. Cannot register upgrades after initialization.")

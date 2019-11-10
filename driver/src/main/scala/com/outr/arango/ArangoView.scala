@@ -29,7 +29,8 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
     )
   ).map(json => JsonUtil.fromJson[ViewInfo](json))
 
-  def update(links: Option[List[ViewLink]] = None,
+  def update(includeAllFields: Boolean,
+             links: Option[List[ViewLink]] = None,
              cleanupIntervalStep: Option[Int] = None,
              commitInterval: Option[FiniteDuration] = None,
              consolidationInterval: Option[FiniteDuration] = None,
@@ -38,10 +39,8 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
     val map = links.map(_.map { l =>
       l.collectionName -> ArangoLinkProperties(
         analyzers = l.analyzers,
-        fields = l.fields.map { name =>
-          name -> ArangoLinkFieldProperties(analyzers = l.analyzers)
-        }.toMap,
-        includeAllFields = l.fields.isEmpty,
+        fields = l.fields,
+        includeAllFields = includeAllFields,
         storeValues = if (l.allowExists) "id" else "none",
         trackListPositions = l.trackListPositions
       )
