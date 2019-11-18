@@ -8,6 +8,11 @@ trait DocumentModel[D <: Document[D]] {
 
   protected def generateId(): String = Unique()
 
+  object index {
+    def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
+    def unique(fields: Field[_]*): List[Index] = fields.map(_.index.persistent(unique = true)).toList
+  }
+
   def indexes: List[Index]
 
   def id(value: String = generateId()): Id[D] = if (value.startsWith(collectionName)) {
