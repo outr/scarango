@@ -137,6 +137,8 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
   case class User(name: String, _id: Id[User] = User.id()) extends Document[User]
 
   object User extends DocumentModel[User] {
+    override def indexes: List[Index] = Nil
+
     override val collectionName: String = "users"
     override val serialization: Serialization[User] = Serialization.auto[User]
   }

@@ -8,6 +8,8 @@ trait DocumentModel[D <: Document[D]] {
 
   protected def generateId(): String = Unique()
 
+  def indexes: List[Index]
+
   def id(value: String = generateId()): Id[D] = if (value.startsWith(collectionName)) {
     Id[D](value.substring(collectionName.length + 1), collectionName)
   } else {

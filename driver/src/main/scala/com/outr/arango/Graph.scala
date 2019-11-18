@@ -65,8 +65,8 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
 
-  def vertex[D <: Document[D]](indexes: Index*): Collection[D] = macro GraphMacros.vertex[D]
-  def edge[D <: Document[D]](indexes: Index*): Collection[D] = macro GraphMacros.edge[D]
+  def vertex[D <: Document[D]]: Collection[D] = macro GraphMacros.vertex[D]
+  def edge[D <: Document[D]]: Collection[D] = macro GraphMacros.edge[D]
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
                              includeAllFields: Boolean,

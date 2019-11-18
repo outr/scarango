@@ -198,8 +198,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(databaseName = "graphTest") {
-    val airports: Collection[Airport] = vertex[Airport]()
-    val flights: Collection[Flight] = edge[Flight]()
+    val airports: Collection[Airport] = vertex[Airport]
+    val flights: Collection[Flight] = edge[Flight]
     val airportSearch: View[Airport] = view(
       name = "airportSearch",
       collection = airports,
@@ -220,6 +220,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
 
   object Airport extends DocumentModel[Airport] {
     val name: Field[String] = Field[String]("name")
+
+    override def indexes: List[Index] = Nil
 
     override val collectionName: String = "airports"
     override implicit val serialization: Serialization[Airport] = Serialization.auto[Airport]
@@ -242,6 +244,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
                     _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
 
   object Flight extends DocumentModel[Flight] {
+    override def indexes: List[Index] = Nil
+
     override val collectionName: String = "flights"
     override implicit val serialization: Serialization[Flight] = Serialization.auto[Flight]
   }

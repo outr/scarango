@@ -97,7 +97,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(databaseName = "advanced") {
-    val people: Collection[Person] = vertex[Person]()
+    val people: Collection[Person] = vertex[Person]
   }
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
@@ -105,6 +105,8 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
   object Person extends DocumentModel[Person] {
     val name: Field[String] = Field[String]("name")
     val age: Field[Int] = Field[Int]("age")
+
+    override def indexes: List[Index] = Nil
 
     override val collectionName: String = "people"
     override implicit val serialization: Serialization[Person] = Serialization.auto[Person]

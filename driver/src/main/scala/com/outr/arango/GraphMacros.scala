@@ -30,30 +30,30 @@ object GraphMacros {
   }
 
   def vertex[D <: Document[D]](c: blackbox.Context)
-                              (indexes: c.Expr[com.outr.arango.Index]*)
                               (implicit d: c.WeakTypeTag[D]): c.Expr[Collection[D]] = {
     import c.universe._
 
     val graph = c.prefix
+    val companion = d.tpe.typeSymbol.companion
     c.Expr[Collection[D]](
       q"""
          import com.outr.arango._
 
-         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Document, List(..$indexes), None)
+         new Collection[$d]($graph, $companion, CollectionType.Document, $companion.indexes, None)
        """)
   }
 
   def edge[D <: Document[D]](c: blackbox.Context)
-                            (indexes: c.Expr[com.outr.arango.Index]*)
                             (implicit d: c.WeakTypeTag[D]): c.Expr[Collection[D]] = {
     import c.universe._
 
     val graph = c.prefix
+    val companion = d.tpe.typeSymbol.companion
     c.Expr[Collection[D]](
       q"""
          import com.outr.arango._
 
-         new Collection[$d]($graph, ${d.tpe.typeSymbol.companion}, CollectionType.Edge, List(..$indexes), None)
+         new Collection[$d]($graph, $companion, CollectionType.Edge, $companion.indexes, None)
        """)
   }
 }
