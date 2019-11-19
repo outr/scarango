@@ -1,5 +1,6 @@
 package com.outr.arango
 
+import com.outr.arango.aql.{FieldAndValue, Filter}
 import com.outr.arango.transaction.Transaction
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,6 +54,20 @@ class Collection[D <: Document[D]](val graph: Graph,
              silent: Boolean = false)
             (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
     arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+  }
+
+  def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
+            (implicit ec: ExecutionContext): Future[List[D]] = {
+    import aql._
+
+    val v = DocumentRef[D, DocumentModel[D]](model)
+    val query = (
+      FOR (v) IN this
+      FILTER withReference(v)(filter)
+      UPDATE (v, fieldAndValues: _*)
+      RETURN NEW
+    ).toQuery
+    this.query(query).results
   }
 
   def batch(iterator: Iterator[D],

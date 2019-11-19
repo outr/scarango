@@ -15,6 +15,76 @@ object AQLMacros {
   def aqlu(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Query] = {
     process(c)(validate = false, args = args)
   }
+  def fieldAndValue(c: blackbox.Context)(value: c.Tree): c.Tree = {
+    import c.universe._
+
+    val extras = c.prefix.tree
+    q"""
+       import _root_.com.outr.arango.Value._
+       _root_.com.outr.arango.aql.FieldAndValue($extras.thisField, ${type2Value(c)(value)._1})
+     """
+  }
+
+  private def type2Value(c: blackbox.Context)(value: c.Tree): (c.Tree, Boolean) = {
+    import c.universe._
+
+    val vt = value.tpe
+    def n(t: c.Tree): (c.Tree, Boolean) = (t, false)
+    if (vt <:< typeOf[Value]) {
+      n(value)
+    } else if (vt <:< typeOf[String]) {
+      n(q"string($value)")
+    } else if (vt <:< typeOf[Boolean]) {
+      n(q"boolean($value)")
+    } else if (vt <:< typeOf[Int]) {
+      n(q"int($value)")
+    } else if (vt <:< typeOf[Long]) {
+      n(q"long($value)")
+    } else if (vt <:< typeOf[Double]) {
+      n(q"double($value)")
+    } else if (vt <:< typeOf[BigDecimal]) {
+      n(q"bigDecimal($value)")
+    } else if (vt <:< typeOf[Option[String]]) {
+      n(q"string($value)")
+    } else if (vt <:< typeOf[Option[Boolean]]) {
+      n(q"boolean($value)")
+    } else if (vt <:< typeOf[Option[Int]]) {
+      n(q"int($value)")
+    } else if (vt <:< typeOf[Option[Long]]) {
+      n(q"long($value)")
+    } else if (vt <:< typeOf[Option[Double]]) {
+      n(q"double($value)")
+    } else if (vt <:< typeOf[Option[BigDecimal]]) {
+      n(q"bigDecimal($value)")
+    } else if (vt <:< typeOf[Null]) {
+      n(q"Null")
+    } else if (vt <:< typeOf[Seq[String]]) {
+      n(q"strings($value)")
+    } else if (vt <:< typeOf[Seq[Boolean]]) {
+      n(q"booleans($value)")
+    } else if (vt <:< typeOf[Seq[Int]]) {
+      n(q"ints($value)")
+    } else if (vt <:< typeOf[Seq[Long]]) {
+      n(q"longs($value)")
+    } else if (vt <:< typeOf[Seq[Double]]) {
+      n(q"doubles($value)")
+    } else if (vt <:< typeOf[Seq[BigDecimal]]) {
+      n(q"bigDecimals($value)")
+    } else if (vt <:< typeOf[Id[_]]) {
+      n(q"string($value._id)")
+    } else if (vt <:< typeOf[Field[_]]) {
+      n(q"string($value.name)")
+    } else if (vt <:< typeOf[Analyzer]) {
+      n(q"string($value.name)")
+    } else if (vt <:< typeOf[Collection[_]]) {
+      (q"string($value.name)", true)
+    } else if (vt <:< typeOf[View[_]]) {
+      (q"string($value.name)", true)
+    } else {
+      n(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
+    }
+  }
+
   def process(c: blackbox.Context)(validate: Boolean, args: Seq[c.Expr[Any]]): c.Expr[Query] = {
     import c.universe._
 
@@ -35,6 +105,8 @@ object AQLMacros {
               val value = args(index - 1)
               val vt = value.actualType
               // TODO: use implicits instead?
+
+              // TODO: Remove this once type2Value has been fully tested
               val queryArg = if (vt <:< typeOf[Value]) {
                 Some(value.tree)
               } else if (vt <:< typeOf[String]) {

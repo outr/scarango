@@ -39,6 +39,21 @@ class DSLSpec extends AsyncWordSpec with Matchers {
           |RETURN p1""".stripMargin, Map("a1" -> 21, "a2" -> "Adam")
       ))
     }
+    "build an update query" in {
+      val p = Person.ref
+
+      val query = (
+        FOR (p) IN Database.people
+        FILTER (p.age is 21) && (p.name isNot "Adam")
+        UPDATE (p, p.age(22))
+        RETURN NEW
+      )
+      query.toQuery should be(Query(
+        """FOR p1 IN people
+          |FILTER p1.age == @a1 && p1.name != @a2
+          |UPDATE p1 WITH {age: @arg1} IN people
+          |RETURN NEW""".stripMargin, Map("a1" -> 21, "a2" -> "Adam", "arg1" -> 22)))
+    }
   }
 
   object Database extends Graph(databaseName = "advanced") {

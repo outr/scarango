@@ -1,16 +1,22 @@
 package com.outr.arango.aql
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field, Query, Value}
 
 import scala.annotation.tailrec
+import scala.language.implicitConversions
 
 class AQLBuilder(val parts: List[QueryPart] = Nil) {
   private var map = Map.empty[String, Int]
   private var used = Set.empty[String]
+  private lazy val incrementor = new AtomicInteger(0)
 
   private[aql] def ref2Name[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): String = {
     createName(ref.collectionName, ref.id, 1)
   }
+
+  private[aql] def createArg(): String = s"arg${incrementor.incrementAndGet()}"
 
   @tailrec
   private[aql] final def createName(collectionName: String, id: String, position: Int): String = {
@@ -33,9 +39,12 @@ class AQLBuilder(val parts: List[QueryPart] = Nil) {
     ForPartial(ref, this)
   }
   def FILTER(filter: Filter): AQLBuilder = withPart(FilterPart(filter))
+  def UPDATE[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model], values: FieldAndValue[_]*): AQLBuilder = {
+    withPart(UpdatePart(ref, values.toList))
+  }
   def SORT[T](f: => (Field[T], SortDirection)): AQLBuilder = withPart(SortPart[T](() => f))
-  def RETURN[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): AQLBuilder = {
-    withPart(ReturnPart(ref))
+  def RETURN(part: ReturnPart): AQLBuilder = {
+    withPart(part)
   }
 
   def withPart(part: QueryPart): AQLBuilder = new AQLBuilder(parts ::: List(part))
@@ -64,7 +73,7 @@ case class SortPart[T](f: () => (Field[T], SortDirection)) extends QueryPart {
   override def build(builder: AQLBuilder): Query = {
     val (refOption, (field, sort)) = withReference(f())
     val ref = refOption.getOrElse(throw new RuntimeException("No ref option found for SORT!"))
-    val name = createName(ref.model.asInstanceOf[DocumentModel[_]].collectionName, ref.id, 1)
+    val name = builder.createName(ref.model.asInstanceOf[DocumentModel[_]].collectionName, ref.id, 1)
     val sortValue = sort match {
       case SortDirection.ASC => "ASC"
       case SortDirection.DESC => "DESC"
@@ -78,6 +87,19 @@ case class ForPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef
   override def build(builder: AQLBuilder): Query = {
     val name = builder.ref2Name(ref)
     Query(s"FOR $name IN ${collection.name}", Map.empty)
+  }
+}
+
+case class UpdatePart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model], values: List[FieldAndValue[_]]) extends QueryPart {
+  override def build(builder: AQLBuilder): Query = {
+    val name = builder.ref2Name(ref)
+    var map = Map.empty[String, Value]
+    val data = values.map { fv =>
+      val arg = builder.createArg()
+      map += arg -> fv.value
+      s"${fv.field.name}: @$arg"
+    }.mkString(", ")
+    Query(s"UPDATE $name WITH {$data} IN ${ref.collectionName}", map)
   }
 }
 
@@ -100,9 +122,20 @@ class Filter(left: AQLBuilder => Query, condition: String, right: AQLBuilder => 
   }
 }
 
-case class ReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]) extends QueryPart {
+sealed trait ReturnPart extends QueryPart {
+  def value(builder: AQLBuilder): String
+
   override def build(builder: AQLBuilder): Query = {
-    val name = builder.ref2Name(ref)
-    Query(s"RETURN $name", Map.empty)
+    Query(s"RETURN ${value(builder)}", Map.empty)
   }
 }
+
+case class DocumentRefReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]) extends ReturnPart {
+  override def value(builder: AQLBuilder): String = builder.ref2Name(ref)
+}
+
+object NewReturnPart extends ReturnPart {
+  override def value(builder: AQLBuilder): String = "NEW"
+}
+
+case class FieldAndValue[T](field: Field[T], value: Value)

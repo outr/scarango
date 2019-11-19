@@ -2,18 +2,23 @@ package com.outr.arango
 
 import io.youi.Unique
 
+import scala.language.experimental.macros
 import scala.language.implicitConversions
 
-package object aql extends AQLBuilder {
+package object aql {
   private val referenceLocal = new ThreadLocal[Option[DocumentRef[_, _]]] {
     override def initialValue(): Option[DocumentRef[_, _]] = None
   }
+  private var forced = false
 
-//  implicit class DocumentModelExtras[D <: Document[D], Model <: DocumentModel[D]](dm: Model) {
-//    def ref: DocumentRef[D, Model] = DocumentRef[D, Model](dm)
-//  }
+  implicit def ref2ReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ReturnPart = {
+    DocumentRefReturnPart(ref)
+  }
 
   implicit class FieldExtras[T](field: => Field[T]) {
+    def thisField: Field[T] = field
+
+    def apply(value: T): FieldAndValue[T] = macro AQLMacros.fieldAndValue
     private def cond(value: T, condition: String)(implicit conversion: T => Value): Filter = {
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
@@ -48,8 +53,26 @@ package object aql extends AQLBuilder {
     ref.model
   }
 
+  def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
+    new AQLBuilder().FOR(ref)
+  }
+
+  def NEW: ReturnPart = NewReturnPart
+
+  def withReference[D <: Document[D], Model <: DocumentModel[D], Return](ref: DocumentRef[D, Model])(f: => Return): Return = {
+    referenceLocal.set(Some(ref))
+    forced = true
+    try {
+      val r: Return = f
+      r
+    } finally {
+      referenceLocal.remove()
+      forced = false
+    }
+  }
+
   def withReference[Return](f: => Return): (Option[DocumentRef[_, _]], Return) = {
-    referenceLocal.remove()
+    if (!forced) referenceLocal.remove()
     try {
       val r = f
       (referenceLocal.get(), r)
