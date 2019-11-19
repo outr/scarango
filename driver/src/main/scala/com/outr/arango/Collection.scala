@@ -69,6 +69,18 @@ class Collection[D <: Document[D]](val graph: Graph,
     ).toQuery
     this.query(query).results
   }
+  def updateAll(fieldAndValues: FieldAndValue[_]*)
+               (implicit ec: ExecutionContext): Future[List[D]] = {
+    import aql._
+
+    val v = DocumentRef[D, DocumentModel[D]](model)
+    val query = (
+      FOR (v) IN this
+      UPDATE (v, fieldAndValues: _*)
+      RETURN NEW
+    ).toQuery
+    this.query(query).results
+  }
 
   def batch(iterator: Iterator[D],
             batchSize: Int = 5000,
