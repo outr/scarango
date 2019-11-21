@@ -36,6 +36,17 @@ package object aql {
 
       new Filter(left, condition, right)
     }
+    private def stringCond(value: String, condition: String): Filter = {
+      val context = QueryBuilderContext()
+      val (refOption, f) = withReference(field)
+      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> Value.string(value)))
+
+      new Filter(left, condition, right)
+    }
     def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
     def ===(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "==")
@@ -59,6 +70,21 @@ package object aql {
     }
     def IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
       cond(values, "IN")
+    }
+    def NOT_IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+      cond(values, "NOT IN")
+    }
+    def LIKE(value: String): Filter = {
+      stringCond(value, "LIKE")
+    }
+    def NOT_LIKE(value: String): Filter = {
+      stringCond(value, "NOT LIKE")
+    }
+    def =~(value: String): Filter = {
+      stringCond(value, "=~")
+    }
+    def !~(value: String): Filter = {
+      stringCond(value, "!~")
     }
 
     def asc: (Field[T], SortDirection) = (field, SortDirection.ASC)
