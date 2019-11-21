@@ -15,44 +15,59 @@ class DSLSpec extends AsyncWordSpec with Matchers {
     "build a simple query" in {
       val p = Person.ref
 
-      val q = (
+      val query = aql {
         FOR (p) IN Database.people
-        SORT p.age.desc
-        RETURN p
-      )
-      q.toQuery should be(Query(
-        """FOR p1 IN people
-          |SORT p1.age DESC
-          |RETURN p1""".stripMargin, Map.empty))
+        SORT (p.age.desc)
+        RETURN (p)
+      }
+      query should be(Query(
+        """FOR arg1 IN people
+          |SORT arg1.age DESC
+          |RETURN arg1""".stripMargin, Map.empty))
     }
     "build a query with a filter" in {
       val p = Person.ref
 
-      val query = (
+      val query = aql {
         FOR (p) IN Database.people
-        FILTER (p.age is 21) && (p.name isNot "Adam")
-        RETURN p
-      )
-      query.toQuery should be(Query(
-        """FOR p1 IN people
-          |FILTER p1.age == @a1 && p1.name != @a2
-          |RETURN p1""".stripMargin, Map("a1" -> 21, "a2" -> "Adam")
+        FILTER((p.age is 21) && (p.name isNot "Adam"))
+        RETURN (p)
+      }
+      query should be(Query(
+        """FOR arg1 IN people
+          |FILTER arg1.age == @arg2 && arg1.name != @arg3
+          |RETURN arg1""".stripMargin, Map("arg2" -> 21, "arg3" -> "Adam")
       ))
     }
     "build an update query" in {
       val p = Person.ref
 
-      val query = (
-        FOR (p) IN Database.people
-        FILTER (p.age is 21) && (p.name isNot "Adam")
+      val query = aql {
+        FOR(p) IN Database.people
+        FILTER ((p.age is 21) && (p.name isNot "Adam"))
         UPDATE (p, p.age(22))
-        RETURN NEW
-      )
-      query.toQuery should be(Query(
-        """FOR p1 IN people
-          |FILTER p1.age == @a1 && p1.name != @a2
-          |UPDATE p1 WITH {age: @arg1} IN people
-          |RETURN NEW""".stripMargin, Map("a1" -> 21, "a2" -> "Adam", "arg1" -> 22)))
+        RETURN (NEW)
+      }
+      query should be(Query(
+        """FOR arg1 IN people
+          |FILTER arg1.age == @arg2 && arg1.name != @arg3
+          |UPDATE arg1 WITH {age: @arg4} IN people
+          |RETURN NEW""".stripMargin, Map("arg2" -> 21, "arg3" -> "Adam", "arg4" -> 22)))
+    }
+    "build a query to return result count" in {
+      val p = Person.ref
+      val count = ref("count")
+      val query = aql {
+        FOR (p) IN Database.people
+        FILTER (p.age >= 20)
+        COLLECT WITH COUNT INTO count
+        RETURN (count)
+      }
+      query should be(Query(
+        """FOR arg1 IN people
+          |FILTER arg1.age >= @arg2
+          |COLLECT WITH COUNT INTO count
+          |RETURN count""".stripMargin, Map("arg2" -> 20)))
     }
   }
 

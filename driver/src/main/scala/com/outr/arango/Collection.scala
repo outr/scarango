@@ -1,7 +1,8 @@
 package com.outr.arango
 
-import com.outr.arango.aql.{FieldAndValue, Filter}
+import com.outr.arango.aql.Filter
 import com.outr.arango.transaction.Transaction
+import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -57,29 +58,35 @@ class Collection[D <: Document[D]](val graph: Graph,
   }
 
   def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
-            (implicit ec: ExecutionContext): Future[List[D]] = {
+            (implicit ec: ExecutionContext): Future[Long] = {
     import aql._
 
     val v = DocumentRef[D, DocumentModel[D]](model)
-    val query = (
+    val count = ref("count")
+
+    val query = aql {
       FOR (v) IN this
-      FILTER withReference(v)(filter)
+      FILTER (withReference(v)(filter))
       UPDATE (v, fieldAndValues: _*)
-      RETURN NEW
-    ).toQuery
-    this.query(query).results
+      COLLECT WITH COUNT INTO count
+      RETURN (count)
+    }
+    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
   }
+
   def updateAll(fieldAndValues: FieldAndValue[_]*)
-               (implicit ec: ExecutionContext): Future[List[D]] = {
+               (implicit ec: ExecutionContext): Future[Long] = {
     import aql._
 
     val v = DocumentRef[D, DocumentModel[D]](model)
-    val query = (
+    val count = ref("count")
+    val query = aql {
       FOR (v) IN this
       UPDATE (v, fieldAndValues: _*)
-      RETURN NEW
-    ).toQuery
-    this.query(query).results
+      COLLECT WITH COUNT INTO count
+      RETURN (count)
+    }
+    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
   }
 
   def batch(iterator: Iterator[D],

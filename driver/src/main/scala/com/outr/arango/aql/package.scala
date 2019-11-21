@@ -1,18 +1,13 @@
 package com.outr.arango
 
-import io.youi.Unique
-
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 
 package object aql {
-  private val referenceLocal = new ThreadLocal[Option[DocumentRef[_, _]]] {
-    override def initialValue(): Option[DocumentRef[_, _]] = None
-  }
   private var forced = false
 
-  implicit def ref2ReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ReturnPart = {
-    DocumentRefReturnPart(ref)
+  implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
+    ReturnPart.RefReturn(ref)
   }
 
   implicit class FieldExtras[T](field: => Field[T]) {
@@ -20,16 +15,36 @@ package object aql {
 
     def apply(value: T): FieldAndValue[T] = macro AQLMacros.fieldAndValue
     private def cond(value: T, condition: String)(implicit conversion: T => Value): Filter = {
+      val context = QueryBuilderContext()
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-      val left = (b: AQLBuilder) => {
-        val name = b.createName(ref.model.asInstanceOf[DocumentModel[_]].collectionName, ref.id, 1)
-        Query(s"$name.${f.name}", Map.empty)
-      }
-      val right = (b: AQLBuilder) => {
-        val name = b.createName("arg", Unique(), 1)
-        Query(s"@$name", Map(name -> conversion(value)))
-      }
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> conversion(value)))
+
+      new Filter(left, condition, right)
+    }
+    private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
+      val context = QueryBuilderContext()
+      val (refOption, f) = withReference(field)
+      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> Value.values(values.map(conversion))))
+
+      new Filter(left, condition, right)
+    }
+    private def stringCond(value: String, condition: String): Filter = {
+      val context = QueryBuilderContext()
+      val (refOption, f) = withReference(field)
+      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> Value.string(value)))
+
       new Filter(left, condition, right)
     }
     def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
@@ -41,6 +56,36 @@ package object aql {
     def !==(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "!=")
     }
+    def >(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, ">")
+    }
+    def >=(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, ">=")
+    }
+    def <(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, "<")
+    }
+    def <=(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, "<=")
+    }
+    def IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+      cond(values, "IN")
+    }
+    def NOT_IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+      cond(values, "NOT IN")
+    }
+    def LIKE(value: String): Filter = {
+      stringCond(value, "LIKE")
+    }
+    def NOT_LIKE(value: String): Filter = {
+      stringCond(value, "NOT LIKE")
+    }
+    def =~(value: String): Filter = {
+      stringCond(value, "=~")
+    }
+    def !~(value: String): Filter = {
+      stringCond(value, "!~")
+    }
 
     def asc: (Field[T], SortDirection) = (field, SortDirection.ASC)
     def ASC: (Field[T], SortDirection) = (field, SortDirection.ASC)
@@ -48,36 +93,75 @@ package object aql {
     def DESC: (Field[T], SortDirection) = (field, SortDirection.DESC)
   }
 
-  implicit def documentRef2DocumentModel[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): Model = {
-    referenceLocal.set(Some(ref))
-    ref.model
-  }
-
-  def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
-    new AQLBuilder().FOR(ref)
-  }
-
-  def NEW: ReturnPart = NewReturnPart
-
-  def withReference[D <: Document[D], Model <: DocumentModel[D], Return](ref: DocumentRef[D, Model])(f: => Return): Return = {
-    referenceLocal.set(Some(ref))
+  def withReference[Return](ref: Ref)(f: => Return): Return = {
+    val context = QueryBuilderContext()
+    context.ref = Some(ref)
     forced = true
     try {
       val r: Return = f
       r
     } finally {
-      referenceLocal.remove()
+      context.ref = None
       forced = false
     }
   }
 
-  def withReference[Return](f: => Return): (Option[DocumentRef[_, _]], Return) = {
-    if (!forced) referenceLocal.remove()
+  def withReference[Return](f: => Return): (Option[Ref], Return) = {
+    val context = QueryBuilderContext()
+    if (!forced) context.ref = None
     try {
       val r = f
-      (referenceLocal.get(), r)
+      (context.ref, r)
     } finally {
-      referenceLocal.remove()
+      context.ref = None
     }
   }
+
+  implicit def ref2Wrapped[T](ref: WrappedRef[T]): T = {
+    val context = QueryBuilderContext()
+    context.ref = Some(ref)
+    ref.wrapped
+  }
+
+  def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = ForPartial(ref)
+
+  def SORT[T](f: => (Field[T], SortDirection)): Unit = {
+    val context = QueryBuilderContext()
+    val (refOption, (field, sort)) = withReference(f)
+    val ref = refOption.getOrElse(throw new RuntimeException("No ref option found for SORT!"))
+    val name = context.name(ref)
+    val sortValue = sort match {
+      case SortDirection.ASC => "ASC"
+      case SortDirection.DESC => "DESC"
+    }
+    context.addQuery(Query(s"SORT $name.${field.name} $sortValue", Map.empty))
+  }
+
+  def FILTER(filter: Filter): Unit = {
+    val query = filter.build()
+    add(query.copy(value = s"FILTER ${query.value}"))
+  }
+
+  def COLLECT: CollectStart.type = CollectStart
+
+  def COUNT: CollectWith.Count.type = CollectWith.Count
+
+  def UPDATE[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model], values: FieldAndValue[_]*): Unit = {
+    add(UpdatePart(ref, values.toList).build())
+  }
+
+  def NEW: ReturnPart = ReturnPart.New
+
+  def RETURN(part: ReturnPart): Unit = add(part.build())
+
+  private def add(query: Query): Unit = {
+    val context = QueryBuilderContext()
+    context.addQuery(query)
+  }
+
+  def ref: Ref = new Ref
+  def ref(name: String): Ref = NamedRef(name)
+  def ref[T](wrapped: T): WrappedRef[T] = new WrappedRef[T](wrapped)
+
+  def aql(f: => Unit): Query = QueryBuilderContext.contextualize(f)
 }

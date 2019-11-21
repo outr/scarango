@@ -21,7 +21,7 @@ object AQLMacros {
     val extras = c.prefix.tree
     q"""
        import _root_.com.outr.arango.Value._
-       _root_.com.outr.arango.aql.FieldAndValue($extras.thisField, ${type2Value(c)(value)._1})
+       _root_.com.outr.arango.FieldAndValue($extras.thisField, ${type2Value(c)(value)._1})
      """
   }
 

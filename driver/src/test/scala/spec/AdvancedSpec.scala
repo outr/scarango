@@ -100,11 +100,8 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
       database
         .people
         .update(Person.age is 21, Person.age(22))
-        .map { results =>
-          results.length should be(1)
-          val adam = results.head
-          adam.name should be("Adam")
-          adam.age should be(22)
+        .map { modified =>
+          modified should be(1L)
         }
     }
   }
