@@ -26,4 +26,15 @@ class Ref
 
 case class NamedRef(name: String) extends Ref
 
-case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model, id: String = Unique()) extends Ref
+class WrappedRef[T](val wrapped: T) extends Ref
+
+case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model) extends WrappedRef[Model](model) {
+  private val id = Unique()
+
+  override def hashCode(): Int = id.hashCode
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: DocumentRef[_, _] if that.id == this.id => true
+    case _ => false
+  }
+}

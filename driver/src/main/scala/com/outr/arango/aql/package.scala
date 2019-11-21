@@ -1,29 +1,10 @@
 package com.outr.arango
 
-import io.youi.Unique
-
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 
 package object aql {
   private var forced = false
-
-  /*private val referenceLocal = new ThreadLocal[Option[DocumentRef[_, _]]] {
-    override def initialValue(): Option[DocumentRef[_, _]] = None
-  }
-
-  implicit def ref2ReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ReturnPart = {
-    DocumentRefReturnPart(ref)
-  }
-
-  implicit def documentRef2DocumentModel[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): Model = {
-    referenceLocal.set(Some(ref))
-    ref.model
-  }
-
-  def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
-    new AQLBuilder().FOR(ref)
-  }*/
 
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
@@ -44,6 +25,17 @@ package object aql {
 
       new Filter(left, condition, right)
     }
+    private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
+      val context = QueryBuilderContext()
+      val (refOption, f) = withReference(field)
+      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> Value.values(values.map(conversion))))
+
+      new Filter(left, condition, right)
+    }
     def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
     def ===(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "==")
@@ -53,8 +45,20 @@ package object aql {
     def !==(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "!=")
     }
+    def >(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, ">")
+    }
     def >=(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, ">=")
+    }
+    def <(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, "<")
+    }
+    def <=(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, "<=")
+    }
+    def IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+      cond(values, "IN")
     }
 
     def asc: (Field[T], SortDirection) = (field, SortDirection.ASC)
@@ -63,34 +67,34 @@ package object aql {
     def DESC: (Field[T], SortDirection) = (field, SortDirection.DESC)
   }
 
-  def withReference[D <: Document[D], Model <: DocumentModel[D], Return](ref: DocumentRef[D, Model])(f: => Return): Return = {
+  def withReference[Return](ref: Ref)(f: => Return): Return = {
     val context = QueryBuilderContext()
-    context.documentRef = Some(ref)
+    context.ref = Some(ref)
     forced = true
     try {
       val r: Return = f
       r
     } finally {
-      context.documentRef = None
+      context.ref = None
       forced = false
     }
   }
 
-  def withReference[Return](f: => Return): (Option[DocumentRef[_, _]], Return) = {
+  def withReference[Return](f: => Return): (Option[Ref], Return) = {
     val context = QueryBuilderContext()
-    if (!forced) context.documentRef = None
+    if (!forced) context.ref = None
     try {
       val r = f
-      (context.documentRef, r)
+      (context.ref, r)
     } finally {
-      context.documentRef = None
+      context.ref = None
     }
   }
 
-  implicit def documentRef2DocumentModel[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): Model = {
+  implicit def ref2Wrapped[T](ref: WrappedRef[T]): T = {
     val context = QueryBuilderContext()
-    context.documentRef = Some(ref)
-    ref.model
+    context.ref = Some(ref)
+    ref.wrapped
   }
 
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = ForPartial(ref)
@@ -131,21 +135,7 @@ package object aql {
 
   def ref: Ref = new Ref
   def ref(name: String): Ref = NamedRef(name)
+  def ref[T](wrapped: T): WrappedRef[T] = new WrappedRef[T](wrapped)
 
   def aql(f: => Unit): Query = QueryBuilderContext.contextualize(f)
 }
-
-/*
-case class SortPart[T](f: () => (Field[T], SortDirection)) extends QueryPart {
-  override def build(builder: AQLBuilder): Query = {
-    val (refOption, (field, sort)) = withReference(f())
-    val ref = refOption.getOrElse(throw new RuntimeException("No ref option found for SORT!"))
-    val name = builder.createName(ref.model.asInstanceOf[DocumentModel[_]].collectionName, ref.id, 1)
-    val sortValue = sort match {
-      case SortDirection.ASC => "ASC"
-      case SortDirection.DESC => "DESC"
-    }
-    Query(s"SORT $name.${field.name} $sortValue", Map.empty)
-  }
-}
- */

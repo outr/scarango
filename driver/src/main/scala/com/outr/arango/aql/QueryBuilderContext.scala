@@ -2,14 +2,14 @@ package com.outr.arango.aql
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.outr.arango.{DocumentRef, NamedRef, Query, Ref}
+import com.outr.arango.{NamedRef, Query, Ref}
 
 class QueryBuilderContext private() {
   private var queries = List.empty[Query]
   private var refNames = Map.empty[Ref, String]
   private lazy val incrementer = new AtomicInteger(0)
 
-  var documentRef = Option.empty[DocumentRef[_, _]]
+  var ref: Option[Ref] = None
 
   def addQuery(query: Query): Unit = queries = query :: queries
 
