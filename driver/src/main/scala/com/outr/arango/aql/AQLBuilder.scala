@@ -7,7 +7,7 @@ import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field,
 import scala.annotation.tailrec
 import scala.language.implicitConversions
 
-class AQLBuilder(val parts: List[QueryPart] = Nil) {
+/*class AQLBuilder(val parts: List[QueryPart] = Nil) {
   private var map = Map.empty[String, Int]
   private var used = Set.empty[String]
   private lazy val incrementor = new AtomicInteger(0)
@@ -35,6 +35,8 @@ class AQLBuilder(val parts: List[QueryPart] = Nil) {
     }
   }
 
+  def createRef[T](): TypeRef[T] = TypeRef[T](createArg())
+
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
     ForPartial(ref, this)
   }
@@ -52,9 +54,9 @@ class AQLBuilder(val parts: List[QueryPart] = Nil) {
     val queries = parts.map(_.build(this))
     Query.merge(queries)
   }
-}
+}*/
 
-sealed trait SortDirection
+/*sealed trait SortDirection
 
 object SortDirection {
   case object ASC extends SortDirection
@@ -79,14 +81,6 @@ case class SortPart[T](f: () => (Field[T], SortDirection)) extends QueryPart {
       case SortDirection.DESC => "DESC"
     }
     Query(s"SORT $name.${field.name} $sortValue", Map.empty)
-  }
-}
-
-case class ForPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model],
-                                                                collection: Collection[D]) extends QueryPart {
-  override def build(builder: AQLBuilder): Query = {
-    val name = builder.ref2Name(ref)
-    Query(s"FOR $name IN ${collection.name}", Map.empty)
   }
 }
 
@@ -120,22 +114,50 @@ class Filter(left: AQLBuilder => Query, condition: String, right: AQLBuilder => 
     val r = right(builder)
     Query(s"${l.value} $condition ${r.value}", l.args ++ r.args)
   }
-}
+}*/
 
-sealed trait ReturnPart extends QueryPart {
-  def value(builder: AQLBuilder): String
+sealed trait ReturnPart {
+  def value: String
 
-  override def build(builder: AQLBuilder): Query = {
-    Query(s"RETURN ${value(builder)}", Map.empty)
+  def build(): Query = {
+    Query(s"RETURN ${value}", Map.empty)
   }
 }
 
 case class DocumentRefReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]) extends ReturnPart {
-  override def value(builder: AQLBuilder): String = builder.ref2Name(ref)
+  override def value: String = {
+    val context = QueryBuilderContext()
+    val name = context.name(ref)
+    name
+  }
 }
 
 object NewReturnPart extends ReturnPart {
-  override def value(builder: AQLBuilder): String = "NEW"
+  override val value: String = "NEW"
 }
 
-case class FieldAndValue[T](field: Field[T], value: Value)
+case class ForPartial[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]) {
+  def IN(collection: Collection[D]): Unit = {
+    val context = QueryBuilderContext()
+    val name = context.name(ref)
+    context.addQuery(Query(
+      value = s"FOR $name IN ${collection.name}",
+      args = Map.empty
+    ))
+  }
+}
+
+sealed trait SortDirection
+
+object SortDirection {
+  case object ASC extends SortDirection
+  case object DESC extends SortDirection
+}
+
+class Filter(left: Query, condition: String, right: Query) {
+  def &&(filter: Filter): Filter = {
+    new Filter(build(), "&&", filter.build())
+  }
+
+  def build(): Query = Query(s"${left.value} $condition ${right.value}", left.args ++ right.args)
+}

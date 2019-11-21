@@ -94,7 +94,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
           people.map(_.name).toSet should be(Set("Adam", "Bethany", "Charles", "Donna"))
         }
     }
-    "update the records using DSL" in {
+    /*"update the records using DSL" in {
       import com.outr.arango.aql._
 
       database
@@ -106,7 +106,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
           adam.name should be("Adam")
           adam.age should be(22)
         }
-    }
+    }*/
   }
 
   object database extends Graph(databaseName = "advanced") {
