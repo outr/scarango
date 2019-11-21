@@ -23,19 +23,17 @@ package object aql {
 
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = {
     new AQLBuilder().FOR(ref)
-  }
+  }*/
 
-  def NEW: ReturnPart = NewReturnPart*/
-
-  implicit def ref2ReturnPart[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ReturnPart = {
-    DocumentRefReturnPart(ref)
+  implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
+    ReturnPart.RefReturn(ref)
   }
 
   implicit class FieldExtras[T](field: => Field[T]) {
     def thisField: Field[T] = field
 
     def apply(value: T): FieldAndValue[T] = macro AQLMacros.fieldAndValue
-    private def cond(value: T, condition: String)(implicit conversion: T => Value): Query = {
+    private def cond(value: T, condition: String)(implicit conversion: T => Value): Filter = {
       val context = QueryBuilderContext()
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
@@ -44,16 +42,19 @@ package object aql {
       val left = Query(s"$leftName.${f.name}", Map.empty)
       val right = Query(s"@$rightName", Map(rightName -> conversion(value)))
 
-      new Filter(left, condition, right).build()
+      new Filter(left, condition, right)
     }
-    def is(value: T)(implicit conversion: T => Value): Query = ===(value)
-    def ===(value: T)(implicit conversion: T => Value): Query = {
+    def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
+    def ===(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "==")
     }
-    def isNot(value: T)(implicit conversion: T => Value): Query = !==(value)
-    def !=(value: T)(implicit conversion: T => Value): Query = !==(value)
-    def !==(value: T)(implicit conversion: T => Value): Query = {
+    def isNot(value: T)(implicit conversion: T => Value): Filter = !==(value)
+    def !=(value: T)(implicit conversion: T => Value): Filter = !==(value)
+    def !==(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "!=")
+    }
+    def >=(value: T)(implicit conversion: T => Value): Filter = {
+      cond(value, ">=")
     }
 
     def asc: (Field[T], SortDirection) = (field, SortDirection.ASC)
@@ -106,10 +107,30 @@ package object aql {
     context.addQuery(Query(s"SORT $name.${field.name} $sortValue", Map.empty))
   }
 
-  def RETURN(part: ReturnPart): Unit = {
-    val context = QueryBuilderContext()
-    context.addQuery(part.build())
+  def FILTER(filter: Filter): Unit = {
+    val query = filter.build()
+    add(query.copy(value = s"FILTER ${query.value}"))
   }
+
+  def COLLECT: CollectStart.type = CollectStart
+
+  def COUNT: CollectWith.Count.type = CollectWith.Count
+
+  def UPDATE[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model], values: FieldAndValue[_]*): Unit = {
+    add(UpdatePart(ref, values.toList).build())
+  }
+
+  def NEW: ReturnPart = ReturnPart.New
+
+  def RETURN(part: ReturnPart): Unit = add(part.build())
+
+  private def add(query: Query): Unit = {
+    val context = QueryBuilderContext()
+    context.addQuery(query)
+  }
+
+  def ref: Ref = new Ref
+  def ref(name: String): Ref = NamedRef(name)
 
   def aql(f: => Unit): Query = QueryBuilderContext.contextualize(f)
 }

@@ -2,27 +2,32 @@ package com.outr.arango.aql
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.outr.arango.{DocumentRef, Query, Ref}
+import com.outr.arango.{DocumentRef, NamedRef, Query, Ref}
 
 class QueryBuilderContext private() {
   private var queries = List.empty[Query]
   private var refNames = Map.empty[Ref, String]
-  private lazy val incrementor = new AtomicInteger(0)
+  private lazy val incrementer = new AtomicInteger(0)
 
   var documentRef = Option.empty[DocumentRef[_, _]]
 
   def addQuery(query: Query): Unit = queries = query :: queries
 
-  def name(ref: Ref): String = refNames.get(ref) match {
-    case Some(name) => name
-    case None => {
-      val name = createArg
-      refNames += ref -> name
-      name
+  def name(ref: Ref): String = ref match {
+    case NamedRef(name) => name
+    case _ => {
+      refNames.get(ref) match {
+        case Some(name) => name
+        case None => {
+          val name = createArg
+          refNames += ref -> name
+          name
+        }
+      }
     }
   }
 
-  def createArg: String = s"arg${incrementor.incrementAndGet()}"
+  def createArg: String = s"arg${incrementer.incrementAndGet()}"
 
   def toQuery: Query = {
     if (queries.isEmpty) throw new RuntimeException("Empty query is not allowed")

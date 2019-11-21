@@ -1,5 +1,6 @@
 package com.outr.arango
 
+import com.outr.arango.aql.Filter
 import com.outr.arango.transaction.Transaction
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,42 +56,37 @@ class Collection[D <: Document[D]](val graph: Graph,
     arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
   }
 
-  /*def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
-            (implicit ec: ExecutionContext): Future[List[D]] = {
+  def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
+            (implicit ec: ExecutionContext): Future[Long] = {
     import aql._
 
     val v = DocumentRef[D, DocumentModel[D]](model)
-//    val count =
+    val count = ref("count")
+
     val query = aql {
       FOR (v) IN this
-//      FILTER withReference(v)(filter)
-//      UPDATE (v, fieldAndValues: _*)
-      //      COLLECT AGGREGATE
-//      RETURN NEW
+      FILTER (withReference(v)(filter))
+      UPDATE (v, fieldAndValues: _*)
+      COLLECT WITH COUNT INTO count
+      RETURN (count)
     }
-//    val query = (
-//      FOR (v) IN this
-//      FILTER withReference(v)(filter)
-//      UPDATE (v, fieldAndValues: _*)
-////      COLLECT AGGREGATE
-//      RETURN NEW
-//    ).toQuery
-    this.query(query).results
-  }*/
+    this.query(query).as[Long].one
+  }
 
-  // COLLECT AGGREGATE files = COUNT(r.${Resource._id}), total = SUM(r.${Resource.size})
-  /*def updateAll(fieldAndValues: FieldAndValue[_]*)
-               (implicit ec: ExecutionContext): Future[List[D]] = {
+  def updateAll(fieldAndValues: FieldAndValue[_]*)
+               (implicit ec: ExecutionContext): Future[Long] = {
     import aql._
 
     val v = DocumentRef[D, DocumentModel[D]](model)
-    val query = (
+    val count = ref("count")
+    val query = aql {
       FOR (v) IN this
       UPDATE (v, fieldAndValues: _*)
-      RETURN NEW
-    ).toQuery
-    this.query(query).results
-  }*/
+      COLLECT WITH COUNT INTO count
+      RETURN (count)
+    }
+    this.query(query).as[Long].one
+  }
 
   def batch(iterator: Iterator[D],
             batchSize: Int = 5000,

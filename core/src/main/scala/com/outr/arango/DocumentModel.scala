@@ -22,8 +22,8 @@ trait DocumentModel[D <: Document[D]] {
   }
 }
 
-trait Ref {
-  def id: String
-}
+class Ref
+
+case class NamedRef(name: String) extends Ref
 
 case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model, id: String = Unique()) extends Ref
