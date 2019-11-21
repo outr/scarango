@@ -2,6 +2,7 @@ package com.outr.arango
 
 import com.outr.arango.aql.Filter
 import com.outr.arango.transaction.Transaction
+import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -70,7 +71,7 @@ class Collection[D <: Document[D]](val graph: Graph,
       COLLECT WITH COUNT INTO count
       RETURN (count)
     }
-    this.query(query).as[Long].one
+    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
   }
 
   def updateAll(fieldAndValues: FieldAndValue[_]*)
@@ -85,7 +86,7 @@ class Collection[D <: Document[D]](val graph: Graph,
       COLLECT WITH COUNT INTO count
       RETURN (count)
     }
-    this.query(query).as[Long].one
+    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
   }
 
   def batch(iterator: Iterator[D],
