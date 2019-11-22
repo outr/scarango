@@ -19,7 +19,7 @@ Tested and supporting ArangoDB 3.5.
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "2.1.0"
+libraryDependencies += "com.outr" %% "scarango-driver" % "2.2.1"
 ```
 
 ## Introduction
@@ -34,12 +34,3 @@ for examples of the first layer take a look at the tests for simple and straight
 ## Getting Started
 
 This needs to be updated with instructions for 2.0, but for now, take a look at https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
-
-## Versions
-
-### Features for 2.2.0 (In-Progress)
-
-* [ ] "Modify" convenience functionality to use `Field` to filter and set values without having to modify individually or replace the entire document (generates AQL)
-* [ ] DSL for creating AQL queries
-* [ ] Versioned Document functionality (replace and delete creates duplicate in another collection instead of updating)
-* [ ] Scala.js wrapper for Foxx framework
