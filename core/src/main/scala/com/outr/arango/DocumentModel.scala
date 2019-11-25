@@ -8,6 +8,8 @@ trait DocumentModel[D <: Document[D]] {
 
   protected def generateId(): String = Unique()
 
+  protected def field[T](name: String): Field[T] = Field[T](name)
+
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
     def unique(fields: Field[_]*): List[Index] = fields.map(_.index.persistent(unique = true)).toList

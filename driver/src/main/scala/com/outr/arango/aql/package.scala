@@ -20,7 +20,7 @@ package object aql {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val rightName = context.createArg
-      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val left = Query(s"$leftName.${f.fieldName}", Map.empty)
       val right = Query(s"@$rightName", Map(rightName -> conversion(value)))
 
       new Filter(left, condition, right)
@@ -31,7 +31,7 @@ package object aql {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val rightName = context.createArg
-      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val left = Query(s"$leftName.${f.fieldName}", Map.empty)
       val right = Query(s"@$rightName", Map(rightName -> Value.values(values.map(conversion))))
 
       new Filter(left, condition, right)
@@ -42,7 +42,7 @@ package object aql {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val rightName = context.createArg
-      val left = Query(s"$leftName.${f.name}", Map.empty)
+      val left = Query(s"$leftName.${f.fieldName}", Map.empty)
       val right = Query(s"@$rightName", Map(rightName -> Value.string(value)))
 
       new Filter(left, condition, right)
@@ -134,7 +134,7 @@ package object aql {
       case SortDirection.ASC => "ASC"
       case SortDirection.DESC => "DESC"
     }
-    context.addQuery(Query(s"SORT $name.${field.name} $sortValue", Map.empty))
+    context.addQuery(Query(s"SORT $name.${field.fieldName} $sortValue", Map.empty))
   }
 
   def FILTER(filter: Filter): Unit = {

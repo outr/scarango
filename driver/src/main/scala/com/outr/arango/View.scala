@@ -25,7 +25,7 @@ class View[D <: Document[D]](val name: String,
         ViewLink(
           collectionName = collection.name,
           fields = fields.map {
-            case (f, p) => f.name -> p
+            case (f, p) => f.fieldName -> p
           },
           analyzers = analyzers
         )

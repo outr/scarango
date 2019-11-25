@@ -10,7 +10,7 @@ case class UpdatePart[D <: Document[D], Model <: DocumentModel[D]](ref: Document
     val data = values.map { fv =>
       val arg = context.createArg
       map += arg -> fv.value
-      s"${fv.field.name}: @$arg"
+      s"${fv.field.fieldName}: @$arg"
     }.mkString(", ")
     Query(s"UPDATE $name WITH {$data} IN ${ref.collectionName}", map)
   }

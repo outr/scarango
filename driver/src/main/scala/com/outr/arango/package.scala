@@ -19,6 +19,6 @@ package object arango {
     def aqlu(args: Any*): Query = macro AQLMacros.aqlu
   }
 
-  implicit def field2String[T](field: Field[T]): String = field.name
-  implicit def fieldList2Strings[T](fields: List[Field[T]]): List[String] = fields.map(_.name)
+  implicit def field2String[T](field: Field[T]): String = field.fieldName
+  implicit def fieldList2Strings[T](fields: List[Field[T]]): List[String] = fields.map(_.fieldName)
 }
