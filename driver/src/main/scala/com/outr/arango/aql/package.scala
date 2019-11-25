@@ -6,6 +6,21 @@ import scala.language.implicitConversions
 package object aql {
   private var forced = false
 
+  implicit class AQLInterpolator(val sc: StringContext) extends AnyVal {
+    /**
+      * AQL interpolation with compile-time validation against ArangoDB
+      */
+    def aql(args: Any*): Query = macro AQLMacros.aql
+
+    /**
+      * AQL interpolation unvalidated.
+      *
+      * WARNING: This can lead to runtime errors if you use invalid AQL. Ideally, this should only be used for partial
+      * queries.
+      */
+    def aqlu(args: Any*): Query = macro AQLMacros.aqlu
+  }
+
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
   }

@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango._
-import com.outr.arango.api.APITransaction
+import com.outr.arango.aql._
 import io.youi.http.Headers
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

@@ -2,7 +2,8 @@ package spec
 
 import com.outr.arango.transaction.{Transaction, TransactionStatus}
 import com.outr.arango._
-import org.scalatest.{Assertion, Matchers}
+import com.outr.arango.aql._
+import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 

@@ -73,7 +73,7 @@ object AQLMacros {
     } else if (vt <:< typeOf[Id[_]]) {
       n(q"string($value._id)")
     } else if (vt <:< typeOf[Field[_]]) {
-      n(q"string($value.name)")
+      n(q"string($value.fieldName)")
     } else if (vt <:< typeOf[Analyzer]) {
       n(q"string($value.name)")
     } else if (vt <:< typeOf[Collection[_]]) {
@@ -150,7 +150,7 @@ object AQLMacros {
               } else if (vt <:< typeOf[Id[_]]) {
                 Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
-                Some(q"string($value.name)")
+                Some(q"string($value.fieldName)")
               } else if (vt <:< typeOf[Analyzer]) {
                 Some(q"string($value.name)")
               } else if (vt <:< typeOf[Collection[_]]) {
