@@ -17,10 +17,14 @@ trait DocumentModel[D <: Document[D]] {
 
   def indexes: List[Index]
 
-  def id(value: String = generateId()): Id[D] = if (value.startsWith(collectionName)) {
-    Id[D](value.substring(collectionName.length + 1), collectionName)
-  } else {
-    Id[D](value, collectionName)
+  def id(value: String = generateId()): Id[D] = {
+    val index = value.indexOf('/')
+    val v = if (index != -1) {
+      value.substring(index + 1)
+    } else {
+      value
+    }
+    Id[D](v, collectionName)
   }
 }
 
