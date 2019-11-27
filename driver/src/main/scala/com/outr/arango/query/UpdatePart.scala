@@ -1,4 +1,4 @@
-package com.outr.arango.aql
+package com.outr.arango.query
 
 import com.outr.arango.{Document, DocumentModel, DocumentRef, FieldAndValue, Query, Value}
 

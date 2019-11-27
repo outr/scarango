@@ -2,7 +2,7 @@ package spec
 
 import com.outr.arango.transaction.{Transaction, TransactionStatus}
 import com.outr.arango._
-import com.outr.arango.aql._
+import com.outr.arango.query._
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -96,7 +96,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
         }
     }
     "update the records using DSL" in {
-      import com.outr.arango.aql._
+      import com.outr.arango.query._
 
       database
         .people

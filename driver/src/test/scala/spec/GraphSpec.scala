@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango._
-import com.outr.arango.aql._
+import com.outr.arango.query._
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig

@@ -3,7 +3,7 @@ package com.outr.arango
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 
-package object aql {
+package object query {
   private var forced = false
 
   implicit class AQLInterpolator(val sc: StringContext) extends AnyVal {

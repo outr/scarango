@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.aql.Filter
+import com.outr.arango.query._
 import com.outr.arango.transaction.Transaction
 import io.circe.Json
 
@@ -59,8 +59,6 @@ class Collection[D <: Document[D]](val graph: Graph,
 
   def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
             (implicit ec: ExecutionContext): Future[Long] = {
-    import aql._
-
     val v = DocumentRef[D, DocumentModel[D]](model)
     val count = ref("count")
 
@@ -76,8 +74,6 @@ class Collection[D <: Document[D]](val graph: Graph,
 
   def updateAll(fieldAndValues: FieldAndValue[_]*)
                (implicit ec: ExecutionContext): Future[Long] = {
-    import aql._
-
     val v = DocumentRef[D, DocumentModel[D]](model)
     val count = ref("count")
     val query = aql {

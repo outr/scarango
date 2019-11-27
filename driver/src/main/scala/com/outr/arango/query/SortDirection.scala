@@ -1,4 +1,4 @@
-package com.outr.arango.aql
+package com.outr.arango.query
 
 sealed trait SortDirection
 

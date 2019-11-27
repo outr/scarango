@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field, Graph, Id, Index, Query, Serialization}
-import com.outr.arango.aql._
+import com.outr.arango.query._
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
