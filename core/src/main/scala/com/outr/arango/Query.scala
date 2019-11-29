@@ -18,7 +18,7 @@ case class Query(value: String, args: Map[String, Value]) {
     this
   }
 
-  def +(that: Query): Query = Query(s"${this.value}\n${that.value}", this.args ++ that.args)
+  def +(that: Query): Query = Query.merge(List(this, that))
 
   def bindVars: Json = Json.obj(args.toList.map {
     case (key, v) => {
