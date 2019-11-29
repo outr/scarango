@@ -86,6 +86,8 @@ case class QueryBuilder[R](client: HttpClient,
       }
   }
 
+  def update(implicit ec: ExecutionContext): Future[Unit] = cursor(ec).map(_ => ())
+
   def results(implicit ec: ExecutionContext): Future[List[R]] = cursor(ec).map(_.result)
 
   def get(id: String)(implicit ec: ExecutionContext): Future[QueryResponse[R]] = APICursorCursorIdentifier

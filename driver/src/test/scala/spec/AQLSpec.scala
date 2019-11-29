@@ -193,6 +193,16 @@ class AQLSpec extends AsyncWordSpec with Matchers {
         response.result should be(List("John Doe"))
       }
     }
+    "delete all records with an AQL query and no return" in {
+      val query =
+      aql"""
+          FOR user IN users
+          REMOVE user IN users
+         """
+      dbExample.query(query).update.map { response =>
+        response should be(())
+      }
+    }
     "drop the test database" in {
       dbExample.drop().map { response =>
         response.value should be(true)
