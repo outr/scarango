@@ -46,6 +46,15 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
       query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
     }
+    "merge two simple queries with args" in {
+      val id = 123
+      val name = "John Doe"
+      val q1 = aqlu"FOR u IN users FILTER u.id == $id"
+      val q2 = aqlu"&& u.name == $name RETURN u"
+      val query = q1 + q2
+      query.value.replace('\n', ' ') should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
+      query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
+    }
     "create the database" in {
       dbExample.create().map { response =>
         response.value should be(true)

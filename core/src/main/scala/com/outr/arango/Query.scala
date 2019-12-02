@@ -29,9 +29,49 @@ case class Query(value: String, args: Map[String, Value]) {
 }
 
 object Query {
-  def merge(queries: List[Query], concat: String = "\n"): Query = {
-    val value = queries.map(_.value).mkString(concat)
-    val args = queries.flatMap(_.args)
-    Query(value, args.toMap)
+  private val ExtractNumeric = """(.+)(\d+)""".r
+
+  /**
+    * Merges queries and renames overlapping argument names
+    *
+    * @param queries the list of queries to merge
+    * @param separator the separator string between each query
+    * @return merge quest
+    */
+  def merge(queries: List[Query], separator: String = "\n"): Query = {
+    var usedKeys = Set.empty[String]
+    val updatedQueries = queries.map { q =>
+      var query = q
+
+      def nextKey(key: String): String = key match {
+        case ExtractNumeric(prefix, n) => {
+          val newKey = s"$prefix${n.toInt + 1}"
+          if (!usedKeys.contains(newKey)) {
+            newKey
+          } else {
+            nextKey(newKey)
+          }
+        }
+        case _ => nextKey(s"${key}1")
+      }
+
+      query.args.keys.foreach {
+        case key if usedKeys.contains(key) => {
+          val newKey = nextKey(key)
+          query = query.copy(
+            value = query.value.replaceAllLiterally(s"@$key", s"@$newKey"),
+            args = query.args.map {
+              case (k, v) if k == key => newKey -> v
+              case (k, v) => k -> v
+            }
+          )
+        }
+        case key => usedKeys += key
+      }
+      query
+    }
+    val value = updatedQueries.map(_.value).mkString(separator)
+    val args = updatedQueries.flatMap(_.args).toMap
+    Query(value, args)
   }
 }
