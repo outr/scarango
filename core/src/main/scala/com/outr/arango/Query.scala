@@ -40,7 +40,7 @@ object Query {
     */
   def merge(queries: List[Query], separator: String = "\n"): Query = {
     var usedKeys = Set.empty[String]
-    val updatedQueries = queries.map { q =>
+    val updatedQueries: List[Query] = queries.map { q =>
       var query = q
       val localKeys = query.args.keys.toSet
 
