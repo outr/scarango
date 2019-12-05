@@ -7,6 +7,7 @@ import io.circe.{Decoder, HCursor, Json}
 import io.youi.client.HttpClient
 import profig.JsonUtil
 
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 
@@ -37,6 +38,7 @@ case class QueryBuilder[R](client: HttpClient,
   def includeFullCount: QueryBuilder[R] = opt(_.copy(fullCount = Some(true)))
   def excludeFullCount: QueryBuilder[R] = opt(_.copy(fullCount = Some(false)))
   def maxWarningCount(n: Int): QueryBuilder[R] = opt(_.copy(maxWarningCount = Some(n)))
+  def maxRuntime(max: FiniteDuration): QueryBuilder[R] = opt(_.copy(maxRuntime = Some(max.toMillis.toDouble / 1000.0)))
   def satelliteSyncWait(b: Boolean): QueryBuilder[R] = opt(_.copy(satelliteSyncWait = Some(b)))
   def stream(b: Boolean): QueryBuilder[R] = opt(_.copy(stream = Some(b)))
   def logQuery(f: Json => Unit): QueryBuilder[R] = copy(logQuery = Some(f))

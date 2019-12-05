@@ -42,11 +42,12 @@ object Query {
     var usedKeys = Set.empty[String]
     val updatedQueries = queries.map { q =>
       var query = q
+      val localKeys = query.args.keys.toSet
 
       def nextKey(key: String): String = key match {
         case ExtractNumeric(prefix, n) => {
           val newKey = s"$prefix${n.toInt + 1}"
-          if (!usedKeys.contains(newKey)) {
+          if (!usedKeys.contains(newKey) && !localKeys.contains(newKey)) {
             newKey
           } else {
             nextKey(newKey)
@@ -58,6 +59,7 @@ object Query {
       query.args.keys.foreach {
         case key if usedKeys.contains(key) => {
           val newKey = nextKey(key)
+          usedKeys += newKey
           query = query.copy(
             value = query.value.replaceAllLiterally(s"@$key", s"@$newKey"),
             args = query.args.map {
