@@ -26,6 +26,8 @@ case class Query(value: String, args: Map[String, Value]) {
       key -> argValue
     }
   }: _*)
+
+  override def toString: String = s"[$value] (${args.map(t => s"${t._1}: ${t._2}").mkString(", ")})"
 }
 
 object Query {
