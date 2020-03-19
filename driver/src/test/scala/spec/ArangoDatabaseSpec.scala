@@ -2,7 +2,7 @@ package spec
 
 import com.outr.arango.{ArangoDB, Credentials, DatabaseState}
 import io.youi.http.Headers
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 

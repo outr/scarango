@@ -25,8 +25,8 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.12.9"
-val scalaTestVersion = "3.1.0-SNAP13"
+val youiVersion = "0.12.13"
+val scalaTestVersion = "3.2.0-M3"
 
 lazy val root = project.in(file("."))
   .aggregate(api, coreJS, coreJVM, driver)
@@ -73,5 +73,5 @@ lazy val plugin = project.in(file("plugin"))
   .settings(
     name := "scarango-plugin",
     sbtPlugin := true,
-    crossSbtVersions := Vector("0.13.18", "1.2.8")
+    crossSbtVersions := Vector("0.13.18", "1.3.8")
   )
