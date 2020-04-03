@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APITransaction, APIView}
+import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APITransaction, APIView, APIWalTail, WALOperations}
 import com.outr.arango.JsonImplicits._
 import com.outr.arango.api.model.{PostAPITransaction, PostApiQueryProperties}
 import com.outr.arango.model.ArangoResponse
@@ -152,6 +152,8 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
     }
     QueryBuilder[Json](c, query.fixed(), identity)
   }
+
+  lazy val wal: ArangoWriteAheadLog = new ArangoWriteAheadLog(client)
 
   def drop()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = db.api.system.drop(name)
 }

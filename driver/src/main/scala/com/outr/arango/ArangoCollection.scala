@@ -1,7 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.api.model.{CollectionInfo, PostAPICollection, PostAPICollectionOpts}
-import com.outr.arango.api.{APICollection, APICollectionCollectionName, APICollectionCollectionNameLoad, APICollectionCollectionNameTruncate, APICollectionCollectionNameUnload}
+import com.outr.arango.api.{APICollection, APICollectionCollectionName, APICollectionCollectionNameLoad, APICollectionCollectionNameTruncate, APICollectionCollectionNameUnload, APIWalTail, WALOperations}
 import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
 import profig.JsonUtil

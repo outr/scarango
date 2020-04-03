@@ -1,5 +1,6 @@
 package spec
 
+import com.outr.arango.api.OperationType
 import com.outr.arango.{ArangoDB, Credentials, DatabaseState}
 import io.youi.http.Headers
 import org.scalatest.matchers.should.Matchers
@@ -45,6 +46,14 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
     "verify the database was created" in {
       db.api.db.list().map { response =>
         response.value should contain("databaseExample")
+      }
+    }
+    "check the WAL" in {
+      db.api.db("databaseExample").wal.tail().map { ops =>
+        ops.operations.length should be(1)
+        val op = ops.operations.head
+        op.`type` should be(OperationType.CreatedDatabase)
+        op.db should be("databaseExample")
       }
     }
     "drop the test database" in {

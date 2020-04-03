@@ -2,7 +2,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.3.3"
+version in ThisBuild := "2.3.4-SNAPSHOT"
 scalaVersion in ThisBuild := "2.13.1"
 crossScalaVersions in ThisBuild := List("2.13.1", "2.12.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")

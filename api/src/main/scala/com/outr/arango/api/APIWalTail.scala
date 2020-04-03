@@ -1,23 +1,62 @@
 package com.outr.arango.api
 
-import com.outr.arango.api.model._
+import io.circe.Decoder.Result
 import io.youi.client.HttpClient
-import io.youi.http.HttpMethod
+import io.youi.http.{HeaderKey, HttpMethod}
 import io.youi.net._
-import io.circe.Json
+import io.circe.{Decoder, DecodingFailure, HCursor}
+import profig.JsonUtil
+
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIWalTail {
+  private implicit def operationTypeDecoder: Decoder[OperationType] = new Decoder[OperationType] {
+    override def apply(c: HCursor): Result[OperationType] = c.value.asNumber match {
+      case Some(n) => Right(OperationType(n.toInt.get))
+      case None => Left(DecodingFailure(s"OperationType not a number: ${c.value}", Nil))
+    }
+  }
 
-  def get(client: HttpClient, from: Option[Double] = None, to: Option[Double] = None, lastScanned: Option[Double] = None, _global: Option[Boolean] = None, chunkSize: Option[Double] = None, serverId: Option[Double] = None, barrierId: Option[Double] = None)(implicit ec: ExecutionContext): Future[Json] = client
-    .method(HttpMethod.Get)
-    .path(path"/_api/wal/tail", append = true) 
-    .param[Option[Double]]("from", from, None)
-    .param[Option[Double]]("to", to, None)
-    .param[Option[Double]]("lastScanned", lastScanned, None)
-    .param[Option[Boolean]]("global", _global, None)
-    .param[Option[Double]]("chunkSize", chunkSize, None)
-    .param[Option[Double]]("serverId", serverId, None)
-    .param[Option[Double]]("barrierId", barrierId, None)
-    .call[Json]
+  def get(client: HttpClient,
+          global: Option[Boolean] = None,
+          from: Option[Long] = None,
+          to: Option[Long] = None,
+          lastScanned: Long = 0L,
+          chunkSize: Option[Long] = None,
+          syncerId: Option[Long] = None,
+          serverId: Option[Long] = None,
+          clientId: Option[String] = None)(implicit ec: ExecutionContext): Future[WALOperations] = {
+    client
+      .method(HttpMethod.Get)
+      .path(path"/_api/wal/tail", append = true)
+      .param[Option[Long]]("from", from, None)
+      .param[Option[Long]]("to", to, None)
+      .param[Long]("lastScanned", lastScanned, 0L)
+      .param[Option[Boolean]]("global", global, None)
+      .param[Option[Long]]("chunkSize", chunkSize, None)
+      .param[Option[Long]]("syncerId", syncerId, None)
+      .param[Option[Long]]("serverId", serverId, None)
+      .param[Option[String]]("clientId", clientId, None)
+      .send().map { response =>
+      val lines = response.content.map(_.asString).getOrElse("").split('\n').toList
+      val operations = lines.map { line =>
+        JsonUtil.fromJsonString[WALOperation](line)
+      }
+      val headers = response.headers
+      WALOperations(
+        client = client,
+        global = global,
+        chunkSize = chunkSize,
+        syncerId = syncerId,
+        serverId = serverId,
+        clientId = clientId,
+        checkMore = headers.first(HeaderKey("X-Arango-Replication-Checkmore")).exists(_.toBoolean),
+        fromPresent = headers.first(HeaderKey("X-Arango-Replication-Frompresent")).exists(_.toBoolean),
+        lastIncluded = headers.first(HeaderKey("X-Arango-Replication-Lastincluded")).map(_.toLong).getOrElse(-1L),
+        lastScanned = headers.first(HeaderKey("X-Arango-Replication-Lastscanned")).map(_.toLong).getOrElse(-1L),
+        lastTick = headers.first(HeaderKey("X-Arango-Replication-Lasttick")).map(_.toLong).getOrElse(-1L),
+        operations = operations
+      )
+    }
+  }
 }
