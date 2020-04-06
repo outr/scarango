@@ -40,12 +40,8 @@ object APIWalTail {
       .send()
       .map { response =>
         val lines = response.content.map(_.asString).getOrElse("").split('\n').toList
-        val operations = lines.map { line =>
-          try {
-            JsonUtil.fromJsonString[WALOperation](line)
-          } catch {
-            case t: Throwable => throw new RuntimeException(s"Parsing failure for: $line", t)
-          }
+        val operations = lines.map(_.trim).collect {
+          case line if line.nonEmpty => JsonUtil.fromJsonString[WALOperation](line)
         }
         val headers = response.headers
         WALOperations(
