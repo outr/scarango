@@ -3,6 +3,7 @@ package com.outr.arango
 import com.outr.arango.query._
 import com.outr.arango.transaction.Transaction
 import io.circe.Json
+import reactify.Channel
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -168,4 +169,6 @@ class Collection[D <: Document[D]](val graph: Graph,
     }
     ()
   }
+
+  def monitor(monitor: WriteAheadLogMonitor): CollectionMonitor[D] = new CollectionMonitor[D](monitor, this)
 }

@@ -16,10 +16,10 @@ case class WALOperations(private val client: HttpClient,
                          lastScanned: Long,
                          lastTick: Long,
                          operations: List[WALOperation]) {
-  def tail()(implicit ec: ExecutionContext): Future[WALOperations] = APIWalTail.get(
+  def tail(from: Long = lastIncluded)(implicit ec: ExecutionContext): Future[WALOperations] = APIWalTail.get(
     client = client,
     global = global,
-    from = Some(lastIncluded),
+    from = Some(from),
     to = None,
     lastScanned = lastScanned,
     chunkSize = chunkSize,

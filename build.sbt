@@ -1,4 +1,5 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
@@ -27,6 +28,14 @@ developers in ThisBuild := List(
 
 val youiVersion = "0.13.0-SNAPSHOT"
 val scalaTestVersion = "3.2.0-M4"
+
+def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
+  tests.groupBy(_.name).map {
+    case (n, t) =>
+      val options = ForkOptions()
+      Group(n, t, SubProcess(options))
+  }.toSeq
+}
 
 lazy val root = project.in(file("."))
   .aggregate(api, coreJS, coreJVM, driver)
@@ -62,7 +71,9 @@ lazy val driver = project.in(file("driver"))
   .settings(
     name := "scarango-driver",
     fork := true,
+    testGrouping in Test := groupByName((definedTests in Test).value),
     testOptions in Test += Tests.Argument("-oD"),
+    parallelExecution in Test := false,
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )

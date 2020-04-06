@@ -1,11 +1,14 @@
 package spec
 
-import com.outr.arango.api.OperationType
+import com.outr.arango.api.{OperationType, WALOperation, WALOperations}
 import com.outr.arango.{ArangoDB, Credentials, DatabaseState}
 import io.youi.http.Headers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
+
+import scala.concurrent.Promise
+import scala.concurrent.duration._
 
 class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
@@ -49,11 +52,43 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the WAL" in {
-      db.api.db("databaseExample").wal.tail().map { ops =>
+      db.api.db("databaseExample").wal.tail().flatMap { ops =>
         ops.operations.length should be(1)
         val op = ops.operations.head
         op.`type` should be(OperationType.CreatedDatabase)
         op.db should be("databaseExample")
+        ops.tail().map { moreOps =>
+          moreOps.operations.isEmpty should be(true)
+        }
+      }
+    }
+    "check the WAL using monitor" in {
+      val monitor = db.api.db("databaseExample").wal.monitor(delay = 1.second, skipHistory = false)
+      var first = Option.empty[WALOperations]
+      var second = Option.empty[WALOperations]
+      val promise = Promise[Unit]
+      var list = List.empty[WALOperation]
+      monitor.attach { op =>
+        list = op :: list
+      }
+      monitor.tailed.attach { ops =>
+        if (first.isEmpty) {
+          first = Some(ops)
+        } else if (second.isEmpty) {
+          second = Some(ops)
+        } else {
+          monitor.stop()
+          promise.success(())
+        }
+      }
+      promise.future.map { _ =>
+        first.isEmpty should be(false)
+        val f = first.get
+        f.operations.length should be(1)
+        second.isEmpty should be(false)
+        val s = second.get
+        s.operations.length should be(0)
+        list.length should be(1)
       }
     }
     "drop the test database" in {
