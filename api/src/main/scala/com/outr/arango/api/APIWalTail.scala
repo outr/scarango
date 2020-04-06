@@ -37,26 +37,31 @@ object APIWalTail {
       .param[Option[Long]]("syncerId", syncerId, None)
       .param[Option[Long]]("serverId", serverId, None)
       .param[Option[String]]("clientId", clientId, None)
-      .send().map { response =>
-      val lines = response.content.map(_.asString).getOrElse("").split('\n').toList
-      val operations = lines.map { line =>
-        JsonUtil.fromJsonString[WALOperation](line)
+      .send()
+      .map { response =>
+        val lines = response.content.map(_.asString).getOrElse("").split('\n').toList
+        val operations = lines.map { line =>
+          try {
+            JsonUtil.fromJsonString[WALOperation](line)
+          } catch {
+            case t: Throwable => throw new RuntimeException(s"Parsing failure for: $line", t)
+          }
+        }
+        val headers = response.headers
+        WALOperations(
+          client = client,
+          global = global,
+          chunkSize = chunkSize,
+          syncerId = syncerId,
+          serverId = serverId,
+          clientId = clientId,
+          checkMore = headers.first(HeaderKey("X-Arango-Replication-Checkmore")).exists(_.toBoolean),
+          fromPresent = headers.first(HeaderKey("X-Arango-Replication-Frompresent")).exists(_.toBoolean),
+          lastIncluded = headers.first(HeaderKey("X-Arango-Replication-Lastincluded")).map(_.toLong).getOrElse(-1L),
+          lastScanned = headers.first(HeaderKey("X-Arango-Replication-Lastscanned")).map(_.toLong).getOrElse(-1L),
+          lastTick = headers.first(HeaderKey("X-Arango-Replication-Lasttick")).map(_.toLong).getOrElse(-1L),
+          operations = operations
+        )
       }
-      val headers = response.headers
-      WALOperations(
-        client = client,
-        global = global,
-        chunkSize = chunkSize,
-        syncerId = syncerId,
-        serverId = serverId,
-        clientId = clientId,
-        checkMore = headers.first(HeaderKey("X-Arango-Replication-Checkmore")).exists(_.toBoolean),
-        fromPresent = headers.first(HeaderKey("X-Arango-Replication-Frompresent")).exists(_.toBoolean),
-        lastIncluded = headers.first(HeaderKey("X-Arango-Replication-Lastincluded")).map(_.toLong).getOrElse(-1L),
-        lastScanned = headers.first(HeaderKey("X-Arango-Replication-Lastscanned")).map(_.toLong).getOrElse(-1L),
-        lastTick = headers.first(HeaderKey("X-Arango-Replication-Lasttick")).map(_.toLong).getOrElse(-1L),
-        operations = operations
-      )
-    }
   }
 }

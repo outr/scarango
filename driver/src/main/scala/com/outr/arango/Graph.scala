@@ -32,6 +32,8 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
   lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
 
+  def wal: ArangoWriteAheadLog = arangoDatabase.wal
+
   def transaction(write: List[Collection[_]] = Nil,
                   read: List[Collection[_]] = Nil,
                   exclusive: List[Collection[_]] = Nil,
