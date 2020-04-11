@@ -19,7 +19,7 @@ Tested and supporting ArangoDB 3.6.
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "2.3.4"
+libraryDependencies += "com.outr" %% "scarango-driver" % "2.3.5"
 ```
 
 ## Introduction

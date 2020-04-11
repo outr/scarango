@@ -3,7 +3,7 @@ import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.3.5-SNAPSHOT"
+version in ThisBuild := "2.3.5"
 scalaVersion in ThisBuild := "2.13.1"
 crossScalaVersions in ThisBuild := List("2.13.1", "2.12.11")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -26,7 +26,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.13.0-SNAPSHOT"
+val youiVersion = "0.13.0"
 val scalaTestVersion = "3.2.0-M4"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
