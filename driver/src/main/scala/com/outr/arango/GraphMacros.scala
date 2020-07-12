@@ -56,4 +56,17 @@ object GraphMacros {
          new Collection[$d]($graph, $companion, CollectionType.Edge, $companion.indexes, None)
        """)
   }
+
+  def cached[D <: Document[D]](c: blackbox.Context)(implicit d: c.WeakTypeTag[D]): c.Expr[CachedCollection[D]] = {
+    import c.universe._
+
+    val graph = c.prefix
+    val companion = d.tpe.typeSymbol.companion
+    c.Expr[CachedCollection[D]](
+      q"""
+         import com.outr.arango._
+
+         new CachedCollection[$d]($graph, $companion, CollectionType.Document, $companion.indexes, None)
+       """)
+  }
 }
