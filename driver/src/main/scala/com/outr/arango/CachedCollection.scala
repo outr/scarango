@@ -20,9 +20,13 @@ class CachedCollection[D <: Document[D]](graph: Graph,
   private var refreshing: Future[Unit] = Future.successful(())
 
   def refresh()(implicit ec: ExecutionContext): Future[Unit] = if (refreshing.isCompleted) {
-    refreshing = all.batchSize(Int.MaxValue).results.map { list =>
+    scribe.info(s"Refreshing $name collection cached data")
+    val now = System.currentTimeMillis()
+    val query = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
+    refreshing = query.batchSize(Int.MaxValue).results.map { list =>
       self.synchronized {
         _cache @= list.map(d => d._id -> d).toMap
+        scribe.info(s"Finished refreshing $name collection cached data in ${(System.currentTimeMillis() - now) / 1000.0} seconds")
         refreshed = true
       }
     }
@@ -49,6 +53,11 @@ class CachedCollection[D <: Document[D]](graph: Graph,
 
   private def updateCache(document: D): Unit = self.synchronized {
     _cache += document._id -> document
+  }
+
+  def cached(id: Id[D]): Option[D] = {
+    assert(refreshed, "Cannot be called until the collection has loaded for the first time")
+    cache().get(id)
   }
 
   override def insertOne(document: D,

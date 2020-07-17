@@ -5,7 +5,7 @@ import com.outr.arango.Graph
 import scala.concurrent.Future
 
 trait DatabaseUpgrade {
-  def label: String = getClass.getSimpleName.replaceAllLiterally("$", "")
+  def label: String = getClass.getSimpleName.replace("$", "")
   def applyToNew: Boolean
   def blockStartup: Boolean
   def alwaysRun: Boolean = false

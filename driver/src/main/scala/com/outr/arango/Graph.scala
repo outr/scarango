@@ -69,6 +69,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def vertex[D <: Document[D]]: Collection[D] = macro GraphMacros.vertex[D]
   def edge[D <: Document[D]]: Collection[D] = macro GraphMacros.edge[D]
+  def cached[D <: Document[D]]: CachedCollection[D] = macro GraphMacros.cached[D]
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
                              includeAllFields: Boolean,
@@ -94,7 +95,12 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     if (_initialized.compareAndSet(false, true)) {
       arangoDB.init().flatMap { state =>
         assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
-        doUpgrades(ec).recover {
+        doUpgrades(ec).map { _ =>
+          collections.foreach {
+            case cc: CachedCollection[_] => cc.refresh()
+            case _ => // Ignore non-cached
+          }
+        }.recover {
           case t: Throwable => {
             arangoDB._state := DatabaseState.Error(t)
             throw t
