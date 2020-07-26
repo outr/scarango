@@ -60,6 +60,8 @@ class CachedCollection[D <: Document[D]](graph: Graph,
     cache().get(id)
   }
 
+  def one(id: Id[D]): D = cached(id).getOrElse(throw new RuntimeException(s"$id does not exist"))
+
   override def insertOne(document: D,
                          waitForSync: Boolean,
                          returnNew: Boolean,
