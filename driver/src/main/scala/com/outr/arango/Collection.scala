@@ -1,111 +1,24 @@
 package com.outr.arango
 
-import com.outr.arango.query._
 import com.outr.arango.transaction.Transaction
-import io.circe.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Collection[D <: Document[D]](val graph: Graph,
-                                   val model: DocumentModel[D],
-                                   val `type`: CollectionType,
-                                   val indexes: List[Index],
-                                   val transaction: Option[Transaction]) {
+trait Collection[D <: Document[D]] {
   lazy val arangoCollection: ArangoCollection = graph.arangoDatabase.collection(name)
 
-  graph.add(this)
+  addCollection()
+
+  def graph: Graph
+  def model: DocumentModel[D]
+  def `type`: CollectionType
+  def indexes: List[Index]
+  def transaction: Option[Transaction]
+  def transactionId: Option[String] = transaction.map(_.id)
 
   def name: String = model.collectionName
 
-  private def transactionId: Option[String] = transaction.map(_.id)
-
-  def apply(transaction: Transaction): Collection[D] = new Collection[D](graph, model, `type`, indexes, Some(transaction))
-
-  def insertOne(document: D,
-                waitForSync: Boolean = false,
-                returnNew: Boolean = false,
-                returnOld: Boolean = false,
-                silent: Boolean = false)
-               (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.insertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
-  }
-
-  def upsertOne(document: D,
-                waitForSync: Boolean = false,
-                returnNew: Boolean = false,
-                returnOld: Boolean = false,
-                silent: Boolean = false)
-               (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.upsertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
-  }
-
-  def insert(documents: List[D],
-             waitForSync: Boolean = false,
-             returnNew: Boolean = false,
-             returnOld: Boolean = false,
-             silent: Boolean = false)
-            (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.insert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
-  }
-
-  def upsert(documents: List[D],
-             waitForSync: Boolean = false,
-             returnNew: Boolean = false,
-             returnOld: Boolean = false,
-             silent: Boolean = false)
-            (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
-  }
-
-  def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
-            (implicit ec: ExecutionContext): Future[Long] = {
-    val v = DocumentRef[D, DocumentModel[D]](model)
-    val count = ref("count")
-
-    val query = aql {
-      FOR (v) IN this
-      FILTER (withReference(v)(filter))
-      UPDATE (v, fieldAndValues: _*)
-      COLLECT WITH COUNT INTO count
-      RETURN (count)
-    }
-    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
-  }
-
-  def updateAll(fieldAndValues: FieldAndValue[_]*)
-               (implicit ec: ExecutionContext): Future[Long] = {
-    val v = DocumentRef[D, DocumentModel[D]](model)
-    val count = ref("count")
-    val query = aql {
-      FOR (v) IN this
-      UPDATE (v, fieldAndValues: _*)
-      COLLECT WITH COUNT INTO count
-      RETURN (count)
-    }
-    this.query(query).as[Long]((json: Json) => json.asNumber.flatMap(_.toLong).getOrElse(0L)).one
-  }
-
-  def batch(iterator: Iterator[D],
-            batchSize: Int = 5000,
-            upsert: Boolean = false,
-            waitForSync: Boolean = false,
-            counter: Int = 0)
-           (implicit ec: ExecutionContext): Future[Int] = {
-    val documents = iterator.take(batchSize).toList
-    val size = documents.length
-    if (size == 0) {
-      Future.successful(counter)
-    } else {
-      val future = if (upsert) {
-        this.upsert(documents, waitForSync, silent = true)
-      } else {
-        this.insert(documents, waitForSync, silent = true)
-      }
-      future.flatMap { _ =>
-        batch(iterator, batchSize, upsert, waitForSync, counter + size)
-      }
-    }
-  }
+  def withTransaction(transaction: Transaction): Collection[D] = new TransactionCollection[D](this, transaction)
 
   def get(id: Id[D])(implicit ec: ExecutionContext): Future[Option[D]] = {
     arangoCollection.document.get(id, transactionId)(ec, model.serialization)
@@ -115,26 +28,9 @@ class Collection[D <: Document[D]](val graph: Graph,
     get(id).map(_.getOrElse(throw new RuntimeException(s"Unable to find $name by id: $id")))
   }
 
-  def query(query: Query): QueryBuilder[D] = graph.query(query, transaction).as[D](model.serialization)
+  def monitor(monitor: WriteAheadLogMonitor): CollectionMonitor[D] = new CollectionMonitor[D](monitor, this)
 
-  lazy val all: QueryBuilder[D] = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
-
-  def deleteOne(id: Id[D],
-                waitForSync: Boolean = false,
-                returnOld: Boolean = false,
-                silent: Boolean = false)
-               (implicit ec: ExecutionContext): Future[Id[D]] = {
-    arangoCollection.document.deleteOne(id, transactionId, waitForSync, returnOld, silent)
-  }
-
-  def delete(ids: List[Id[D]],
-             transactionId: Option[String] = None,
-             waitForSync: Boolean = false,
-             returnOld: Boolean = false,
-             ignoreRevs: Boolean = true)
-            (implicit ec: ExecutionContext): Future[List[Id[D]]] = {
-    arangoCollection.document.delete(ids, transactionId, waitForSync, returnOld)
-  }
+  protected def addCollection(): Unit = graph.add(this)
 
   protected[arango] def create(createCollection: Boolean)(implicit ec: ExecutionContext): Future[Unit] = for {
     // Create the collection if it doesn't already exist
@@ -161,13 +57,4 @@ class Collection[D <: Document[D]](val graph: Graph,
   } yield {
     ()
   }
-
-  def truncate()(implicit ec: ExecutionContext): Future[Unit] = arangoCollection.truncate().map { r =>
-    if (r.error) {
-      throw new RuntimeException(s"Error attempting to truncate $name")
-    }
-    ()
-  }
-
-  def monitor(monitor: WriteAheadLogMonitor): CollectionMonitor[D] = new CollectionMonitor[D](monitor, this)
 }

@@ -1,32 +1,43 @@
 package com.outr.arango
 
-import com.outr.arango.query.Filter
-import com.outr.arango.transaction.Transaction
 import reactify._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CachedCollection[D <: Document[D]](graph: Graph,
-                                         model: DocumentModel[D],
-                                         `type`: CollectionType,
-                                         indexes: List[Index],
-                                         transaction: Option[Transaction]) extends Collection[D](graph, model, `type`, indexes, transaction) { self =>
+class CachedCollection[D <: Document[D]](override val collection: Collection[D]) extends WrappedCollection[D] with WritableCollection[D] { self =>
   private object _cache extends Var[Map[Id[D], D]](Map.empty) {
     def +=(tuple: (Id[D], D)): Unit = set(get + tuple)
   }
-  def cache: Val[Map[Id[D], D]] = _cache
+  def cachedMap: Val[Map[Id[D], D]] = _cache
+  val removed: Channel[D] = Channel[D]
+  val added: Channel[D] = Channel[D]
+  val cache: Val[List[D]] = {
+    val v = Val(cachedMap.values.toList)
+    v.changes {
+      case (previous, current) => {
+        val removed = previous.diff(current)
+        val added = current.diff(previous)
+        removed.foreach(this.removed.static)
+        added.foreach(this.added.static)
+      }
+    }
+    v
+  }
+
+  def filter(f: D => Boolean): List[D] = cache().filter(f)
+
+  def find(f: D => Boolean): Option[D] = cache().find(f)
 
   private var refreshed: Boolean = false
   private var refreshing: Future[Unit] = Future.successful(())
 
   def refresh()(implicit ec: ExecutionContext): Future[Unit] = if (refreshing.isCompleted) {
-    scribe.info(s"Refreshing $name collection cached data")
     val now = System.currentTimeMillis()
     val query = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
     refreshing = query.batchSize(Int.MaxValue).results.map { list =>
       self.synchronized {
         _cache @= list.map(d => d._id -> d).toMap
-        scribe.info(s"Finished refreshing $name collection cached data in ${(System.currentTimeMillis() - now) / 1000.0} seconds")
+        scribe.info(s"Refreshed $name collection cached data (${list.length} items) in ${(System.currentTimeMillis() - now) / 1000.0} seconds")
         refreshed = true
       }
     }
@@ -57,7 +68,7 @@ class CachedCollection[D <: Document[D]](graph: Graph,
 
   def cached(id: Id[D]): Option[D] = {
     assert(refreshed, "Cannot be called until the collection has loaded for the first time")
-    cache().get(id)
+    cachedMap().get(id)
   }
 
   def one(id: Id[D]): D = cached(id).getOrElse(throw new RuntimeException(s"$id does not exist"))
@@ -100,26 +111,16 @@ class CachedCollection[D <: Document[D]](graph: Graph,
     Future.successful(documents.map(_ => insert))
   }
 
-  override def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
-                     (implicit ec: ExecutionContext): Future[Long] = throw new UnsupportedOperationException
-
-  override def updateAll(fieldAndValues: FieldAndValue[_]*)
-                        (implicit ec: ExecutionContext): Future[Long] = throw new UnsupportedOperationException
-
   override def batch(iterator: Iterator[D], batchSize: Int, upsert: Boolean, waitForSync: Boolean, counter: Int)
                     (implicit ec: ExecutionContext): Future[Int] = throw new UnsupportedOperationException
 
   override def get(id: Id[D])(implicit ec: ExecutionContext): Future[Option[D]] = verified {
-    Future.successful(cache().get(id))
+    Future.successful(cachedMap().get(id))
   }
 
   override def apply(id: Id[D])(implicit ec: ExecutionContext): Future[D] = verified {
-    Future.successful(cache()(id))
+    Future.successful(cachedMap()(id))
   }
-
-  override def query(query: Query): QueryBuilder[D] = throw new UnsupportedOperationException
-
-  override lazy val all: QueryBuilder[D] = throw new UnsupportedOperationException
 
   override def deleteOne(id: Id[D], waitForSync: Boolean, returnOld: Boolean, silent: Boolean)
                         (implicit ec: ExecutionContext): Future[Id[D]] = verified {

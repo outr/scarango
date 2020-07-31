@@ -199,8 +199,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(databaseName = "graphTest") {
-    val airports: Collection[Airport] = vertex[Airport]
-    val flights: Collection[Flight] = edge[Flight]
+    val airports: DocumentCollection[Airport] = vertex[Airport]
+    val flights: DocumentCollection[Flight] = edge[Flight]
     val airportSearch: View[Airport] = view(
       name = "airportSearch",
       collection = airports,

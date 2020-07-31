@@ -4,7 +4,7 @@ import io.circe.Json
 
 import scala.language.implicitConversions
 
-case class Value(json: Json)
+case class Value(json: Json, static: Boolean = false)
 
 object Value {
   implicit def string(value: String): Value = if (value != null) Value(Json.fromString(value)) else Value(Json.Null)
@@ -28,6 +28,8 @@ object Value {
   implicit def bigDecimals(value: Seq[BigDecimal]): Value = conv[BigDecimal](value, bigDecimal)
   implicit def id[T](value: Id[T]): Value = string(value._id)
   implicit def json(value: Json): Value = Value(value)
+
+  def static(value: String): Value = if (value != null) Value(Json.fromString(value), static = true) else Value(Json.Null, static = true)
 
   private def conv[T](seq: Seq[T], converter: T => Value): Value = {
     val values = seq.toList.map(converter).map(_.json)

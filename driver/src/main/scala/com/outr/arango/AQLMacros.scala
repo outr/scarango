@@ -1,5 +1,8 @@
 package com.outr.arango
 
+import com.outr.arango.query.SortDirection
+import io.youi.Unique
+
 import scala.annotation.compileTimeOnly
 import scala.reflect.macros.blackbox
 import scribe.Execution.global
@@ -150,7 +153,11 @@ object AQLMacros {
               } else if (vt <:< typeOf[Id[_]]) {
                 Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
-                Some(q"string($value.fieldName)")
+                argName = Unique(length = 8, characters = Unique.LettersLower)
+                Some(q"static($value.fieldName)")
+              } else if (vt <:< typeOf[(Field[_], SortDirection)]) {
+                argName = Unique(length = 8, characters = Unique.LettersLower)
+                Some(q"""static($value._1.fieldName + " " + $value._2)""")
               } else if (vt <:< typeOf[Analyzer]) {
                 Some(q"string($value.name)")
               } else if (vt <:< typeOf[Collection[_]]) {
@@ -193,7 +200,7 @@ object AQLMacros {
               import _root_.com.outr.arango.Value._
               import _root_.com.outr.arango.Query
 
-              Query($query, $argsMap)
+              Query($query, $argsMap).fix()
             """)
       }
       case _ => c.abort(c.enclosingPosition, "Bad usage of AQL interpolation.")

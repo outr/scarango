@@ -66,7 +66,7 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
       val monitor = db.api.db("databaseExample").wal.monitor(delay = 1.second, skipHistory = false)
       var first = Option.empty[WALOperations]
       var second = Option.empty[WALOperations]
-      val promise = Promise[Unit]
+      val promise = Promise[Unit]()
       var list = List.empty[WALOperation]
       monitor.attach { op =>
         list = op :: list

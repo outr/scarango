@@ -65,7 +65,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "insert two records in a transaction" in {
-      database.people(transaction).insert(List(
+      database.people.withTransaction(transaction).insert(List(
         Person("Charles", 35),
         Person("Donna", 41)
       )).map { _ =>
@@ -108,14 +108,14 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(databaseName = "advanced") {
-    val people: Collection[Person] = vertex[Person]
+    val people: DocumentCollection[Person] = vertex[Person]
   }
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
-    val name: Field[String] = Field[String]("name")
-    val age: Field[Int] = Field[Int]("age")
+    val name: Field[String] = field("name")
+    val age: Field[Int] = field("age")
 
     override def indexes: List[Index] = Nil
 

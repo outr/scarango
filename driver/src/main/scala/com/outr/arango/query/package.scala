@@ -167,6 +167,8 @@ package object query {
 
   def NEW: ReturnPart = ReturnPart.New
 
+  def LIMIT(offset: Int, limit: Int): Unit = add(Query(s"LIMIT $offset, $limit", Map.empty))
+
   def RETURN(part: ReturnPart): Unit = add(part.build())
 
   private def add(query: Query): Unit = {

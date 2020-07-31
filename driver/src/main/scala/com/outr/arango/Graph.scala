@@ -30,7 +30,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
+  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
 
   def wal: ArangoWriteAheadLog = arangoDatabase.wal
 
@@ -67,9 +67,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
 
-  def vertex[D <: Document[D]]: Collection[D] = macro GraphMacros.vertex[D]
-  def edge[D <: Document[D]]: Collection[D] = macro GraphMacros.edge[D]
-  def cached[D <: Document[D]]: CachedCollection[D] = macro GraphMacros.cached[D]
+  def vertex[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.vertex[D]
+  def edge[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.edge[D]
+  def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection)
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
                              includeAllFields: Boolean,
@@ -114,7 +114,10 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def truncate()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
     for {
-      _ <- Future.sequence(collections.map(_.truncate()))
+      _ <- Future.sequence(collections.flatMap {
+        case c: WritableCollection[_] => Some(c.truncate())
+        case _ => None
+      })
     } yield {
       ()
     }
@@ -175,7 +178,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   }
 
   private[arango] def add[D <: Document[D]](collection: Collection[D]): Unit = synchronized {
-    _collections = _collections ::: List(collection)
+    _collections = _collections.filterNot(_.name == collection.name) ::: List(collection)
   }
 
   private[arango] def add[D <: Document[D]](view: View[D]): Unit = synchronized {

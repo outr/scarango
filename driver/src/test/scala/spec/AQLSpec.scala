@@ -46,6 +46,18 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
       query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
     }
+    "interpolate a simple query with a dot-separated field" in {
+      val field = Field[String]("this.is.a.test")
+      val query = aql"FOR u IN users FILTER u.$field == ${"test"} RETURN u"
+      query.value should be("FOR u IN users FILTER u.this.is.a.test == @arg2 RETURN u")
+      query.args should be(Map("arg2" -> Value.string("test")))
+    }
+    "interpolate a simple query with a sort direction" in {
+      val field = Field[String]("this.is.a.test")
+      val query = aql"FOR u IN users SORT u.${field.desc} RETURN u"
+      query.args should be(Map.empty)
+      query.value should be("FOR u IN users SORT u.this.is.a.test DESC RETURN u")
+    }
     "merge two simple queries with args" in {
       val id = 123
       val name = "John Doe"
