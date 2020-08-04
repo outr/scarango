@@ -93,18 +93,26 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def init()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
     if (_initialized.compareAndSet(false, true)) {
-      arangoDB.init().flatMap { state =>
-        assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
-        doUpgrades(ec).map { _ =>
-          collections.foreach {
-            case cc: CachedCollection[_] => cc.refresh()
-            case _ => // Ignore non-cached
-          }
-        }.recover {
-          case t: Throwable => {
-            arangoDB._state := DatabaseState.Error(t)
-            throw t
-          }
+      (for {
+        // Initialize the database
+        state <- arangoDB.init()
+        // Verify it initialized successfully
+        _ = assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
+        // Execute upgrades
+        upgrades <- doUpgrades
+        // Load cached collections
+        _ <- Future.sequence(collections.map {
+          case cc: CachedCollection[_] => cc.refresh()
+          case _ => Future.successful(())
+        })
+        // Execute afterStartup for previously executed upgrades
+        _ = upgrades.foreach(_.afterStartup(this))
+      } yield {
+        ()
+      }).recover {
+        case t: Throwable => {
+          arangoDB._state := DatabaseState.Error(t)
+          throw t
         }
       }
     } else {
@@ -133,10 +141,10 @@ class Graph(val databaseName: String = ArangoDB.config.db,
       case exc: ArangoException if exc.error.errorCode == ArangoCode.ArangoCollectionNotFound => DatabaseVersion()    // Collection doesn't exist yet
     }
 
-  private def doUpgrades(implicit ec: ExecutionContext): Future[Unit] = {
+  private def doUpgrades(implicit ec: ExecutionContext): Future[List[DatabaseUpgrade]] = {
     version.flatMap { version =>
       val upgrades = versions.toList.filterNot(v => version.upgrades.contains(v.label) && !v.alwaysRun)
-      upgrade(version, upgrades, version.upgrades.isEmpty)
+      upgrade(version, upgrades, version.upgrades.isEmpty).map(_ => upgrades)
     }
   }
 

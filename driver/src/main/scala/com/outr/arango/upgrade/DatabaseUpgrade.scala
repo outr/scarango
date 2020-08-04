@@ -11,4 +11,6 @@ trait DatabaseUpgrade {
   def alwaysRun: Boolean = false
 
   def upgrade(graph: Graph): Future[Unit]
+
+  def afterStartup(graph: Graph): Future[Unit] = Future.successful(())
 }
