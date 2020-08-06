@@ -13,8 +13,8 @@ class QueryBuilderContext private() {
 
   def addQuery(query: Query): Unit = queries = query :: queries
 
-  def name(ref: Ref): String = ref match {
-    case NamedRef(name) => name
+  def name(ref: Ref): String = ref.refName match {
+    case Some(name) => name
     case _ => {
       refNames.get(ref) match {
         case Some(name) => name

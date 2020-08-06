@@ -24,6 +24,15 @@ trait Collection[D <: Document[D]] {
     arangoCollection.document.get(id, transactionId)(ec, model.serialization)
   }
 
+  def byIds(ids: Id[D]*)(implicit ec: ExecutionContext): Future[List[D]] = if (ids.nonEmpty) {
+    graph.query(
+      query = Query(s"FOR c IN $name FILTER c._id IN @ids RETURN c", Map("ids" -> Value.values(ids.map(Value.id)))),
+      transaction = transaction
+    ).as[D](model.serialization).batchSize(ids.length).results
+  } else {
+    Future.successful(Nil)
+  }
+
   def apply(id: Id[D])(implicit ec: ExecutionContext): Future[D] = {
     get(id).map(_.getOrElse(throw new RuntimeException(s"Unable to find $name by id: $id")))
   }

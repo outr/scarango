@@ -6,9 +6,17 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 import scala.language.experimental.macros
 
 case class Serialization[D](private val doc2Json: D => Json, private val json2Doc: Json => D) {
-  final def toJson(document: D): Json = Id.update(doc2Json(document))
+  final def toJson(document: D): Json = try {
+    Id.update(doc2Json(document))
+  } catch {
+    case t: Throwable => throw new RuntimeException(s"Failed to convert $document to JSON", t)
+  }
 
-  final def fromJson(json: Json): D = json2Doc(Id.update(json))
+  final def fromJson(json: Json): D = try {
+    json2Doc(Id.update(json))
+  } catch {
+    case t: Throwable => throw new RuntimeException(s"Failed to convert $json to object", t)
+  }
 
   lazy val decoder: Decoder[D] = new Decoder[D] {
     override def apply(c: HCursor): Result[D] = Right(fromJson(c.value))

@@ -106,7 +106,11 @@ class Graph(val databaseName: String = ArangoDB.config.db,
           case _ => Future.successful(())
         })
         // Execute afterStartup for previously executed upgrades
-        _ = upgrades.foreach(_.afterStartup(this))
+        _ = upgrades.foreach { upgrade =>
+          upgrade.afterStartup(this).failed.foreach { t =>
+            scribe.error(s"After Startup failed for ${upgrade.label}", t)
+          }
+        }
       } yield {
         ()
       }).recover {

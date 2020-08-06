@@ -21,9 +21,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (p)
       }
       query should be(Query(
-        """FOR arg1 IN people
-          |SORT arg1.age DESC
-          |RETURN arg1""".stripMargin, Map.empty))
+        """FOR p IN people
+          |SORT p.age DESC
+          |RETURN p""".stripMargin, Map.empty))
     }
     "build a query with a filter" in {
       val p = Person.ref
@@ -34,9 +34,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (p)
       }
       query should be(Query(
-        """FOR arg1 IN people
-          |FILTER arg1.age == @arg2 && arg1.name != @arg3
-          |RETURN arg1""".stripMargin, Map("arg2" -> 21, "arg3" -> "Adam")
+        """FOR p IN people
+          |FILTER p.age == @arg1 && p.name != @arg2
+          |RETURN p""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam")
       ))
     }
     "build an update query" in {
@@ -49,10 +49,10 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (NEW)
       }
       query should be(Query(
-        """FOR arg1 IN people
-          |FILTER arg1.age == @arg2 && arg1.name != @arg3
-          |UPDATE arg1 WITH {age: @arg4} IN people
-          |RETURN NEW""".stripMargin, Map("arg2" -> 21, "arg3" -> "Adam", "arg4" -> 22)))
+        """FOR p IN people
+          |FILTER p.age == @arg1 && p.name != @arg2
+          |UPDATE p WITH {age: @arg3} IN people
+          |RETURN NEW""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam", "arg3" -> 22)))
     }
     "build a query to return result count" in {
       val p = Person.ref
@@ -64,10 +64,10 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (count)
       }
       query should be(Query(
-        """FOR arg1 IN people
-          |FILTER arg1.age >= @arg2
+        """FOR p IN people
+          |FILTER p.age >= @arg1
           |COLLECT WITH COUNT INTO count
-          |RETURN count""".stripMargin, Map("arg2" -> 20)))
+          |RETURN count""".stripMargin, Map("arg1" -> 20)))
     }
   }
 
@@ -83,7 +83,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
 
     override def indexes: List[Index] = Nil
 
-    def ref: DocumentRef[Person, Person.type] = DocumentRef(this)
+    def ref: DocumentRef[Person, Person.type] = DocumentRef(this, Some("p"))
 
     override val collectionName: String = "people"
     override implicit val serialization: Serialization[Person] = Serialization.auto[Person]

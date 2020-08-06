@@ -15,7 +15,7 @@ trait QueryWritableCollection[D <: Document[D]] extends WritableCollection[D] {
 
   def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*)
             (implicit ec: ExecutionContext): Future[Long] = {
-    val v = DocumentRef[D, DocumentModel[D]](model)
+    val v = DocumentRef[D, DocumentModel[D]](model, None)
     val count = ref("count")
 
     val query = aql {
@@ -29,7 +29,7 @@ trait QueryWritableCollection[D <: Document[D]] extends WritableCollection[D] {
   }
 
   def updateAll(fieldAndValues: FieldAndValue[_]*)(implicit ec: ExecutionContext): Future[Long] = {
-    val v = DocumentRef[D, DocumentModel[D]](model)
+    val v = DocumentRef[D, DocumentModel[D]](model, None)
     val count = ref("count")
     val query = aql {
       FOR(v) IN this
