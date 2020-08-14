@@ -15,8 +15,9 @@ class GraphSpec extends AsyncWordSpec with Matchers {
     val doDrop: Boolean = false
 
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "initialize" in {
       database.init().map { _ =>

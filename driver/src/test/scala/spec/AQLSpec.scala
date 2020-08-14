@@ -15,8 +15,9 @@ class AQLSpec extends AsyncWordSpec with Matchers {
 
   "AQL" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "initialize successfully" in {
       db.init().map { state =>

@@ -9,8 +9,9 @@ import profig.Profig
 class DSLSpec extends AsyncWordSpec with Matchers {
   "DSL" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "build a simple query" in {
       val p = Person.ref

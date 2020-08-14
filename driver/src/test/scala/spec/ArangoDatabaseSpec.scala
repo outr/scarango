@@ -15,8 +15,9 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
 
   "ArangoDatabase" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "fail to initialize with bad password" in {
       val db = new ArangoDB(credentials = Some(Credentials("root", "bad")))

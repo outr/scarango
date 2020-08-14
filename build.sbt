@@ -26,7 +26,8 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.13.16"
+val youiVersion = "0.13.17-SNAPSHOT"
+val profigVersion = "3.0.2"
 val scalaTestVersion = "3.2.0-M4"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
@@ -75,6 +76,7 @@ lazy val driver = project.in(file("driver"))
     testOptions in Test += Tests.Argument("-oD"),
     parallelExecution in Test := false,
     libraryDependencies ++= Seq(
+      "com.outr" %% "profig-all" % profigVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )

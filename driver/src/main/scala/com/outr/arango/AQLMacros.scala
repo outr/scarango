@@ -2,6 +2,8 @@ package com.outr.arango
 
 import com.outr.arango.query.SortDirection
 import io.youi.Unique
+import profig._
+import profig.jdk._
 
 import scala.annotation.compileTimeOnly
 import scala.reflect.macros.blackbox
@@ -92,7 +94,7 @@ object AQLMacros {
     import c.universe._
 
     // Make sure that Profig is initialized
-    profig.Profig.loadDefaultsMacro()
+    Profig.initConfigurationBlocking()
 
     c.prefix.tree match {
       case Apply(_, List(Apply(_, rawParts))) => {

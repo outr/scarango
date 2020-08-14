@@ -12,8 +12,9 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
 
   "Advanced" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "initialize" in {
       database.init().map { _ =>
