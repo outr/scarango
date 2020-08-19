@@ -27,7 +27,7 @@ developers in ThisBuild := List(
 )
 
 val youiVersion = "0.13.17-SNAPSHOT"
-val profigVersion = "3.0.2"
+val profigVersion = "3.0.4"
 val scalaTestVersion = "3.2.0-M4"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
