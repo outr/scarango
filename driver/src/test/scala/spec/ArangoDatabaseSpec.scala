@@ -53,6 +53,7 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the WAL" in {
+      Thread.sleep(1000)
       db.api.db("databaseExample").wal.tail().flatMap { ops =>
         ops.operations.length should be(1)
         val op = ops.operations.head
