@@ -1,13 +1,16 @@
 package spec
 
-import com.outr.arango.{Document, DocumentCollection, DocumentModel, Field, Graph, Id, Index, Serialization}
+import com.outr.arango.{Document, DocumentCollection, DocumentModel, Field, Graph, Id, Index, Serialization, WriteAheadLogMonitor}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
+import scala.concurrent.duration._
 
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   "Materialized" should {
+    lazy val walMonitor = database.wal.monitor(delay = 250.millis)(scala.concurrent.ExecutionContext.global)
+
     val u1 = User("User 1", 21)
 
     "initialize configuration" in {
@@ -20,10 +23,27 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         succeed
       }
     }
+    "temporary hack to represent materialization" in {
+      val monitor = database.users.monitor(walMonitor)
+      monitor.attach { op =>
+        scribe.info(s"Operation: ${op._id} / ${op.collectionName} / ${op.`type`}")
+      }
+      monitor.started.map { _ =>
+        succeed
+      }
+    }
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
-        org.scalatest.concurrent.ScalaFutures.whenReady()
+        Thread.sleep(1000) // TODO: better support this
+        database.materializedUsers.all.results.map { list =>
+          list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+        }
       }
+    }
+    "cleanup" in {
+      walMonitor.stop()
+      Thread.sleep(1000)
+      database.drop().map(_ => succeed)
     }
   }
 

@@ -2,7 +2,7 @@ package com.outr.arango
 
 import com.outr.arango.transaction.Transaction
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait Collection[D <: Document[D]] {
   lazy val arangoCollection: ArangoCollection = graph.arangoDatabase.collection(name)
@@ -37,7 +37,11 @@ trait Collection[D <: Document[D]] {
     get(id).map(_.getOrElse(throw new RuntimeException(s"Unable to find $name by id: $id")))
   }
 
-  def monitor(monitor: WriteAheadLogMonitor): CollectionMonitor[D] = new CollectionMonitor[D](monitor, this)
+  def monitor(monitor: WriteAheadLogMonitor): CollectionMonitor[D] = {
+    val promise = Promise[Unit]
+    monitor.tailed.once(_ => promise.success(()))
+    new CollectionMonitor[D](monitor, this, promise.future)
+  }
 
   protected def addCollection(): Unit = graph.add(this)
 
