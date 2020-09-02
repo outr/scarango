@@ -10,9 +10,11 @@ case class Operation[D <: Document[D]](underlying: WALOperation, graph: Graph) {
 
   def `type`: OperationType = underlying.`type`
   lazy val _id: Option[Id[D]] = data._id
-  lazy val _key: Option[String] = _id.map(_._key)
-  lazy val collectionName: Option[String] = _id.map(_.collection)
-  lazy val collection: Option[Collection[D]] = collectionName.flatMap(n => graph.collections.find(_.name == n)).asInstanceOf[Option[Collection[D]]]
+  lazy val _key: Option[String] = data._key
+  lazy val collection: Option[Collection[D]] = underlying.collectionId.flatMap { cid =>
+    graph.collections.find(_.id == cid).asInstanceOf[Option[Collection[D]]]
+  }
+  lazy val collectionName: Option[String] = collection.map(_.name)
 
-  case class Data(_id: Option[Id[D]], _rev: Option[String])
+  case class Data(_id: Option[Id[D]], _key: Option[String], _rev: Option[String])
 }

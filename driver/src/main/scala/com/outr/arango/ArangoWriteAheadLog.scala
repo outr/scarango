@@ -6,7 +6,7 @@ import io.youi.util.Time
 import reactify.Channel
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
 
 class ArangoWriteAheadLog(client: HttpClient) {
@@ -60,6 +60,12 @@ class WriteAheadLogMonitor(delay: FiniteDuration, skipHistory: Boolean, failureH
   private var skipped: Boolean = false
 
   val tailed: Channel[WALOperations] = Channel[WALOperations]
+
+  def nextTick: Future[WALOperations] = {
+    val promise = Promise[WALOperations]()
+    tailed.once(promise.success)
+    promise.future
+  }
 
   private[arango] def run(future: Future[WALOperations])(implicit ec: ExecutionContext): Unit = {
     keepAlive = true

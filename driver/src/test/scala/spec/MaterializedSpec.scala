@@ -1,17 +1,44 @@
 package spec
 
-import com.outr.arango.{Document, DocumentCollection, DocumentModel, Field, Graph, Id, Index, Serialization, WriteAheadLogMonitor}
+import com.outr.arango.api.OperationType
+import com.outr.arango._
+import com.outr.arango.query._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
+
 import scala.concurrent.duration._
 
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   "Materialized" should {
-    lazy val walMonitor = database.wal.monitor(delay = 250.millis)(scala.concurrent.ExecutionContext.global)
+    val ec = scala.concurrent.ExecutionContext.global
+    lazy val walMonitor = database.wal.monitor(delay = 100.millis)(ec)
+    lazy val userMonitor = database.users.monitor(walMonitor)
+    lazy val locationMonitor = database.locations.monitor(walMonitor)
 
     val u1 = User("User 1", 21)
+    val l1 = Location(u1._id, "San Jose", "California")
+
+    def query(userIds: Query): Query = {
+      val query =
+        aqlu"""
+              FOR u IN ${database.users}
+              FILTER u._id IN userIds
+              LET l = (
+                FOR loc IN ${database.locations}
+                FILTER loc.${Location.userId} IN userIds
+                RETURN loc
+              )
+              INSERT {
+                _key: u._key,
+                ${MaterializedUser.name}: u.${User.name},
+                ${MaterializedUser.age}: u.${User.age},
+                ${MaterializedUser.locations}: l
+              } INTO ${database.materializedUsers} OPTIONS { overwrite: true, waitForSync: true }
+            """
+      userIds + query
+    }
 
     "initialize configuration" in {
       Profig.initConfiguration().map { _ =>
@@ -24,26 +51,92 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "temporary hack to represent materialization" in {
-      val monitor = database.users.monitor(walMonitor)
-      monitor.attach { op =>
-        scribe.info(s"Operation: ${op._id} / ${op.collectionName} / ${op.`type`}")
+      userMonitor.attach { op =>
+        op._key.foreach { userKey =>
+          val userId = User.id(userKey)
+          if (op.`type` == OperationType.InsertReplaceDocument) {
+            val userIds = aqlu"LET userIds = [$userId]"
+            database.query(query(userIds)).update(ec)
+          } else if (op.`type` == OperationType.RemoveDocument) {
+            database.materializedUsers.deleteOne(MaterializedUser.id(userId.value))
+          }
+        }
       }
-      monitor.started.map { _ =>
-        succeed
+      locationMonitor.attach { op =>
+        op._key.foreach { locationKey =>
+          val locationId = Location.id(locationKey)
+          if (op.`type` == OperationType.InsertReplaceDocument) {
+            val userIds =
+              aqlu"""
+                     LET newLoc = DOCUMENT($locationId)
+                     LET userIds = [newLoc.userId]
+                  """
+            database.query(query(userIds)).update(ec)
+          } else if (op.`type` == OperationType.RemoveDocument) {
+            val userIds =
+              aqlu"""
+                     LET userIds = (
+                      FOR m IN ${database.materializedUsers}
+                      FILTER $locationId IN m.locations[*]._id
+                      RETURN CONCAT('users/', m._key)
+                    )
+                  """
+            database.query(query(userIds)).update(ec)
+          }
+        }
+      }
+      walMonitor.nextTick.flatMap { _ =>
+        walMonitor.nextTick.map { _ =>
+          succeed
+        }
       }
     }
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
-        Thread.sleep(1000) // TODO: better support this
-        database.materializedUsers.all.results.map { list =>
-          list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+        walMonitor.nextTick.flatMap { _ =>
+          database.materializedUsers.all.results.map { list =>
+            list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+          }
+        }
+      }
+    }
+    "insert a location and verify it was added to the materialized" in {
+      database.locations.insertOne(l1).flatMap { _ =>
+        walMonitor.nextTick.flatMap { _ =>
+          database.materializedUsers.all.results.map { list =>
+            list should be(List(MaterializedUser(u1.name, u1.age, List(l1), MaterializedUser.id(u1._id.value))))
+          }
+        }
+      }
+    }
+    "delete a location and verify it was deleted from the materialized" in {
+      database.locations.deleteOne(l1._id).flatMap { _ =>
+        walMonitor.nextTick.flatMap { _ =>
+          database.materializedUsers.all.results.map { list =>
+            list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+          }
+        }
+      }
+    }
+    // TODO: Add another user
+    "delete a user and verify it was deleted from materialized" in {
+      database.users.deleteOne(u1._id).flatMap { _ =>
+        walMonitor.nextTick.flatMap { _ =>
+          database.materializedUsers.all.results.map { list =>
+            list should be(Nil)
+          }
         }
       }
     }
     "cleanup" in {
+      val nextTick = walMonitor.nextTick
       walMonitor.stop()
-      Thread.sleep(1000)
-      database.drop().map(_ => succeed)
+      for {
+        _ <- nextTick
+        _ <- database.drop()
+      } yield {
+        succeed
+      }
     }
   }
 
