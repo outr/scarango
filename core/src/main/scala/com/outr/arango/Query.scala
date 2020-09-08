@@ -9,11 +9,21 @@ case class Query(value: String, args: Map[String, Value], fixed: Boolean = false
     var updatedValue = value
     val updatedArgs = args.flatMap {
       case (k, v) if v.static => {
-        updatedValue = updatedValue.replace(s"@$k", v.json.asString.getOrElse(throw new RuntimeException(s"Cannot expand special: ${v.json}")))
+        val key = if (v.excludeAt) {
+          k
+        } else {
+          s"@$k"
+        }
+        updatedValue = updatedValue.replace(key, v.json.asString.getOrElse(throw new RuntimeException(s"Cannot expand special: ${v.json}")))
         None
       }
       case (k, v) if v.json == Json.Null => {
-        updatedValue = updatedValue.replace(s"@$k", "null")
+        val key = if (v.excludeAt) {
+          k
+        } else {
+          s"@$k"
+        }
+        updatedValue = updatedValue.replace(key, "null")
         None
       }
       case (k, v) => Some((k, v))

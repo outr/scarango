@@ -85,6 +85,8 @@ object AQLMacros {
       (q"string($value.name)", true)
     } else if (vt <:< typeOf[View[_]]) {
       (q"string($value.name)", true)
+    } else if (vt <:< typeOf[NamedRef]) {
+      (q"string($value.name)", true)
     } else {
       n(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
     }
@@ -106,6 +108,7 @@ object AQLMacros {
           case ((raw, _), index) => {
             if (index > 0) {
               var special = false
+              var excludeAt = false
               var argName = s"arg$index"
               val value = args(index - 1)
               val vt = value.actualType
@@ -168,6 +171,9 @@ object AQLMacros {
               } else if (vt <:< typeOf[View[_]]) {
                 special = true
                 Some(q"string($value.name)")
+              } else if (vt <:< typeOf[NamedRef]) {
+                excludeAt = true
+                Some(q"""static($value.name, true)""")
               } else {
                 Some(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
               }
@@ -175,7 +181,10 @@ object AQLMacros {
                 argName = s"@$argName"
               }
               queryArg.foreach { arg =>
-                b.append(s"@$argName")
+                if (!excludeAt) {
+                  b.append('@')
+                }
+                b.append(argName)
                 argsMap += argName -> c.Expr[Value](arg)
               }
             }
