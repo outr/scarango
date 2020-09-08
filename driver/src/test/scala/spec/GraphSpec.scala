@@ -2,16 +2,17 @@ package spec
 
 import com.outr.arango._
 import com.outr.arango.query._
+import com.outr.arango.upgrade.DatabaseUpgrade
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
 import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with Matchers {
   "Graph" should {
-    val doImport: Boolean = false
     val doDrop: Boolean = false
 
     "initialize configuration" in {
@@ -20,60 +21,13 @@ class GraphSpec extends AsyncWordSpec with Matchers {
       }
     }
     "initialize" in {
+      database.register(DataImportUpgrade)
       database.init().map { _ =>
         succeed
       }
     }
     "have two collections" in {
       database.collections.map(_.name).toSet should be(Set("backingStore", "airports", "flights"))
-    }
-    "import sample airport data" in {
-      if (doImport) {
-        val airports = csvToIterator("airports.csv").map { d =>
-          Airport(
-            name = d(1),
-            city = d(2),
-            state = d(3),
-            country = d(4),
-            lat = d(5).toDouble,
-            long = d(6).toDouble,
-            vip = d(7).toBoolean,
-            _id = Airport.id(d(0))
-          )
-        }
-        database.airports.batch(airports).map { inserted =>
-          inserted should be(3375)
-        }
-      } else {
-        succeed
-      }
-    }
-    "import sample flight data" in {
-      if (doImport) {
-        val flights = csvToIterator("flights.csv").map { d =>
-          Flight(
-            _from = Airport.id(d(0)),
-            _to = Airport.id(d(1)),
-            year = d(2).toInt,
-            month = d(3).toInt,
-            day = d(4).toInt,
-            dayOfWeek = d(5).toInt,
-            depTime = d(6).toInt,
-            arrTime = d(7).toInt,
-            depTimeUTC = d(8),
-            arrTimeUTC = d(9),
-            uniqueCarrier = d(10),
-            flightNum = d(11).toInt,
-            tailNum = d(12),
-            distance = d(13).toInt
-          )
-        }
-        database.flights.batch(flights).map { inserted =>
-          inserted should be(286463)
-        }
-      } else {
-        succeed
-      }
     }
     "query VIP airports" in {
       val query =
@@ -253,4 +207,54 @@ class GraphSpec extends AsyncWordSpec with Matchers {
   }
 
   case class AirportName(fullName: String)
+
+  object DataImportUpgrade extends DatabaseUpgrade {
+    override def applyToNew: Boolean = true
+    override def blockStartup: Boolean = true
+
+    override def upgrade(graph: Graph): Future[Unit] = for {
+      _ <- {
+        val airports = csvToIterator("airports.csv").map { d =>
+          Airport(
+            name = d(1),
+            city = d(2),
+            state = d(3),
+            country = d(4),
+            lat = d(5).toDouble,
+            long = d(6).toDouble,
+            vip = d(7).toBoolean,
+            _id = Airport.id(d(0))
+          )
+        }
+        database.airports.batch(airports).map { inserted =>
+          inserted should be(3375)
+        }
+      }
+      _ <- {
+        val flights = csvToIterator("flights.csv").map { d =>
+          Flight(
+            _from = Airport.id(d(0)),
+            _to = Airport.id(d(1)),
+            year = d(2).toInt,
+            month = d(3).toInt,
+            day = d(4).toInt,
+            dayOfWeek = d(5).toInt,
+            depTime = d(6).toInt,
+            arrTime = d(7).toInt,
+            depTimeUTC = d(8),
+            arrTimeUTC = d(9),
+            uniqueCarrier = d(10),
+            flightNum = d(11).toInt,
+            tailNum = d(12),
+            distance = d(13).toInt
+          )
+        }
+        database.flights.batch(flights).map { inserted =>
+          inserted should be(286463)
+        }
+      }
+    } yield {
+      ()
+    }
+  }
 }
