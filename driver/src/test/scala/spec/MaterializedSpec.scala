@@ -20,14 +20,16 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val u1 = User("User 1", 21)
     val l1 = Location(u1._id, "San Jose", "California")
 
-    def query(userIds: Query): Query = {
+    def query(ids: NamedRef => Query): Query = {
+      val ref = NamedRef("$ids")
+      val preQuery = ids(ref)
       val query =
         aqlu"""
               FOR u IN ${database.users}
-              FILTER u._id IN userIds
+              FILTER u._id IN $ref
               LET l = (
                 FOR loc IN ${database.locations}
-                FILTER loc.${Location.userId} IN userIds
+                FILTER loc.${Location.userId} IN $ref
                 RETURN loc
               )
               INSERT {
@@ -37,7 +39,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
                 ${MaterializedUser.locations}: l
               } INTO ${database.materializedUsers} OPTIONS { overwrite: true, waitForSync: true }
             """
-      userIds + query
+      preQuery + query
     }
 
     "initialize configuration" in {
@@ -55,8 +57,10 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         op._key.foreach { userKey =>
           val userId = User.id(userKey)
           if (op.`type` == OperationType.InsertReplaceDocument) {
-            val userIds = aqlu"LET userIds = [$userId]"
-            database.query(query(userIds)).update(ec)
+            val q = query { ref =>
+              aqlu"LET $ref = [$userId]"
+            }
+            database.query(q).update(ec)
           } else if (op.`type` == OperationType.RemoveDocument) {
             database.materializedUsers.deleteOne(MaterializedUser.id(userId.value))
           }
@@ -66,22 +70,21 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         op._key.foreach { locationKey =>
           val locationId = Location.id(locationKey)
           if (op.`type` == OperationType.InsertReplaceDocument) {
-            val userIds =
-              aqlu"""
-                     LET newLoc = DOCUMENT($locationId)
-                     LET userIds = [newLoc.userId]
-                  """
-            database.query(query(userIds)).update(ec)
+            val q = query { ref =>
+              aqlu"LET $ref = [DOCUMENT($locationId).userId]"
+            }
+            database.query(q).update(ec)
           } else if (op.`type` == OperationType.RemoveDocument) {
-            val userIds =
+            val q = query { ref =>
               aqlu"""
-                     LET userIds = (
-                      FOR m IN ${database.materializedUsers}
-                      FILTER $locationId IN m.locations[*]._id
-                      RETURN CONCAT('users/', m._key)
-                    )
+                     LET $ref = (
+                       FOR m in ${database.materializedUsers}
+                       FILTER $locationId IN m.locations[*]._id
+                       RETURN CONCAT('users/', m._key)
+                     )
                   """
-            database.query(query(userIds)).update(ec)
+            }
+            database.query(q).update(ec)
           }
         }
       }
