@@ -8,14 +8,11 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
-import scala.concurrent.duration._
-
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   "Materialized" should {
     val ec = scribe.Execution.global
-    lazy val walMonitor = database.wal.monitor(delay = 100.millis)(ec)
-    lazy val userMonitor = database.users.monitor(walMonitor)
-    lazy val locationMonitor = database.locations.monitor(walMonitor)
+    lazy val userMonitor = database.monitor(database.users)
+    lazy val locationMonitor = database.monitor(database.locations)
 
     val u1 = User("User 1", 21)
     val l1 = Location(u1._id, "San Jose", "California")
@@ -88,15 +85,15 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
           }
         }
       }
-      walMonitor.nextTick.flatMap { _ =>
-        walMonitor.nextTick.map { _ =>
+      database.monitor.nextTick.flatMap { _ =>
+        database.monitor.nextTick.map { _ =>
           succeed
         }
       }
     }
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
-        walMonitor.nextTick.flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
           database.materializedUsers.all.results.map { list =>
             list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
           }
@@ -105,7 +102,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     }
     "insert a location and verify it was added to the materialized" in {
       database.locations.insertOne(l1).flatMap { _ =>
-        walMonitor.nextTick.flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
           database.materializedUsers.all.results.map { list =>
             list should be(List(MaterializedUser(u1.name, u1.age, List(l1), MaterializedUser.id(u1._id.value))))
           }
@@ -114,7 +111,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     }
     "delete a location and verify it was deleted from the materialized" in {
       database.locations.deleteOne(l1._id).flatMap { _ =>
-        walMonitor.nextTick.flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
           database.materializedUsers.all.results.map { list =>
             list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
           }
@@ -124,7 +121,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     // TODO: Add another user
     "delete a user and verify it was deleted from materialized" in {
       database.users.deleteOne(u1._id).flatMap { _ =>
-        walMonitor.nextTick.flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
           database.materializedUsers.all.results.map { list =>
             list should be(Nil)
           }
@@ -132,8 +129,8 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "cleanup" in {
-      val nextTick = walMonitor.nextTick
-      walMonitor.stop()
+      val nextTick = database.monitor.nextTick
+      database.monitor.stop()
       for {
         _ <- nextTick
         _ <- database.drop()
@@ -143,7 +140,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     }
   }
 
-  object database extends Graph("materializedSpec") {
+  object database extends Graph("materializedSpec") with MonitoredSupport {
     val users: DocumentCollection[User] = vertex[User]
     val locations: DocumentCollection[Location] = vertex[Location]
     val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
