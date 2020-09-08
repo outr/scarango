@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   "Materialized" should {
-    val ec = scala.concurrent.ExecutionContext.global
+    val ec = scribe.Execution.global
     lazy val walMonitor = database.wal.monitor(delay = 100.millis)(ec)
     lazy val userMonitor = database.users.monitor(walMonitor)
     lazy val locationMonitor = database.locations.monitor(walMonitor)
@@ -37,7 +37,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
                 ${MaterializedUser.name}: u.${User.name},
                 ${MaterializedUser.age}: u.${User.age},
                 ${MaterializedUser.locations}: l
-              } INTO ${database.materializedUsers} OPTIONS { overwrite: true, waitForSync: true }
+              } INTO ${database.materializedUsers} OPTIONS { overwrite: true }
             """
       preQuery + query
     }
