@@ -15,7 +15,7 @@ class WriteAheadLogMonitor(delay: FiniteDuration, skipHistory: Boolean = true, f
   private var keepAlive = false
   private var last: Option[WALOperations] = None
   private var from: Long = 0L
-  private var skipped: Boolean = false
+  private var current: Future[Unit] = Future.successful(())
 
   val tailed: Channel[WALOperations] = Channel[WALOperations]
 
@@ -28,13 +28,12 @@ class WriteAheadLogMonitor(delay: FiniteDuration, skipHistory: Boolean = true, f
   private[arango] def run(future: Future[WALOperations])(implicit ec: ExecutionContext): Unit = {
     keepAlive = true
 
+    current = future.map(_ => ())
     future.onComplete { complete =>
       val d = complete match {
         case Success(operations) => try {
-          if (skipHistory && !skipped) {
-            if (operations.lastIncluded == 0L) {
-              skipped = true
-            }
+          if (skipHistory && !operations.fromPresent) {
+            // Skip
           } else {
             operations.operations.foreach(static)
           }
@@ -49,12 +48,15 @@ class WriteAheadLogMonitor(delay: FiniteDuration, skipHistory: Boolean = true, f
       }
       d match {
         case Some(delay) if keepAlive => last.foreach { ops =>
-          Time.delay(delay).foreach(_ => run(ops.tail(from)))
+          current = Time.delay(delay).map(_ => run(ops.tail(from)))
         }
         case _ => // Error or keepAlive caused monitor to stop
       }
     }
   }
 
-  def stop(): Unit = keepAlive = false
+  def stop(): Future[Unit] = {
+    keepAlive = false
+    current
+  }
 }

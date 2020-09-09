@@ -25,6 +25,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
             httpClient: HttpClient = HttpClient) {
   private var _collections: List[Collection[_]] = Nil
   private var _views: List[View[_]] = Nil
+  private var _initializations: List[() => Future[Unit]] = Nil
   private val _initialized = new AtomicBoolean(false)
   private var versions = ListBuffer.empty[DatabaseUpgrade]
 
@@ -105,6 +106,8 @@ class Graph(val databaseName: String = ArangoDB.config.db,
           case cc: CachedCollection[_] => cc.refresh()
           case _ => Future.successful(())
         })
+        // Load initialize tasks
+        _ <- Future.sequence(_initializations.map(_()))
         // Execute afterStartup for previously executed upgrades
         _ = upgrades.foreach { upgrade =>
           upgrade.afterStartup(this).failed.foreach { t =>
@@ -195,5 +198,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   private[arango] def add[D <: Document[D]](view: View[D]): Unit = synchronized {
     _views = _views ::: List(view)
+  }
+
+  private[arango] def add(initialization: () => Future[Unit]): Unit = synchronized {
+    _initializations = _initializations ::: List(initialization)
   }
 }

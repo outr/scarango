@@ -49,7 +49,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         succeed
       }
     }
-    "temporary hack to represent materialization" in {
+    /*"temporary hack to represent materialization" in {
       userMonitor.attach { op =>
         op._key.foreach { userKey =>
           val userId = User.id(userKey)
@@ -90,7 +90,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
           succeed
         }
       }
-    }
+    }*/
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
@@ -129,10 +129,8 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "cleanup" in {
-      val nextTick = database.monitor.nextTick
-      database.monitor.stop()
       for {
-        _ <- nextTick
+        _ <- database.monitor.stop()
         _ <- database.drop()
       } yield {
         succeed
@@ -144,6 +142,37 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val users: DocumentCollection[User] = vertex[User]
     val locations: DocumentCollection[Location] = vertex[Location]
     val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
+    val materialized: MaterializedBuilder[User, MaterializedUser] = users
+      .materialized(
+        refs => aqlu"""
+              FOR u IN ${database.users}
+              FILTER u._id IN ${refs.ids}
+              LET l = (
+                FOR loc IN ${database.locations}
+                FILTER loc.${Location.userId} IN ${refs.ids}
+                RETURN loc
+              )
+              LET ${refs.updatedRef} = {
+                _key: u._key,
+                ${MaterializedUser.name}: u.${User.name},
+                ${MaterializedUser.age}: u.${User.age},
+                ${MaterializedUser.locations}: l
+              }
+            """
+      )
+      .into(materializedUsers)
+      .and(locations) { getRefs =>
+        aqlu"LET ${getRefs.ids} = [DOCUMENT(${getRefs.dependencyId}).userId]"
+      } { getRefs =>
+        aqlu"""
+               LET ${getRefs.ids} = (
+                 FOR m in ${database.materializedUsers}
+                 FILTER ${getRefs.dependencyId} IN m.locations[*]._id
+                 RETURN CONCAT('users/', m._key)
+               )
+            """
+      }
+      .build()
 //    val materializedUsers: DocumentCollection[MaterializedUser] = materialized[MaterializedUser](
 //      User,
 //      MaterializedUser.name -> User.name,
