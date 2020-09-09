@@ -49,48 +49,6 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         succeed
       }
     }
-    /*"temporary hack to represent materialization" in {
-      userMonitor.attach { op =>
-        op._key.foreach { userKey =>
-          val userId = User.id(userKey)
-          if (op.`type` == OperationType.InsertReplaceDocument) {
-            val q = query { ref =>
-              aqlu"LET $ref = [$userId]"
-            }
-            database.query(q).update(ec)
-          } else if (op.`type` == OperationType.RemoveDocument) {
-            database.materializedUsers.deleteOne(MaterializedUser.id(userId.value))
-          }
-        }
-      }
-      locationMonitor.attach { op =>
-        op._key.foreach { locationKey =>
-          val locationId = Location.id(locationKey)
-          if (op.`type` == OperationType.InsertReplaceDocument) {
-            val q = query { ref =>
-              aqlu"LET $ref = [DOCUMENT($locationId).userId]"
-            }
-            database.query(q).update(ec)
-          } else if (op.`type` == OperationType.RemoveDocument) {
-            val q = query { ref =>
-              aqlu"""
-                     LET $ref = (
-                       FOR m in ${database.materializedUsers}
-                       FILTER $locationId IN m.locations[*]._id
-                       RETURN CONCAT('users/', m._key)
-                     )
-                  """
-            }
-            database.query(q).update(ec)
-          }
-        }
-      }
-      database.monitor.nextTick.flatMap { _ =>
-        database.monitor.nextTick.map { _ =>
-          succeed
-        }
-      }
-    }*/
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
