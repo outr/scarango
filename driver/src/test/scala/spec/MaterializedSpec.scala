@@ -100,7 +100,8 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val users: DocumentCollection[User] = vertex[User]
     val locations: DocumentCollection[Location] = vertex[Location]
     val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
-    val materialized: MaterializedBuilder[User, MaterializedUser] = users
+
+    users
       .materialized(
         refs => aqlu"""
               FOR u IN ${database.users}
@@ -131,6 +132,9 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
             """
       }
       .build()
+
+//    materialized(database.users -> database.materializedUsers)
+
 //    val materializedUsers: DocumentCollection[MaterializedUser] = materialized[MaterializedUser](
 //      User,
 //      MaterializedUser.name -> User.name,

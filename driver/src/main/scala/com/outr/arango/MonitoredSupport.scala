@@ -38,6 +38,21 @@ trait MonitoredSupport {
     }
   }
 
+  def materialized[Base <: Document[Base], Into <: Document[Into]](baseInto: (Collection[Base], Collection[Into])): Unit = {
+    val (base, into) = baseInto
+    val baseRef = NamedRef("$base")
+    val updateQuery = (refs: UpdateReferences) =>
+      aqlu"""
+             FOR $baseRef IN $base
+             FILTER $baseRef._id IN ${refs.ids}
+             LET ${refs.updatedRef} = {
+               _key: $baseRef._key,
+               // TODO: mappings
+             }
+          """
+
+  }
+
   case class MaterializedBuilderPart[Base <: Document[Base]](baseCollection: Collection[Base], updateQuery: UpdateReferences => Query) {
     def into[Into <: Document[Into]](collection: WritableCollection[Into]): MaterializedBuilder[Base, Into] = {
       MaterializedBuilder(MonitoredSupport.this, baseCollection, updateQuery, collection)
