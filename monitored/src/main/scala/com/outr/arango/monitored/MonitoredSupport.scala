@@ -1,10 +1,13 @@
-package com.outr.arango
+package com.outr.arango.monitored
 
+import com.outr.arango._
 import com.outr.arango.api.OperationType
 import com.outr.arango.query._
+import io.youi.Unique
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 
 trait MonitoredSupport {
   this: Graph =>
@@ -38,19 +41,75 @@ trait MonitoredSupport {
     }
   }
 
-  def materialized[Base <: Document[Base], Into <: Document[Into]](baseInto: (Collection[Base], Collection[Into])): Unit = {
+  case class MaterializedPart(updateQueryPart: (NamedRef, UpdateReferences) => Query, references: List[Reference[_ <: Document[_]]])
+
+  implicit def fieldTupleMapping[T](tuple: (Field[T], Field[T])): MaterializedPart = {
+    val (f1, f2) = tuple
+    MaterializedPart(
+      updateQueryPart = (baseRef, _) => aqlu"$baseRef.$f2: $f1,",
+      references = Nil
+    )
+  }
+
+  def one2Many[D <: Document[D], Base](collection: Collection[D],
+                                       baseIdRef: Field[Id[Base]],
+                                       field: Field[D]): MaterializedPart = {
+    val collectionRef = NamedRef(s"$$coll_${field.fieldName}")
+    val reference = Reference(
+      collection = collection,
+      addedQuery = (refs: GetReferences[D]) => {
+        aqlu"LET ${refs.ids} = [DOCUMENT(${refs.dependencyId}).$baseIdRef]"
+      },
+      removedQuery = (refs: GetReferences[D]) => {
+        val subQuery = NamedRef(s"$$sub${Unique(length = 8)}")
+        aqlu"""
+               LET ${refs.ids} = (
+                 FOR $subQuery IN ${refs.into}
+                 FILTER ${refs.dependencyId} IN $subQuery.$field[*]._id
+                 RETURN CONCAT(${refs.base.name + "/"}, $subQuery._key)
+               )
+            """
+      }
+    )
+    MaterializedPart(
+      updateQueryPart = (baseRef, refs) =>
+        aqlu"""
+               $baseRef.field: (
+                  FOR $collectionRef IN $collection
+                  FILTER $collectionRef.$baseIdRef IN ${refs.ids}
+                  RETURN $collectionRef
+               )
+            """,
+      references = List(reference)
+    )
+  }
+
+  def materialized[Base <: Document[Base], Into <: Document[Into]](baseInto: (Collection[Base], WritableCollection[Into]),
+                                                                   parts: MaterializedPart*): Unit = {
     val (base, into) = baseInto
     val baseRef = NamedRef("$base")
-    val updateQuery = (refs: UpdateReferences) =>
-      aqlu"""
+    val updateQuery = (refs: UpdateReferences) => {
+      val pre =
+        aqlu"""
              FOR $baseRef IN $base
              FILTER $baseRef._id IN ${refs.ids}
              LET ${refs.updatedRef} = {
-               _key: $baseRef._key,
-               // TODO: mappings
-             }
           """
+      val post =
+        aqlu"""
+                 _key: $baseRef._key
+               }
+            """
+      Query.merge(List(pre) ::: parts.toList.map(_.updateQueryPart(baseRef, refs)) ::: List(post))
+    }
 
+    MaterializedBuilder[Base, Into](
+      graph = this,
+      baseCollection = base,
+      updateQuery = updateQuery,
+      into = into,
+      references = parts.flatMap(_.references).toList
+    ).build()
   }
 
   case class MaterializedBuilderPart[Base <: Document[Base]](baseCollection: Collection[Base], updateQuery: UpdateReferences => Query) {
@@ -62,7 +121,7 @@ trait MonitoredSupport {
 
 case class UpdateReferences(ids: NamedRef, updatedRef: NamedRef)
 
-case class GetReferences[D <: Document[D]](ids: NamedRef, dependencyId: Id[D])
+case class GetReferences[D <: Document[D]](ids: NamedRef, dependencyId: Id[D], base: Collection[_ <: Document[_]], into: WritableCollection[_ <: Document[_]])
 
 case class Reference[D <: Document[D]](collection: Collection[D],
                                        addedQuery: GetReferences[D] => Query,
@@ -73,11 +132,11 @@ case class Reference[D <: Document[D]](collection: Collection[D],
       op._id.foreach { id =>
         if (op.`type` == OperationType.InsertReplaceDocument) {
           val ids = NamedRef("$ids")
-          val refQuery = addedQuery(GetReferences(ids, id))
+          val refQuery = addedQuery(GetReferences(ids, id, builder.baseCollection, builder.into))
           builder.update(ids, refQuery)
         } else if (op.`type` == OperationType.RemoveDocument) {
           val ids = NamedRef("$ids")
-          val refQuery = removedQuery(GetReferences(ids, id))
+          val refQuery = removedQuery(GetReferences(ids, id, builder.baseCollection, builder.into))
           builder.update(ids, refQuery)
         }
       }
@@ -124,10 +183,15 @@ case class MaterializedBuilder[Base <: Document[Base], Into <: Document[Into]](g
     val q = refQuery + updateQuery(UpdateReferences(ids, updatedRef)) +
       aqlu"""
             INSERT $updatedRef INTO $into OPTIONS { overwrite: true }
-            RETURN u._id
+            RETURN $$base._id
           """
-    graph.query(q).as[Id[Base]].results(graph.monitor.ec).map { ids =>
-      scribe.debug(s"Updated: $ids")
+    scribe.info(s"QueryUpdate: $q")
+    val future = graph.query(q).as[Id[Base]].results(graph.monitor.ec).map { ids =>
+      scribe.info(s"Updated: $ids")
     }(graph.monitor.ec)
+    future.failed.foreach { t =>
+      scribe.error(t)
+    }(graph.monitor.ec)
+    future
   }
 }

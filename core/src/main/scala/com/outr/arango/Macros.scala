@@ -16,6 +16,7 @@ object Macros {
          import _root_.io.circe.Json
 
          Serialization[$d](
+           name = ${d.tpe.toString},
            doc2Json = (d: $d) => JsonUtil.toJson[$d](d),
            json2Doc = (j: Json) => JsonUtil.fromJson[$d](j)
          )

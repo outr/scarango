@@ -5,17 +5,17 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 
 import scala.language.experimental.macros
 
-case class Serialization[D](private val doc2Json: D => Json, private val json2Doc: Json => D) {
+case class Serialization[D](name: String, private val doc2Json: D => Json, private val json2Doc: Json => D) {
   final def toJson(document: D): Json = try {
     Id.update(doc2Json(document))
   } catch {
-    case t: Throwable => throw new RuntimeException(s"Failed to convert $document to JSON", t)
+    case t: Throwable => throw new RuntimeException(s"Failed to convert $document to JSON ($name)", t)
   }
 
   final def fromJson(json: Json): D = try {
     json2Doc(Id.update(json))
   } catch {
-    case t: Throwable => throw new RuntimeException(s"Failed to convert $json to object", t)
+    case t: Throwable => throw new RuntimeException(s"Failed to convert $json to $name", t)
   }
 
   lazy val decoder: Decoder[D] = new Decoder[D] {
@@ -25,12 +25,12 @@ case class Serialization[D](private val doc2Json: D => Json, private val json2Do
 
 object Serialization {
   def auto[D]: Serialization[D] = macro Macros.serializationAuto[D]
-  def create[D](encoder: Encoder[D], decoder: Decoder[D]): Serialization[D] = {
+  def create[D](name: String, encoder: Encoder[D], decoder: Decoder[D]): Serialization[D] = {
     val doc2Json = (d: D) => encoder(d)
     val json2Doc = (json: Json) => decoder.decodeJson(json) match {
       case Left(df) => throw df
       case Right(d) => d
     }
-    Serialization[D](doc2Json, json2Doc)
+    Serialization[D](name, doc2Json, json2Doc)
   }
 }

@@ -39,7 +39,7 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(api, coreJS, coreJVM, driver)
+  .aggregate(api, coreJS, coreJVM, driver, monitored)
   .settings(
     publish := {},
     publishLocal := {}
@@ -81,6 +81,19 @@ lazy val driver = project.in(file("driver"))
     )
   )
   .dependsOn(coreJVM, api)
+
+lazy val monitored = project.in(file("monitored"))
+  .settings(
+    name := "scarango-monitored",
+    fork := true,
+    testGrouping in Test := groupByName((definedTests in Test).value),
+    testOptions in Test += Tests.Argument("-oD"),
+    parallelExecution in Test := false,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    )
+  )
+  .dependsOn(driver)
 
 lazy val plugin = project.in(file("plugin"))
   .settings(

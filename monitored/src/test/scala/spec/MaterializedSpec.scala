@@ -1,7 +1,7 @@
 package spec
 
-import com.outr.arango.api.OperationType
 import com.outr.arango._
+import com.outr.arango.monitored.MonitoredSupport
 import com.outr.arango.query._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
@@ -101,7 +101,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val locations: DocumentCollection[Location] = vertex[Location]
     val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
 
-    users
+    /*users
       .materialized(
         refs => aqlu"""
               FOR u IN ${database.users}
@@ -131,9 +131,14 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
                )
             """
       }
-      .build()
+      .build()*/
 
-//    materialized(database.users -> database.materializedUsers)
+    materialized(
+      users -> materializedUsers,
+      User.name -> MaterializedUser.name,
+      User.age -> MaterializedUser.age,
+      one2Many(locations, Location.userId, MaterializedUser.locations)
+    )
 
 //    val materializedUsers: DocumentCollection[MaterializedUser] = materialized[MaterializedUser](
 //      User,
