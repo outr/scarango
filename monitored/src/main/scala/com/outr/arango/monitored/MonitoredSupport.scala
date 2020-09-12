@@ -41,47 +41,57 @@ trait MonitoredSupport {
     }
   }
 
-  case class MaterializedPart(updateQueryPart: (NamedRef, UpdateReferences) => Query, references: List[Reference[_ <: Document[_]]])
+//  case class MaterializedPart(updateQueryPart: (NamedRef, UpdateReferences) => Query, references: List[Reference[_ <: Document[_]]])
+
+  trait MaterializedPart {
+    def updateQueryPart(baseRef: NamedRef, updatedReferences: UpdateReferences): Query
+    def references[Base <: Document[Base], Into <: Document[Into]](base: Collection[Base], into: WritableCollection[Into]): List[Reference[_ <: Document[_]]]
+  }
 
   implicit def fieldTupleMapping[T](tuple: (Field[T], Field[T])): MaterializedPart = {
     val (f1, f2) = tuple
-    MaterializedPart(
-      updateQueryPart = (baseRef, _) => aqlu"$baseRef.$f2: $f1,",
-      references = Nil
-    )
+    new MaterializedPart {
+      override def updateQueryPart(baseRef: NamedRef, updatedReferences: UpdateReferences): Query = {
+        aqlu"$f2: $baseRef.$f1"
+      }
+
+      override def references[Base <: Document[Base], Into <: Document[Into]](base: Collection[Base], into: WritableCollection[Into]): List[Reference[_ <: Document[_]]] = Nil
+    }
   }
 
-  def one2Many[D <: Document[D], Base](collection: Collection[D],
-                                       baseIdRef: Field[Id[Base]],
-                                       field: Field[D]): MaterializedPart = {
-    val collectionRef = NamedRef(s"$$coll_${field.fieldName}")
-    val reference = Reference(
-      collection = collection,
-      addedQuery = (refs: GetReferences[D]) => {
-        aqlu"LET ${refs.ids} = [DOCUMENT(${refs.dependencyId}).$baseIdRef]"
-      },
-      removedQuery = (refs: GetReferences[D]) => {
-        val subQuery = NamedRef(s"$$sub${Unique(length = 8)}")
-        aqlu"""
+  def one2Many[D <: Document[D], B](collection: Collection[D],
+                                    baseIdRef: Field[Id[B]],
+                                    field: Field[List[D]]): MaterializedPart = new MaterializedPart {
+    override def updateQueryPart(baseRef: NamedRef, updatedReferences: UpdateReferences): Query = {
+      val collectionRef = NamedRef(s"$$coll_${field.fieldName}")
+      aqlu"""
+             $baseRef.$field: (
+                FOR $collectionRef IN $collection
+                FILTER $collectionRef.$baseIdRef IN ${updatedReferences.ids}
+                RETURN $collectionRef
+             )
+          """
+    }
+
+    override def references[Base <: Document[Base], Into <: Document[Into]](base: Collection[Base], into: WritableCollection[Into]): List[Reference[_ <: Document[_]]] = {
+      val reference = Reference(
+        collection = collection,
+        addedQuery = (refs: GetReferences[D]) => {
+          aqlu"LET ${refs.ids} = [DOCUMENT(${refs.dependencyId}).$baseIdRef]"
+        },
+        removedQuery = (refs: GetReferences[D]) => {
+          val subQuery = NamedRef(s"$$sub${Unique(length = 8)}")
+          aqlu"""
                LET ${refs.ids} = (
-                 FOR $subQuery IN ${refs.into}
+                 FOR $subQuery IN $into
                  FILTER ${refs.dependencyId} IN $subQuery.$field[*]._id
-                 RETURN CONCAT(${refs.base.name + "/"}, $subQuery._key)
+                 RETURN CONCAT(${base.name + "/"}, $subQuery._key)
                )
             """
-      }
-    )
-    MaterializedPart(
-      updateQueryPart = (baseRef, refs) =>
-        aqlu"""
-               $baseRef.field: (
-                  FOR $collectionRef IN $collection
-                  FILTER $collectionRef.$baseIdRef IN ${refs.ids}
-                  RETURN $collectionRef
-               )
-            """,
-      references = List(reference)
-    )
+        }
+      )
+      List(reference)
+    }
   }
 
   def materialized[Base <: Document[Base], Into <: Document[Into]](baseInto: (Collection[Base], WritableCollection[Into]),
@@ -108,7 +118,7 @@ trait MonitoredSupport {
       baseCollection = base,
       updateQuery = updateQuery,
       into = into,
-      references = parts.flatMap(_.references).toList
+      references = parts.flatMap(_.references(base, into)).toList
     ).build()
   }
 
@@ -121,7 +131,7 @@ trait MonitoredSupport {
 
 case class UpdateReferences(ids: NamedRef, updatedRef: NamedRef)
 
-case class GetReferences[D <: Document[D]](ids: NamedRef, dependencyId: Id[D], base: Collection[_ <: Document[_]], into: WritableCollection[_ <: Document[_]])
+case class GetReferences[D <: Document[D]](ids: NamedRef, dependencyId: Id[D])
 
 case class Reference[D <: Document[D]](collection: Collection[D],
                                        addedQuery: GetReferences[D] => Query,
@@ -132,11 +142,11 @@ case class Reference[D <: Document[D]](collection: Collection[D],
       op._id.foreach { id =>
         if (op.`type` == OperationType.InsertReplaceDocument) {
           val ids = NamedRef("$ids")
-          val refQuery = addedQuery(GetReferences(ids, id, builder.baseCollection, builder.into))
+          val refQuery = addedQuery(GetReferences(ids, id))
           builder.update(ids, refQuery)
         } else if (op.`type` == OperationType.RemoveDocument) {
           val ids = NamedRef("$ids")
-          val refQuery = removedQuery(GetReferences(ids, id, builder.baseCollection, builder.into))
+          val refQuery = removedQuery(GetReferences(ids, id))
           builder.update(ids, refQuery)
         }
       }
