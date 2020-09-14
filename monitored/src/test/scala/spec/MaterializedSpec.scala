@@ -139,13 +139,6 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       User.age -> MaterializedUser.age,
       one2Many(locations, Location.userId, MaterializedUser.locations)
     )
-
-//    val materializedUsers: DocumentCollection[MaterializedUser] = materialized[MaterializedUser](
-//      User,
-//      MaterializedUser.name -> User.name,
-//      MaterializedUser.age -> User.age,
-//      MaterializedUser.locations -> Location.userId
-//    )
   }
 
   case class User(name: String, age: Int, _id: Id[User] = User.id()) extends Document[User]

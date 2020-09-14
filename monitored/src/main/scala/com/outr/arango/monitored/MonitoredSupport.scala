@@ -52,7 +52,7 @@ trait MonitoredSupport {
     val (f1, f2) = tuple
     new MaterializedPart {
       override def updateQueryPart(baseRef: NamedRef, updatedReferences: UpdateReferences): Query = {
-        aqlu"$f2: $baseRef.$f1"
+        aqlu"$f2: $baseRef.$f1,"
       }
 
       override def references[Base <: Document[Base], Into <: Document[Into]](base: Collection[Base], into: WritableCollection[Into]): List[Reference[_ <: Document[_]]] = Nil
@@ -65,11 +65,11 @@ trait MonitoredSupport {
     override def updateQueryPart(baseRef: NamedRef, updatedReferences: UpdateReferences): Query = {
       val collectionRef = NamedRef(s"$$coll_${field.fieldName}")
       aqlu"""
-             $baseRef.$field: (
+             $field: (
                 FOR $collectionRef IN $collection
                 FILTER $collectionRef.$baseIdRef IN ${updatedReferences.ids}
                 RETURN $collectionRef
-             )
+             ),
           """
     }
 
@@ -195,13 +195,6 @@ case class MaterializedBuilder[Base <: Document[Base], Into <: Document[Into]](g
             INSERT $updatedRef INTO $into OPTIONS { overwrite: true }
             RETURN $$base._id
           """
-    scribe.info(s"QueryUpdate: $q")
-    val future = graph.query(q).as[Id[Base]].results(graph.monitor.ec).map { ids =>
-      scribe.info(s"Updated: $ids")
-    }(graph.monitor.ec)
-    future.failed.foreach { t =>
-      scribe.error(t)
-    }(graph.monitor.ec)
-    future
+    graph.query(q).as[Id[Base]].results(graph.monitor.ec).map(_ => ())(graph.monitor.ec)
   }
 }
