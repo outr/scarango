@@ -9,8 +9,6 @@ import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
-  val explicit: Boolean = false
-
   "Materialized" should {
     val u1 = User("User 1", 21)
     val l1 = Location(u1._id, "San Jose", "California")
@@ -77,47 +75,12 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val locations: DocumentCollection[Location] = vertex[Location]
     val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
 
-    if (explicit) {
-      users
-        .materialized(
-          refs =>
-            aqlu"""
-              FOR u IN ${database.users}
-              FILTER u._id IN ${refs.ids}
-              LET l = (
-                FOR loc IN ${database.locations}
-                FILTER loc.${Location.userId} IN ${refs.ids}
-                RETURN loc
-              )
-              LET ${refs.updatedRef} = {
-                _key: u._key,
-                ${MaterializedUser.name}: u.${User.name},
-                ${MaterializedUser.age}: u.${User.age},
-                ${MaterializedUser.locations}: l
-              }
-            """
-        )
-        .into(materializedUsers)
-        .and(locations) { getRefs =>
-          aqlu"LET ${getRefs.ids} = [DOCUMENT(${getRefs.dependencyId}).userId]"
-        } { getRefs =>
-          aqlu"""
-               LET ${getRefs.ids} = (
-                 FOR m in ${database.materializedUsers}
-                 FILTER ${getRefs.dependencyId} IN m.locations[*]._id
-                 RETURN CONCAT('users/', m._key)
-               )
-            """
-        }
-        .build()
-    } else {
-      materialized(
-        users -> materializedUsers,
-        User.name -> MaterializedUser.name,
-        User.age -> MaterializedUser.age,
-        one2Many(locations, Location.userId, MaterializedUser.locations)
-      )
-    }
+    materialized(
+      users -> materializedUsers,
+      User.name -> MaterializedUser.name,
+      User.age -> MaterializedUser.age,
+      one2Many(locations, Location.userId, MaterializedUser.locations)
+    )
   }
 
   case class User(name: String, age: Int, _id: Id[User] = User.id()) extends Document[User]
