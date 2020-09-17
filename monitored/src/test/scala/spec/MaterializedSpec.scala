@@ -1,8 +1,8 @@
 package spec
 
 import com.outr.arango._
-import com.outr.arango.monitored.MonitoredSupport
-import com.outr.arango.query._
+import com.outr.arango.monitored.{Materialized, MonitoredSupport}
+import org.scalatest.Assertion
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -11,7 +11,33 @@ import profig.Profig
 class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   "Materialized" should {
     val u1 = User("User 1", 21)
+    val u2 = User("User 2", 31)
     val l1 = Location(u1._id, "San Jose", "California")
+    val l2 = Location(u2._id, "Hollywood", "California")
+    val l3 = Location(u2._id, "Santa Cruz", "California")
+
+    val fu1Empty = FullUser(u1.name, u1.age, Nil, FullUser.id(u1._id.value))
+    val fu1Location = fu1Empty.copy(locations = List(l1))
+    val fu2Empty = FullUser(u2.name, u2.age, Nil, FullUser.id(u2._id.value))
+    val fu2Location = fu2Empty.copy(locations = List(l2))
+    val fu2Locations = fu2Empty.copy(locations = List(l2, l3))
+
+    var updated = List.empty[Id[FullUser]]
+    var deleted = List.empty[Id[FullUser]]
+
+    @inline
+    def verifyUpdatedAndClear(ids: Id[User]*): Assertion = try {
+      updated should be(ids.toList.map(id => Id[FullUser](id.value, database.fullUsers.name)))
+    } finally {
+      updated = Nil
+    }
+
+    @inline
+    def verifyDeletedAndClear(ids: Id[User]*): Assertion = try {
+      deleted should be(ids.toList.map(id => Id[FullUser](id.value, database.fullUsers.name)))
+    } finally {
+      deleted = Nil
+    }
 
     "initialize configuration" in {
       Profig.initConfiguration().map { _ =>
@@ -20,14 +46,23 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     }
     "initialize the database" in {
       database.init().map { _ =>
+        database.materialized.updated.attach { id =>
+          updated = updated ::: List(id)
+        }
+        database.materialized.deleted.attach { id =>
+          deleted = deleted ::: List(id)
+        }
+
         succeed
       }
     }
     "insert a user and verify it exists in materialized" in {
       database.users.insertOne(u1).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
-          database.materializedUsers.all.results.map { list =>
-            list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+          database.fullUsers.all.results.map { list =>
+            list should be(List(fu1Empty))
+            verifyUpdatedAndClear(u1._id)
+            verifyDeletedAndClear()
           }
         }
       }
@@ -35,8 +70,21 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     "insert a location and verify it was added to the materialized" in {
       database.locations.insertOne(l1).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
-          database.materializedUsers.all.results.map { list =>
-            list should be(List(MaterializedUser(u1.name, u1.age, List(l1), MaterializedUser.id(u1._id.value))))
+          database.fullUsers.all.results.map { list =>
+            list should be(List(fu1Location))
+            verifyUpdatedAndClear(u1._id)
+            verifyDeletedAndClear()
+          }
+        }
+      }
+    }
+    "insert another user and verify it exists in materialized" in {
+      database.users.insertOne(u2).flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
+          database.fullUsers.all.results.map { list =>
+            list.map(_.name).sorted should be(List("User 1", "User 2"))
+            verifyUpdatedAndClear(u2._id)
+            verifyDeletedAndClear()
           }
         }
       }
@@ -44,18 +92,43 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     "delete a location and verify it was deleted from the materialized" in {
       database.locations.deleteOne(l1._id).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
-          database.materializedUsers.all.results.map { list =>
-            list should be(List(MaterializedUser(u1.name, u1.age, Nil, MaterializedUser.id(u1._id.value))))
+          database.fullUsers(FullUser.id(u1._id.value)).map { user =>
+            user should be(fu1Empty)
+            verifyUpdatedAndClear(u1._id)
+            verifyDeletedAndClear()
           }
         }
       }
     }
-    // TODO: Add another user
     "delete a user and verify it was deleted from materialized" in {
       database.users.deleteOne(u1._id).flatMap { _ =>
         database.monitor.nextTick.flatMap { _ =>
-          database.materializedUsers.all.results.map { list =>
-            list should be(Nil)
+          database.fullUsers.all.results.map { list =>
+            list should be(List(fu2Empty))
+            verifyUpdatedAndClear()
+            verifyDeletedAndClear(u1._id)
+          }
+        }
+      }
+    }
+    "insert a location for user 2 and verify it was added to the materialized" in {
+      database.locations.insertOne(l2).flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
+          database.fullUsers.all.results.map { list =>
+            list should be(List(fu2Location))
+            verifyUpdatedAndClear(u2._id)
+            verifyDeletedAndClear()
+          }
+        }
+      }
+    }
+    "insert a second location for user 2 and verify it was added to the materialized" in {
+      database.locations.insertOne(l3).flatMap { _ =>
+        database.monitor.nextTick.flatMap { _ =>
+          database.fullUsers.all.results.map { list =>
+            list should be(List(fu2Locations))
+            verifyUpdatedAndClear(u2._id)
+            verifyDeletedAndClear()
           }
         }
       }
@@ -73,14 +146,15 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
   object database extends Graph("materializedSpec") with MonitoredSupport {
     val users: DocumentCollection[User] = vertex[User]
     val locations: DocumentCollection[Location] = vertex[Location]
-    val materializedUsers: DocumentCollection[MaterializedUser] = vertex[MaterializedUser]
+    val fullUsers: DocumentCollection[FullUser] = vertex[FullUser]
 
-    materialized(
-      users -> materializedUsers,
-      User.name -> MaterializedUser.name,
-      User.age -> MaterializedUser.age,
-      one2Many(locations, Location.userId, MaterializedUser.locations)
-    )
+    // TODO: Add locationCount
+
+    val materialized: Materialized[User, FullUser] = materialized(users -> fullUsers)
+      .map(User.name -> FullUser.name)
+      .map(User.age -> FullUser.age)
+      .one2Many(locations, Location.userId, FullUser.locations)
+      .build()
   }
 
   case class User(name: String, age: Int, _id: Id[User] = User.id()) extends Document[User]
@@ -106,14 +180,14 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     override def indexes: List[Index] = Nil
   }
 
-  case class MaterializedUser(name: String, age: Int, locations: List[Location], _id: Id[MaterializedUser]) extends Document[MaterializedUser]
-  object MaterializedUser extends DocumentModel[MaterializedUser] {
+  case class FullUser(name: String, age: Int, locations: List[Location], _id: Id[FullUser]) extends Document[FullUser]
+  object FullUser extends DocumentModel[FullUser] {
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
     val locations: Field[List[Location]] = field("locations")
 
     override val collectionName: String = "materializedUsers"
-    override implicit val serialization: Serialization[MaterializedUser] = Serialization.auto[MaterializedUser]
+    override implicit val serialization: Serialization[FullUser] = Serialization.auto[FullUser]
 
     override def indexes: List[Index] = Nil
   }
