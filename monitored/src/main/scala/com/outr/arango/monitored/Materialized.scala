@@ -2,7 +2,7 @@ package com.outr.arango.monitored
 
 import com.outr.arango.api.OperationType
 import com.outr.arango.query._
-import com.outr.arango.{Collection, Document, Graph, Id, NamedRef, Query, WritableCollection}
+import com.outr.arango.{BackingStore, Collection, Document, Graph, Id, NamedRef, Query, WritableCollection}
 import reactify.Channel
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,7 +34,18 @@ case class Materialized[Base <: Document[Base], Into <: Document[Into]](graph: G
                _key: $baseRef._key
              }
           """
-    Query.merge(List(pre) ::: parts.flatMap(_.updateQueryPart(baseRef, ids, updatedRef)) ::: List(post))
+    val info = QueryInfo(baseRef, ids, updatedRef)
+    val queries = parts
+      .flatMap(_.updateQueryPart(info))
+      .map { query =>
+        val trimmed = query.value.trim
+        if (trimmed.endsWith(",")) {
+          query
+        } else {
+          query.copy(value = s"$trimmed,\n")
+        }
+      }
+    Query.merge(List(pre) ::: queries ::: List(post))
   }
 
   graph.add(init _)
@@ -55,7 +66,10 @@ case class Materialized[Base <: Document[Base], Into <: Document[Into]](graph: G
         }
       }
     }
-    references.foreach(_.connect(this))
+    references.groupBy(_.collection).values.foreach { references =>   // Group and merge to avoid multiple query invocations
+      val reference = Reference.merge[BackingStore](references.asInstanceOf[List[Reference[BackingStore]]])
+      reference.connect(this)
+    }
     graph.monitor.nextTick.map(_ => ())
   }
 

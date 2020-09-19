@@ -36,6 +36,10 @@ case class NamedRef(name: String) extends Ref {
   lazy val refName: Option[String] = Some(name)
 }
 
+object NamedRef {
+  def apply(): NamedRef = NamedRef(s"$$ref_${Unique(length = 8)}")
+}
+
 class WrappedRef[T](val wrapped: T, val refName: Option[String] = None) extends Ref
 
 case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model, refNameOverride: Option[String]) extends WrappedRef[Model](model, refNameOverride) {

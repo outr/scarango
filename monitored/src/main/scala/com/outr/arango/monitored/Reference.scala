@@ -21,3 +21,21 @@ case class Reference[D <: Document[D]](collection: Collection[D],
     }
   }
 }
+
+object Reference {
+  def merge[D <: Document[D]](references: List[Reference[D]]): Reference[D] = if (references.isEmpty) {
+    throw new RuntimeException("No references to merge")
+  } else if (references.tail.isEmpty) {
+    references.head
+  } else {
+    val addedQuery = (get: GetReferences[D]) => {
+      val queries = references.map(_.addedQuery(get))
+      Query.merge(queries)
+    }
+    val removedQuery = (get: GetReferences[D]) => {
+      val queries = references.map(_.removedQuery(get))
+      Query.merge(queries)
+    }
+    Reference[D](references.head.collection, addedQuery, removedQuery)
+  }
+}
