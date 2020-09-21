@@ -13,7 +13,7 @@ class ArangoIndex(client: HttpClient, dbName: String, collectionName: String) {
       case IndexType.Persistent => APIIndexpersistent.post(client, collectionName, PostAPIIndexPersistent("persistent", Some(index.fields), Some(index.sparse), Some(index.unique)))
       case IndexType.Geo => APIIndexgeo.post(client, collectionName, PostAPIIndexGeo("geo", Some(index.fields), Some(index.geoJson.toString)))
       case IndexType.FullText => APIIndexfulltext.post(client, collectionName, PostAPIIndexFulltext("fulltext", Some(index.fields), Some(index.minLength)))
-      case IndexType.TTL => APIIndexttl.post(client, collectionName, PostAPIIndexTtl("ttl", Some(index.expireAfterSeconds.toLong), Some(index.fields)))
+      case IndexType.TTL => APIIndexttl.post(client, collectionName, PostAPIIndexTtl("ttl", Some(index.expireAfterSeconds.toDouble), Some(index.fields)))
     }
     future.map(json => JsonUtil.fromJson[IndexInfo](json))
   }

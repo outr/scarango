@@ -16,8 +16,9 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     implicit val serialization: Serialization[User] = User.serialization
 
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "initialize successfully" in {
       db.init().map { state =>

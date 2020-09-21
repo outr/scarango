@@ -87,6 +87,8 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     throw new ArangoException(error, request, response, None)
   }
 
+  override def toString: String = s"ArangoDB($database)"
+
   case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
 }
 

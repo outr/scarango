@@ -1,5 +1,10 @@
 package com.outr.arango
 
+import com.outr.arango.query.SortDirection
+import io.youi.Unique
+import profig._
+import profig.jdk._
+
 import scala.annotation.compileTimeOnly
 import scala.reflect.macros.blackbox
 import scribe.Execution.global
@@ -80,6 +85,8 @@ object AQLMacros {
       (q"string($value.name)", true)
     } else if (vt <:< typeOf[View[_]]) {
       (q"string($value.name)", true)
+    } else if (vt <:< typeOf[NamedRef]) {
+      (q"string($value.name)", true)
     } else {
       n(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
     }
@@ -89,7 +96,7 @@ object AQLMacros {
     import c.universe._
 
     // Make sure that Profig is initialized
-    profig.Profig.loadDefaultsMacro()
+    Profig.initConfigurationBlocking()
 
     c.prefix.tree match {
       case Apply(_, List(Apply(_, rawParts))) => {
@@ -101,6 +108,7 @@ object AQLMacros {
           case ((raw, _), index) => {
             if (index > 0) {
               var special = false
+              var excludeAt = false
               var argName = s"arg$index"
               val value = args(index - 1)
               val vt = value.actualType
@@ -150,7 +158,11 @@ object AQLMacros {
               } else if (vt <:< typeOf[Id[_]]) {
                 Some(q"string($value._id)")
               } else if (vt <:< typeOf[Field[_]]) {
-                Some(q"string($value.fieldName)")
+                argName = Unique(length = 8, characters = Unique.LettersLower)
+                Some(q"static($value.fieldName)")
+              } else if (vt <:< typeOf[(Field[_], SortDirection)]) {
+                argName = Unique(length = 8, characters = Unique.LettersLower)
+                Some(q"""static($value._1.fieldName + " " + $value._2)""")
               } else if (vt <:< typeOf[Analyzer]) {
                 Some(q"string($value.name)")
               } else if (vt <:< typeOf[Collection[_]]) {
@@ -159,6 +171,9 @@ object AQLMacros {
               } else if (vt <:< typeOf[View[_]]) {
                 special = true
                 Some(q"string($value.name)")
+              } else if (vt <:< typeOf[NamedRef]) {
+                excludeAt = true
+                Some(q"""static($value.name, true)""")
               } else {
                 Some(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
               }
@@ -166,7 +181,10 @@ object AQLMacros {
                 argName = s"@$argName"
               }
               queryArg.foreach { arg =>
-                b.append(s"@$argName")
+                if (!excludeAt) {
+                  b.append('@')
+                }
+                b.append(argName)
                 argsMap += argName -> c.Expr[Value](arg)
               }
             }
@@ -193,7 +211,7 @@ object AQLMacros {
               import _root_.com.outr.arango.Value._
               import _root_.com.outr.arango.Query
 
-              Query($query, $argsMap)
+              Query($query, $argsMap).fix()
             """)
       }
       case _ => c.abort(c.enclosingPosition, "Bad usage of AQL interpolation.")

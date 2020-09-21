@@ -27,4 +27,19 @@ case class WALOperations(private val client: HttpClient,
     serverId = serverId,
     clientId = clientId
   )
+
+  override def toString: String =
+    s"""WALOperations(
+       |  global: $global,
+       |  chunkSize: $chunkSize,
+       |  syncerId: $syncerId,
+       |  serverId: $serverId,
+       |  clientId: $clientId,
+       |  checkMore: $checkMore,
+       |  fromPresent: $fromPresent,
+       |  lastIncluded: $lastIncluded,
+       |  lastScanned: $lastScanned,
+       |  lastTick: $lastTick,
+       |  operations: $operations
+       |)""".stripMargin
 }

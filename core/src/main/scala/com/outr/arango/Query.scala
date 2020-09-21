@@ -2,20 +2,33 @@ package com.outr.arango
 
 import io.circe.Json
 
-case class Query(value: String, args: Map[String, Value]) {
-  def fixed(): Query = if (args.valuesIterator.map(_.json).contains(Json.Null)) {
-    var updated = value
-    val filteredArgs = args.filter {
-      case (k, v) => if (v.json == Json.Null) {
-        updated = updated.replaceAllLiterally(s"@$k", "null")
-        false
-      } else {
-        true
-      }
-    }
-    copy(updated, filteredArgs)
-  } else {
+case class Query(value: String, args: Map[String, Value], fixed: Boolean = false) {
+  def fix(): Query = if (fixed) {
     this
+  } else {
+    var updatedValue = value
+    val updatedArgs = args.flatMap {
+      case (k, v) if v.static => {
+        val key = if (v.excludeAt) {
+          k
+        } else {
+          s"@$k"
+        }
+        updatedValue = updatedValue.replace(key, v.json.asString.getOrElse(throw new RuntimeException(s"Cannot expand special: ${v.json}")))
+        None
+      }
+      case (k, v) if v.json == Json.Null => {
+        val key = if (v.excludeAt) {
+          k
+        } else {
+          s"@$k"
+        }
+        updatedValue = updatedValue.replace(key, "null")
+        None
+      }
+      case (k, v) => Some((k, v))
+    }
+    Query(updatedValue, updatedArgs, fixed = true)
   }
 
   def +(that: Query): Query = Query.merge(List(this, that))
@@ -46,6 +59,7 @@ object Query {
       var query = q
       val localKeys = query.args.keys.toSet
 
+      @scala.annotation.tailrec
       def nextKey(key: String): String = key match {
         case ExtractNumeric(prefix, n) => {
           val newKey = s"$prefix${n.toInt + 1}"
@@ -63,7 +77,7 @@ object Query {
           val newKey = nextKey(key)
           usedKeys += newKey
           query = query.copy(
-            value = query.value.replaceAllLiterally(s"@$key", s"@$newKey"),
+            value = query.value.replace(s"@$key", s"@$newKey"),
             args = query.args.map {
               case (k, v) if k == key => newKey -> v
               case (k, v) => k -> v

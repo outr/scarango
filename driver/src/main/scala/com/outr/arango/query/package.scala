@@ -25,6 +25,8 @@ package object query {
     ReturnPart.RefReturn(ref)
   }
 
+  implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
+
   implicit class FieldExtras[T](field: => Field[T]) {
     def thisField: Field[T] = field
 
@@ -154,7 +156,7 @@ package object query {
 
   def FILTER(filter: Filter): Unit = {
     val query = filter.build()
-    add(query.copy(value = s"FILTER ${query.value}"))
+    addQuery(query.copy(value = s"FILTER ${query.value}"))
   }
 
   def COLLECT: CollectStart.type = CollectStart
@@ -162,21 +164,31 @@ package object query {
   def COUNT: CollectWith.Count.type = CollectWith.Count
 
   def UPDATE[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model], values: FieldAndValue[_]*): Unit = {
-    add(UpdatePart(ref, values.toList).build())
+    addQuery(UpdatePart(ref, values.toList).build())
   }
 
   def NEW: ReturnPart = ReturnPart.New
 
-  def RETURN(part: ReturnPart): Unit = add(part.build())
+  def mapped(mappings: (String, Field[_])*): ReturnPart = json(mappings.map {
+    case (name, field) => s"$name: ${field.fieldName}"
+  }.mkString("{", ", ", "}"))
 
-  private def add(query: Query): Unit = {
+  def json(json: String): ReturnPart = ReturnPart.Json(json)
+
+  def LIMIT(offset: Int, limit: Int): Unit = addQuery(Query(s"LIMIT $offset, $limit", Map.empty))
+
+  def RETURN(part: ReturnPart): Unit = addQuery(part.build())
+
+  def addQuery(query: Query): Unit = {
     val context = QueryBuilderContext()
     context.addQuery(query)
   }
 
-  def ref: Ref = new Ref
+  def ref: Ref = new Ref {
+    override def refName: Option[String] = None
+  }
   def ref(name: String): Ref = NamedRef(name)
-  def ref[T](wrapped: T): WrappedRef[T] = new WrappedRef[T](wrapped)
+  def ref[T](wrapped: T, name: Option[String]): WrappedRef[T] = new WrappedRef[T](wrapped, name)
 
   def aql(f: => Unit): Query = QueryBuilderContext.contextualize(f)
 }

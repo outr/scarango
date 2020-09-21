@@ -1,7 +1,7 @@
 package com.outr.arango
 
 import io.circe.Decoder.Result
-import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
 import com.outr.arango.JsonImplicits._
 
 /**
@@ -42,8 +42,12 @@ object Id {
   }
 
   implicit def decoder[D]: Decoder[Id[D]] = new Decoder[Id[D]] {
-    override def apply(c: HCursor): Result[Id[D]] = c.value.asString.get match {
-      case ExtractorRegex(collection, value) => Right(Id[D](value, collection))
+    override def apply(c: HCursor): Result[Id[D]] = c.value.asString match {
+      case Some(s) => s match {
+        case ExtractorRegex(collection, value) => Right(Id[D](value, collection))
+        case _ => Left(DecodingFailure(s"Unable to parse string to Id: $s", Nil))
+      }
+      case None => Left(DecodingFailure(s"Unable to parse JSON ${c.value} to Id", Nil))
     }
   }
 

@@ -25,12 +25,13 @@ class Graph(val databaseName: String = ArangoDB.config.db,
             httpClient: HttpClient = HttpClient) {
   private var _collections: List[Collection[_]] = Nil
   private var _views: List[View[_]] = Nil
+  private var _initializations: List[() => Future[Unit]] = Nil
   private val _initialized = new AtomicBoolean(false)
   private var versions = ListBuffer.empty[DatabaseUpgrade]
 
   lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: Collection[BackingStore] = new Collection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
+  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
 
   def wal: ArangoWriteAheadLog = arangoDatabase.wal
 
@@ -67,8 +68,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
 
-  def vertex[D <: Document[D]]: Collection[D] = macro GraphMacros.vertex[D]
-  def edge[D <: Document[D]]: Collection[D] = macro GraphMacros.edge[D]
+  def vertex[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.vertex[D]
+  def edge[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.edge[D]
+  def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection)
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
                              includeAllFields: Boolean,
@@ -92,13 +94,32 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def init()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
     if (_initialized.compareAndSet(false, true)) {
-      arangoDB.init().flatMap { state =>
-        assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
-        doUpgrades(ec).recover {
-          case t: Throwable => {
-            arangoDB._state := DatabaseState.Error(t)
-            throw t
+      (for {
+        // Initialize the database
+        state <- arangoDB.init()
+        // Verify it initialized successfully
+        _ = assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
+        // Execute upgrades
+        upgrades <- doUpgrades
+        // Load cached collections
+        _ <- Future.sequence(collections.map {
+          case cc: CachedCollection[_] => cc.refresh()
+          case _ => Future.successful(())
+        })
+        // Load initialize tasks
+        _ <- Future.sequence(_initializations.map(_()))
+        // Execute afterStartup for previously executed upgrades
+        _ = upgrades.foreach { upgrade =>
+          upgrade.afterStartup(this).failed.foreach { t =>
+            scribe.error(s"After Startup failed for ${upgrade.label}", t)
           }
+        }
+      } yield {
+        ()
+      }).recover {
+        case t: Throwable => {
+          arangoDB._state := DatabaseState.Error(t)
+          throw t
         }
       }
     } else {
@@ -108,7 +129,10 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def truncate()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
     for {
-      _ <- Future.sequence(collections.map(_.truncate()))
+      _ <- Future.sequence(collections.flatMap {
+        case c: WritableCollection[_] => Some(c.truncate())
+        case _ => None
+      })
     } yield {
       ()
     }
@@ -124,10 +148,10 @@ class Graph(val databaseName: String = ArangoDB.config.db,
       case exc: ArangoException if exc.error.errorCode == ArangoCode.ArangoCollectionNotFound => DatabaseVersion()    // Collection doesn't exist yet
     }
 
-  private def doUpgrades(implicit ec: ExecutionContext): Future[Unit] = {
+  private def doUpgrades(implicit ec: ExecutionContext): Future[List[DatabaseUpgrade]] = {
     version.flatMap { version =>
       val upgrades = versions.toList.filterNot(v => version.upgrades.contains(v.label) && !v.alwaysRun)
-      upgrade(version, upgrades, version.upgrades.isEmpty)
+      upgrade(version, upgrades, version.upgrades.isEmpty).map(_ => upgrades)
     }
   }
 
@@ -169,10 +193,14 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   }
 
   private[arango] def add[D <: Document[D]](collection: Collection[D]): Unit = synchronized {
-    _collections = _collections ::: List(collection)
+    _collections = _collections.filterNot(_.name == collection.name) ::: List(collection)
   }
 
   private[arango] def add[D <: Document[D]](view: View[D]): Unit = synchronized {
     _views = _views ::: List(view)
+  }
+
+  private[arango] def add(initialization: () => Future[Unit]): Unit = synchronized {
+    _initializations = _initializations ::: List(initialization)
   }
 }

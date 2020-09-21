@@ -7,7 +7,16 @@ case class WALOperation(tick: Long,
                         db: String,
                         data: Json = Json.obj(),
                         cuid: Option[String],
-                        tid: Option[String])
+                        tid: Option[String]) {
+  lazy val collectionId: Option[String] = cuid.flatMap { s =>
+    val index = s.indexOf('/')
+    if (index != -1) {
+      Some(s.substring(index + 1))
+    } else {
+      None
+    }
+  }
+}
 
 sealed abstract class OperationType(val value: Int)
 

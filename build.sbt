@@ -3,9 +3,9 @@ import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.3.5"
-scalaVersion in ThisBuild := "2.13.1"
-crossScalaVersions in ThisBuild := List("2.13.1", "2.12.11")
+version in ThisBuild := "2.4.0-SNAPSHOT"
+scalaVersion in ThisBuild := "2.13.3"
+crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
@@ -26,7 +26,8 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.13.0"
+val youiVersion = "0.13.17-SNAPSHOT"
+val profigVersion = "3.0.4"
 val scalaTestVersion = "3.2.0-M4"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
@@ -38,7 +39,7 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(api, coreJS, coreJVM, driver)
+  .aggregate(api, coreJS, coreJVM, driver, monitored)
   .settings(
     publish := {},
     publishLocal := {}
@@ -75,10 +76,24 @@ lazy val driver = project.in(file("driver"))
     testOptions in Test += Tests.Argument("-oD"),
     parallelExecution in Test := false,
     libraryDependencies ++= Seq(
+      "com.outr" %% "profig-all" % profigVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )
   .dependsOn(coreJVM, api)
+
+lazy val monitored = project.in(file("monitored"))
+  .settings(
+    name := "scarango-monitored",
+    fork := true,
+    testGrouping in Test := groupByName((definedTests in Test).value),
+    testOptions in Test += Tests.Argument("-oD"),
+    parallelExecution in Test := false,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    )
+  )
+  .dependsOn(driver)
 
 lazy val plugin = project.in(file("plugin"))
   .settings(

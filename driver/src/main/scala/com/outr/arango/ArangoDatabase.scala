@@ -60,7 +60,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
                   maxTransactionSize: Option[Long] = None)
                  (implicit ec: ExecutionContext): Future[ArangoResponse[Vector[Json]]] = {
     assert(queries.nonEmpty, "Cannot create a transaction with no queries!")
-    val queryString = queries.map(_.fixed()).map { q =>
+    val queryString = queries.map(_.fix()).map { q =>
       val params = q.bindVars.spaces2
       s"""results.push(db._query("${q.value}", $params));"""
     }.mkString("\n  ")
@@ -150,7 +150,7 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
       case Some(tId) => client.header("x-arango-trx-id", tId)
       case None => client
     }
-    QueryBuilder[Json](c, query.fixed(), identity)
+    QueryBuilder[Json](c, query.fix(), identity)
   }
 
   lazy val wal: ArangoWriteAheadLog = new ArangoWriteAheadLog(client)

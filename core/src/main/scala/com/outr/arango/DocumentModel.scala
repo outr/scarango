@@ -28,13 +28,21 @@ trait DocumentModel[D <: Document[D]] {
   }
 }
 
-class Ref
+trait Ref {
+  def refName: Option[String]
+}
 
-case class NamedRef(name: String) extends Ref
+case class NamedRef(name: String) extends Ref {
+  lazy val refName: Option[String] = Some(name)
+}
 
-class WrappedRef[T](val wrapped: T) extends Ref
+object NamedRef {
+  def apply(): NamedRef = NamedRef(s"$$ref_${Unique(length = 8)}")
+}
 
-case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model) extends WrappedRef[Model](model) {
+class WrappedRef[T](val wrapped: T, val refName: Option[String] = None) extends Ref
+
+case class DocumentRef[D <: Document[D], Model <: DocumentModel[D]](model: Model, refNameOverride: Option[String]) extends WrappedRef[Model](model, refNameOverride) {
   private val id = Unique()
 
   override def hashCode(): Int = id.hashCode

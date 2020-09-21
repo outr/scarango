@@ -15,8 +15,9 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
 
   "ArangoDatabase" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "fail to initialize with bad password" in {
       val db = new ArangoDB(credentials = Some(Credentials("root", "bad")))
@@ -52,6 +53,7 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
       }
     }
     "check the WAL" in {
+      Thread.sleep(1000)
       db.api.db("databaseExample").wal.tail().flatMap { ops =>
         ops.operations.length should be(1)
         val op = ops.operations.head
@@ -66,7 +68,7 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
       val monitor = db.api.db("databaseExample").wal.monitor(delay = 1.second, skipHistory = false)
       var first = Option.empty[WALOperations]
       var second = Option.empty[WALOperations]
-      val promise = Promise[Unit]
+      val promise = Promise[Unit]()
       var list = List.empty[WALOperation]
       monitor.attach { op =>
         list = op :: list

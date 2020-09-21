@@ -15,8 +15,9 @@ class AQLSpec extends AsyncWordSpec with Matchers {
 
   "AQL" should {
     "initialize configuration" in {
-      Profig.loadDefaults()
-      succeed
+      Profig.initConfiguration().map { _ =>
+        succeed
+      }
     }
     "initialize successfully" in {
       db.init().map { state =>
@@ -45,6 +46,24 @@ class AQLSpec extends AsyncWordSpec with Matchers {
       val query = aql"FOR u IN users FILTER u.id == $id && u.name == $name RETURN u"
       query.value should be("FOR u IN users FILTER u.id == @arg1 && u.name == @arg2 RETURN u")
       query.args should be(Map("arg1" -> Value.int(123), "arg2" -> Value.string("John Doe")))
+    }
+    "interpolate a simple query with a dot-separated field" in {
+      val field = Field[String]("this.is.a.test")
+      val query = aql"FOR u IN users FILTER u.$field == ${"test"} RETURN u"
+      query.value should be("FOR u IN users FILTER u.this.is.a.test == @arg2 RETURN u")
+      query.args should be(Map("arg2" -> Value.string("test")))
+    }
+    "interpolate a simple query with a reference" in {
+      val ref = NamedRef("$myRef1")
+      val query = aql"FOR $ref IN users RETURN $ref"
+      query.value should be("FOR $myRef1 IN users RETURN $myRef1")
+      query.args should be(Map.empty)
+    }
+    "interpolate a simple query with a sort direction" in {
+      val field = Field[String]("this.is.a.test")
+      val query = aql"FOR u IN users SORT u.${field.desc} RETURN u"
+      query.args should be(Map.empty)
+      query.value should be("FOR u IN users SORT u.this.is.a.test DESC RETURN u")
     }
     "merge two simple queries with args" in {
       val id = 123
