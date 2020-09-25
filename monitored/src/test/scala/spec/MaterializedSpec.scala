@@ -23,6 +23,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     val fu2Empty = FullUser(u2.name, u2.age, Nil, 0, FullUser.id(u2._id.value))
     val fu2Location = fu2Empty.copy(locations = List(l2), locationCount = 1)
     val fu2Locations = fu2Empty.copy(locations = List(l2, l3), locationCount = 2)
+    val fu2LocationsUpdated = fu2Locations.copy(age = 41)
 
     var updated: Var[List[Id[FullUser]]] = Var(Nil)
     var deleted: Var[List[Id[FullUser]]] = Var(Nil)
@@ -116,14 +117,15 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "insert a location for user 2 and verify it was added to the materialized" in {
-      database.locations.insertOne(l2).flatMap { _ =>
-        database.monitor.nextTick.flatMap { _ =>
-          database.fullUsers.all.results.map { list =>
-            list should be(List(fu2Location))
-            verifyUpdatedAndClear(u2._id)
-            verifyDeletedAndClear()
-          }
-        }
+      val changedFuture = updated.future()
+      for {
+        _ <- database.locations.insertOne(l2)
+        _ <- changedFuture
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(List(fu2Location))
+        verifyUpdatedAndClear(u2._id)
+        verifyDeletedAndClear()
       }
     }
     "insert a second location for user 2 and verify it was added to the materialized" in {
@@ -135,6 +137,18 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
             verifyDeletedAndClear()
           }
         }
+      }
+    }
+    "issue an update to all users and verify it applies" in {
+      val changedFuture = updated.future()
+      for {
+        _ <- database.users.updateAll(FieldAndValue(User.age, 41))
+        _ <- changedFuture
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(List(fu2LocationsUpdated))
+        verifyUpdatedAndClear(u2._id)
+        verifyDeletedAndClear()
       }
     }
     "cleanup" in {
