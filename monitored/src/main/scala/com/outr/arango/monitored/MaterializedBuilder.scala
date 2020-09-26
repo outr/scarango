@@ -40,7 +40,7 @@ case class MaterializedBuilder[Base <: Document[Base], Into <: Document[Into]](g
         aqlu"""
              $field: (
                 FOR $collectionRef IN $collection
-                FILTER $collectionRef.$baseIdRef IN ${info.ids}
+                FILTER $collectionRef.$baseIdRef == ${info.baseRef}._id
                 RETURN $collectionRef
              ),
           """)

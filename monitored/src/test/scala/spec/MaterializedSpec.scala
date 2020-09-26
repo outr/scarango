@@ -71,14 +71,15 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "insert a location and verify it was added to the materialized" in {
-      database.locations.insertOne(l1).flatMap { _ =>
-        database.monitor.nextTick.flatMap { _ =>
-          database.fullUsers.all.results.map { list =>
-            list should be(List(fu1Location))
-            verifyUpdatedAndClear(u1._id)
-            verifyDeletedAndClear()
-          }
-        }
+      val changedFuture = updated.future()
+      for {
+        _ <- database.locations.insertOne(l1)
+        _ <- changedFuture
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(List(fu1Location))
+        verifyUpdatedAndClear(u1._id)
+        verifyDeletedAndClear()
       }
     }
     "insert another user and verify it exists in materialized" in {
@@ -97,9 +98,9 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       for {
         _ <- database.locations.deleteOne(l1._id)
         _ <- changedFuture
-        user <- database.fullUsers(FullUser.id(u1._id.value))
+        list <- database.fullUsers.all.results
       } yield {
-        user should be(fu1Empty)
+        list.toSet should be(Set(fu1Empty, fu2Empty))
         verifyUpdatedAndClear(u1._id)
         verifyDeletedAndClear()
       }
@@ -129,14 +130,15 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
       }
     }
     "insert a second location for user 2 and verify it was added to the materialized" in {
-      database.locations.insertOne(l3).flatMap { _ =>
-        database.monitor.nextTick.flatMap { _ =>
-          database.fullUsers.all.results.map { list =>
-            list should be(List(fu2Locations))
-            verifyUpdatedAndClear(u2._id)
-            verifyDeletedAndClear()
-          }
-        }
+      val changedFuture = updated.future()
+      for {
+        _ <- database.locations.insertOne(l3)
+        _ <- changedFuture
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(List(fu2Locations))
+        verifyUpdatedAndClear(u2._id)
+        verifyDeletedAndClear()
       }
     }
     "issue an update to all users and verify it applies" in {
@@ -149,6 +151,22 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         list should be(List(fu2LocationsUpdated))
         verifyUpdatedAndClear(u2._id)
         verifyDeletedAndClear()
+      }
+    }
+    "truncate materialized and verify empty" in {
+      for {
+        _ <- database.fullUsers.truncate()
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(Nil)
+      }
+    }
+    "execution refreshAll to rebuild the materialized view" in {
+      for {
+        _ <- database.materialized.refreshAll()
+        list <- database.fullUsers.all.results
+      } yield {
+        list should be(List(fu2LocationsUpdated))
       }
     }
     "cleanup" in {
@@ -175,7 +193,7 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
         aqlu"""
                FIRST(
                  FOR $collectionRef IN ${database.locations}
-                 FILTER $collectionRef.${Location.userId} IN ${info.ids}
+                 FILTER $collectionRef.${Location.userId} == ${info.baseRef}._id
                  COLLECT WITH COUNT INTO length
                  RETURN length
                )

@@ -22,13 +22,13 @@ case class Materialized[Base <: Document[Base], Into <: Document[Into]](graph: G
 
   private lazy val references: List[Reference[_ <: Document[_]]] = parts.flatMap(_.references(base, into))
 
-  private lazy val updateQuery: Query = {
-    val pre =
-      aqlu"""
-           FOR $baseRef IN $base
-           FILTER $baseRef._id IN $ids
-           LET $updatedRef = {
-        """
+  private def createQuery(updateFilter: Option[Query]): Query = {
+    val pre1 = aqlu"FOR $baseRef IN $base"
+    val pre2 = aqlu"LET $updatedRef = {"
+    val pre = updateFilter match {
+      case Some(q) => Query.merge(List(pre1, q, pre2))
+      case None => Query.merge(List(pre1, pre2))
+    }
     val post =
       aqlu"""
                _key: $baseRef._key
@@ -47,6 +47,9 @@ case class Materialized[Base <: Document[Base], Into <: Document[Into]](graph: G
       }
     Query.merge(List(pre) ::: queries ::: List(post))
   }
+
+  private lazy val updateAllQuery: Query = createQuery(None)
+  private lazy val updateQuery: Query = createQuery(Some(aqlu"FILTER $baseRef._id IN $ids"))
 
   graph.add(init _)
 
@@ -74,16 +77,28 @@ case class Materialized[Base <: Document[Base], Into <: Document[Into]](graph: G
   }
 
   def update(refQuery: Query): Future[Unit] = {
-    val q = refQuery + updateQuery +
-      aqlu"""
+    val refQueryOption = Option(refQuery)
+    val queries = List(
+      refQueryOption,
+      Some(if (refQueryOption.isEmpty) updateAllQuery else updateQuery),
+      Some(aqlu"""
             INSERT $updatedRef INTO $into OPTIONS { overwrite: true }
             RETURN $$base._id
-          """
+          """)
+    ).flatten
+    val q = Query.merge(queries)
 
     val future = graph.query(q).as[Id[Base]].results.map { updated =>
       updated.foreach(id => this.updated @= Id[Into](id.value, into.name))
     }
     future.failed.foreach(t => scribe.error(t))
     future
+  }
+
+  def refreshAll(): Future[Unit] = for {
+    _ <- into.truncate()
+    _ <- update(null)
+  } yield {
+    ()
   }
 }
