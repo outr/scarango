@@ -7,6 +7,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
+import scala.concurrent.Future
+
 class AdvancedSpec extends AsyncWordSpec with Matchers {
   private var transaction: Transaction = _
 
@@ -41,6 +43,40 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
         .results
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
+        }
+    }
+    "create a paged result" in {
+      database
+        .people
+        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
+        .paged
+        .map { page =>
+          page.results.length should be(1)
+          page.results.head.name should be("Adam")
+        }
+    }
+    "create a process result" in {
+      database
+        .people
+        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
+        .process { response =>
+          Future.successful(response.result.map(_.name))
+        }
+        .map { list =>
+          list should be(List(List("Adam")))
+        }
+    }
+    "create an iterate result" in {
+      var results = List.empty[String]
+      database
+        .people
+        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
+        .iterate { person =>
+          results = person.name :: results
+          Future.successful(())
+        }
+        .map { _ =>
+          results should be(List("Adam"))
         }
     }
     "create a transaction" in {
