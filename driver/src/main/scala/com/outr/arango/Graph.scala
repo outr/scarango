@@ -22,7 +22,8 @@ import scala.language.experimental.macros
 class Graph(val databaseName: String = ArangoDB.config.db,
             baseURL: URL = ArangoDB.config.url,
             credentials: Option[Credentials] = ArangoDB.credentials,
-            httpClient: HttpClient = HttpClient) {
+            httpClient: HttpClient = HttpClient,
+            replicationFactor: Long = 1L) {
   private var _collections: List[Collection[_]] = Nil
   private var _views: List[View[_]] = Nil
   private var _initializations: List[() => Future[Unit]] = Nil
@@ -31,7 +32,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
+  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None, replicationFactor)
 
   def wal: ArangoWriteAheadLog = arangoDatabase.wal
 
@@ -62,6 +63,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     arangoDatabase.query(query, transaction.map(_.id))
   }
 
+  def replicationFactor(): Long = replicationFactor
   def collections: List[Collection[_]] = _collections
   def views: List[View[_]] = _views
   def initialized: Boolean = _initialized.get()
@@ -70,7 +72,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def vertex[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.vertex[D]
   def edge[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.edge[D]
-  def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection)
+  def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection, replicationFactor)
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],
                              includeAllFields: Boolean,

@@ -5,7 +5,7 @@ import com.outr.arango.transaction.Transaction
 import scala.concurrent.{ExecutionContext, Future}
 
 trait WritableCollection[D <: Document[D]] extends Collection[D] {
-  override def withTransaction(transaction: Transaction): WritableCollection[D] = new TransactionCollection[D](this, transaction) with WritableCollection[D]
+  override def withTransaction(transaction: Transaction): WritableCollection[D] = new TransactionCollection[D](this, transaction, replicationFactor) with WritableCollection[D]
 
   def insertOne(document: D,
                 waitForSync: Boolean = false,

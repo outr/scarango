@@ -39,7 +39,7 @@ object GraphMacros {
       q"""
          import com.outr.arango._
 
-         new DocumentCollection[$d]($graph, $companion, CollectionType.Document, $companion.indexes, None)
+         new DocumentCollection[$d]($graph, $companion, CollectionType.Document, $companion.indexes, None, 3L)
        """)
   }
 
@@ -53,7 +53,7 @@ object GraphMacros {
       q"""
          import com.outr.arango._
 
-         new DocumentCollection[$d]($graph, $companion, CollectionType.Edge, $companion.indexes, None)
+         new DocumentCollection[$d]($graph, $companion, CollectionType.Edge, $companion.indexes, None, 3L)
        """)
   }
 }

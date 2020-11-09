@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait QueryWritableCollection[D <: Document[D]] extends WritableCollection[D] {
   lazy val all: QueryBuilder[D] = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
 
-  override def withTransaction(transaction: Transaction): QueryWritableCollection[D] = new TransactionCollection[D](this, transaction) with QueryWritableCollection[D]
+  override def withTransaction(transaction: Transaction): QueryWritableCollection[D] = new TransactionCollection[D](this, transaction, replicationFactor) with QueryWritableCollection[D]
 
   def query(query: Query): QueryBuilder[D] = graph.query(query, transaction).as[D](model.serialization)
 

@@ -6,4 +6,6 @@ class DocumentCollection[D <: Document[D]](override val graph: Graph,
                                            override val model: DocumentModel[D],
                                            override val `type`: CollectionType,
                                            override val indexes: List[Index],
-                                           override val transaction: Option[Transaction]) extends QueryWritableCollection[D]
+                                           override val transaction: Option[Transaction],
+                                           override val replicationFactor: Long
+                                          ) extends QueryWritableCollection[D]

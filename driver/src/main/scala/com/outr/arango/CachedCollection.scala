@@ -4,7 +4,7 @@ import reactify._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CachedCollection[D <: Document[D]](override val collection: Collection[D]) extends WrappedCollection[D] with WritableCollection[D] { self =>
+class CachedCollection[D <: Document[D]](override val collection: Collection[D], val replicationFactor: Long) extends WrappedCollection[D] with WritableCollection[D] { self =>
   private object _cache extends Var[Map[Id[D], D]](Map.empty) {
     def +=(tuple: (Id[D], D)): Unit = set(get + tuple)
   }

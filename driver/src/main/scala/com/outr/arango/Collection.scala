@@ -18,10 +18,11 @@ trait Collection[D <: Document[D]] {
   def indexes: List[Index]
   def transaction: Option[Transaction]
   def transactionId: Option[String] = transaction.map(_.id)
+  def replicationFactor: Long
 
   def name: String = model.collectionName
 
-  def withTransaction(transaction: Transaction): Collection[D] = new TransactionCollection[D](this, transaction)
+  def withTransaction(transaction: Transaction): Collection[D] = new TransactionCollection[D](this, transaction, replicationFactor)
 
   def get(id: Id[D])(implicit ec: ExecutionContext): Future[Option[D]] = {
     arangoCollection.document.get(id, transactionId)(ec, model.serialization)
@@ -51,7 +52,7 @@ trait Collection[D <: Document[D]] {
   protected[arango] def create(collectionId: Option[String])(implicit ec: ExecutionContext): Future[Unit] = for {
     // Create the collection if it doesn't already exist
     _ <- if (collectionId.isEmpty) {
-      arangoCollection.create(`type` = `type`).map { info =>
+      arangoCollection.create(`type` = `type`, replicationFactor = replicationFactor).map { info =>
         info.id.foreach(id => _id = id)
       }
     } else {
