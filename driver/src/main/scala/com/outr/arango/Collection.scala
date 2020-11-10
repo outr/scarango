@@ -15,6 +15,7 @@ trait Collection[D <: Document[D]] {
   def graph: Graph
   def model: DocumentModel[D]
   def `type`: CollectionType
+  def options: CollectionOptions
   def indexes: List[Index]
   def transaction: Option[Transaction]
   def transactionId: Option[String] = transaction.map(_.id)
@@ -51,7 +52,23 @@ trait Collection[D <: Document[D]] {
   protected[arango] def create(collectionId: Option[String])(implicit ec: ExecutionContext): Future[Unit] = for {
     // Create the collection if it doesn't already exist
     _ <- if (collectionId.isEmpty) {
-      arangoCollection.create(`type` = `type`).map { info =>
+      arangoCollection.create(
+        distributeShardsLike = options.distributeShardsLike,
+        doCompact = options.doCompact,
+        indexBuckets = options.indexBuckets,
+        isSystem = options.isSystem,
+        isVolatile = options.isVolatile,
+        journalSize = options.journalSize,
+        keyOptions = options.keyOptions,
+        numberOfShards = options.numberOfShards,
+        replicationFactor = options.replicationFactor,
+        shardKeys = options.shardKeys,
+        shardingStrategy = options.shardingStrategy,
+        smartJoinAttribute = options.smartJoinAttribute,
+        waitForSync = options.waitForSync,
+        waitForSyncReplication = options.waitForSyncReplication,
+        enforceReplicationFactor = options.enforceReplicationFactor
+      ).map { info =>
         info.id.foreach(id => _id = id)
       }
     } else {

@@ -22,7 +22,8 @@ import scala.language.experimental.macros
 class Graph(val databaseName: String = ArangoDB.config.db,
             baseURL: URL = ArangoDB.config.url,
             credentials: Option[Credentials] = ArangoDB.credentials,
-            httpClient: HttpClient = HttpClient) {
+            httpClient: HttpClient = HttpClient,
+            val defaultCollectionOptions: CollectionOptions = CollectionOptions()) {
   private var _collections: List[Collection[_]] = Nil
   private var _views: List[View[_]] = Nil
   private var _initializations: List[() => Future[Unit]] = Nil
@@ -31,7 +32,9 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
   lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None)
+  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None, backingStoreCollectionOptions)
+
+  protected def backingStoreCollectionOptions: CollectionOptions = defaultCollectionOptions
 
   def wal: ArangoWriteAheadLog = arangoDatabase.wal
 
@@ -68,8 +71,10 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
 
-  def vertex[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.vertex[D]
-  def edge[D <: Document[D]]: DocumentCollection[D] = macro GraphMacros.edge[D]
+  def vertex[D <: Document[D]](): DocumentCollection[D] = macro GraphMacros.vertex[D]
+  def vertex[D <: Document[D]](options: CollectionOptions): DocumentCollection[D] = macro GraphMacros.vertexOptions[D]
+  def edge[D <: Document[D]](): DocumentCollection[D] = macro GraphMacros.edge[D]
+  def edge[D <: Document[D]](options: CollectionOptions): DocumentCollection[D] = macro GraphMacros.edgeOptions[D]
   def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection)
   def view[D <: Document[D]](name: String,
                              collection: Collection[D],

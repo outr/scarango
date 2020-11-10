@@ -3,7 +3,7 @@ import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.0"
+version in ThisBuild := "2.4.1-SNAPSHOT"
 scalaVersion in ThisBuild := "2.13.3"
 crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -28,7 +28,7 @@ developers in ThisBuild := List(
 
 val youiVersion = "0.13.17"
 val profigVersion = "3.0.4"
-val scalaTestVersion = "3.2.0-M4"
+val scalaTestVersion = "3.2.3"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
   tests.groupBy(_.name).map {
