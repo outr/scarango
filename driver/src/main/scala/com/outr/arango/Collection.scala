@@ -65,6 +65,7 @@ trait Collection[D <: Document[D]] {
         shardKeys = options.shardKeys,
         shardingStrategy = options.shardingStrategy,
         smartJoinAttribute = options.smartJoinAttribute,
+        `type` = `type`,
         waitForSync = options.waitForSync,
         waitForSyncReplication = options.waitForSyncReplication,
         enforceReplicationFactor = options.enforceReplicationFactor
