@@ -3,7 +3,7 @@ import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.1"
+version in ThisBuild := "2.4.2-SNAPSHOT"
 scalaVersion in ThisBuild := "2.13.3"
 crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
@@ -26,7 +26,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.13.17"
+val youiVersion = "0.13.18"
 val profigVersion = "3.0.4"
 val scalaTestVersion = "3.2.3"
 

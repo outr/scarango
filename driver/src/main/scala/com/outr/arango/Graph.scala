@@ -97,7 +97,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     ()
   }
 
-  def init()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
+  def init()(implicit ec: ExecutionContext): Future[Unit] = {
     if (_initialized.compareAndSet(false, true)) {
       (for {
         // Initialize the database
@@ -132,7 +132,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     }
   }
 
-  def truncate()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
+  def truncate()(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       _ <- Future.sequence(collections.flatMap {
         case c: WritableCollection[_] => Some(c.truncate())
@@ -143,7 +143,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
     }
   }
 
-  def drop()(implicit ec: ExecutionContext): Future[Unit] = scribe.async {
+  def drop()(implicit ec: ExecutionContext): Future[Unit] = {
     arangoDatabase.drop().map(_ => ())
   }
 
@@ -164,7 +164,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
                       upgrades: List[DatabaseUpgrade],
                       newDatabase: Boolean,
                       currentlyBlocking: Boolean = true)
-                     (implicit ec: ExecutionContext): Future[Unit] = scribe.async {
+                     (implicit ec: ExecutionContext): Future[Unit] = {
     val blocking = upgrades.exists(_.blockStartup)
     val future = upgrades.headOption match {
       case Some(u) => if (!newDatabase || u.applyToNew) {

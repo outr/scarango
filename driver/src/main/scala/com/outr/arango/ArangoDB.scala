@@ -30,7 +30,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     .interceptor(this)
     .dropNullValuesInJson(true)
 
-  def init()(implicit ec: ExecutionContext): Future[DatabaseState] = scribe.async {
+  def init()(implicit ec: ExecutionContext): Future[DatabaseState] = {
     assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")
     _state := DatabaseState.Initializing
     val start = System.currentTimeMillis()

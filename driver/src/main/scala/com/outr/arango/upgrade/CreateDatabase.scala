@@ -9,7 +9,7 @@ object CreateDatabase extends DatabaseUpgrade {
   override def blockStartup: Boolean = true
   override def alwaysRun: Boolean = true
 
-  override def upgrade(graph: Graph): Future[Unit] = scribe.async {
+  override def upgrade(graph: Graph): Future[Unit] = {
     for {
       databases <- graph.arangoDB.api.system.list()
       _ <- if (databases.result.getOrElse(Nil).contains(graph.databaseName)) {
