@@ -1,8 +1,5 @@
 package com.outr.arango
 
-import io.circe.Decoder.Result
-import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
-
 sealed abstract class Analyzer(val name: String)
 
 object Analyzer {

@@ -1,33 +1,50 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import Tests._
 
-name := "scarango"
-organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.2"
-scalaVersion in ThisBuild := "2.13.3"
-crossScalaVersions in ThisBuild := List("2.13.3", "2.12.12")
-scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
-resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
-resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
+// Scala versions
+val scala213 = "2.13.5"
+val scala212 = "2.12.13"
+val scala3 = "3.0.0-RC1"
+val scala2 = List(scala213, scala212)
+val allScalaVersions = scala3 :: scala2
+val scalaJVMVersions = allScalaVersions
+val scalaJSVersions = allScalaVersions
 
-publishTo in ThisBuild := sonatypePublishToBundle.value
-sonatypeProfileName in ThisBuild := "com.outr"
-publishMavenStyle in ThisBuild := true
-licenses in ThisBuild := Seq("MIT" -> url("https://github.com/outr/scarango/blob/master/LICENSE"))
-sonatypeProjectHosting in ThisBuild := Some(xerial.sbt.Sonatype.GitHubHosting("outr", "scarango", "matt@outr.com"))
-homepage in ThisBuild := Some(url("https://github.com/outr/scarango"))
-scmInfo in ThisBuild := Some(
+// Variables
+val org: String = "com.outr"
+val projectName: String = "scarango"
+val githubOrg: String = "outr"
+val email: String = "matt@matthicks.com"
+val developerId: String = "darkfrog"
+val developerName: String = "Matt Hicks"
+val developerURL: String = "http://matthicks.com"
+
+name := projectName
+ThisBuild / organization := org
+ThisBuild / version := "2.4.3-SNAPSHOT"
+ThisBuild / scalaVersion := scala213
+ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
+ThisBuild / javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+
+ThisBuild / resolvers += "yahoo-bintray" at "https://yahoo.bintray.com/maven"
+
+ThisBuild / publishTo := sonatypePublishTo.value
+ThisBuild / sonatypeProfileName := org
+ThisBuild / licenses := Seq("MIT" -> url(s"https://github.com/$githubOrg/$projectName/blob/master/LICENSE"))
+ThisBuild / sonatypeProjectHosting := Some(xerial.sbt.Sonatype.GitHubHosting(githubOrg, projectName, email))
+ThisBuild / homepage := Some(url(s"https://github.com/$githubOrg/$projectName"))
+ThisBuild / scmInfo := Some(
   ScmInfo(
-    url("https://github.com/outr/scarango"),
-    "scm:git@github.com:outr/scarango.git"
+    url(s"https://github.com/$githubOrg/$projectName"),
+    s"scm:git@github.com:$githubOrg/$projectName.git"
   )
 )
-developers in ThisBuild := List(
-  Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
+ThisBuild / developers := List(
+  Developer(id=developerId, name=developerName, email=email, url=url(developerURL))
 )
 
-val youiVersion = "0.13.18"
-val profigVersion = "3.0.4"
+val youiVersion = "0.14.0"
+val profigVersion = "3.2.1"
 val scalaTestVersion = "3.2.3"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
@@ -41,13 +58,14 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 lazy val root = project.in(file("."))
   .aggregate(api, coreJS, coreJVM, driver, monitored)
   .settings(
+    name := projectName,
     publish := {},
     publishLocal := {}
   )
 
 lazy val api = project.in(file("api"))
   .settings(
-    name := "scarango-api",
+    name := s"$projectName-api",
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "io.youi" %% "youi-client" % youiVersion,
@@ -59,7 +77,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("core"))
   .settings(
-    name := "scarango-core",
+    name := s"$projectName-core",
     libraryDependencies ++= Seq(
       "io.youi" %% "youi-core" % youiVersion
     )
@@ -70,13 +88,10 @@ lazy val coreJVM = core.jvm
 
 lazy val driver = project.in(file("driver"))
   .settings(
-    name := "scarango-driver",
+    name := s"$projectName-driver",
     fork := true,
-    testGrouping in Test := groupByName((definedTests in Test).value),
-    testOptions in Test += Tests.Argument("-oD"),
-    parallelExecution in Test := false,
     libraryDependencies ++= Seq(
-      "com.outr" %% "profig-all" % profigVersion,
+      "com.outr" %% "profig" % profigVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )
@@ -84,11 +99,8 @@ lazy val driver = project.in(file("driver"))
 
 lazy val monitored = project.in(file("monitored"))
   .settings(
-    name := "scarango-monitored",
+    name := s"$projectName-monitored",
     fork := true,
-    testGrouping in Test := groupByName((definedTests in Test).value),
-    testOptions in Test += Tests.Argument("-oD"),
-    parallelExecution in Test := false,
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
@@ -97,7 +109,7 @@ lazy val monitored = project.in(file("monitored"))
 
 lazy val plugin = project.in(file("plugin"))
   .settings(
-    name := "scarango-plugin",
+    name := s"$projectName-plugin",
     sbtPlugin := true,
-    crossSbtVersions := Vector("0.13.18", "1.3.8")
+    crossSbtVersions := Vector("0.13.18", "1.5.0")
   )

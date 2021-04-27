@@ -27,6 +27,22 @@ package object query {
 
   implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
 
+  implicit class ArrayFieldExtras[T](field: => Field[List[T]]) {
+    def thisField: Field[List[T]] = field
+
+    private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
+      val context = QueryBuilderContext()
+      val (refOption, f) = withReference(field)
+      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(ref)
+      val rightName = context.createArg
+      val left = Query(s"$leftName.${f.fieldName}", Map.empty)
+      val right = Query(s"@$rightName", Map(rightName -> Value.values(values.map(conversion))))
+
+      new Filter(left, condition, right)
+    }
+  }
+
   implicit class FieldExtras[T](field: => Field[T]) {
     def thisField: Field[T] = field
 
