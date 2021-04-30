@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import fabric.rw._
+
 sealed abstract class Analyzer(val name: String)
 
 object Analyzer {
@@ -21,14 +23,5 @@ object Analyzer {
 
   def apply(name: String): Analyzer = map.getOrElse(name, throw new RuntimeException(s"Unable to find analyzer by name: $name"))
 
-  implicit val decoder: Decoder[Analyzer] = new Decoder[Analyzer] {
-    override def apply(c: HCursor): Result[Analyzer] = c.value.asString match {
-      case Some(s) => Right(Analyzer(s))
-      case None => Left(DecodingFailure(s"Expected String to decode Analyzer, but got: ${c.value}", Nil))
-    }
-  }
-
-  implicit val encoder: Encoder[Analyzer] = new Encoder[Analyzer] {
-    override def apply(a: Analyzer): Json = Json.fromString(a.name)
-  }
+  implicit val rw: ReaderWriter[Analyzer] = ReaderWriter(_.name, v => apply(v.asStr.value))
 }
