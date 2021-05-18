@@ -1,6 +1,7 @@
 package com.outr.arango
 
-import io.circe.Json
+import fabric.{Null, obj}
+import fabric.parse.Json
 
 case class Query(value: String, args: Map[String, Value], fixed: Boolean = false) {
   def fix(): Query = if (fixed) {
@@ -14,10 +15,10 @@ case class Query(value: String, args: Map[String, Value], fixed: Boolean = false
         } else {
           s"@$k"
         }
-        updatedValue = updatedValue.replace(key, v.json.asString.getOrElse(throw new RuntimeException(s"Cannot expand special: ${v.json}")))
+        updatedValue = updatedValue.replace(key, Json.format(v.json))
         None
       }
-      case (k, v) if v.json == Json.Null => {
+      case (k, v) if v.json == Null => {
         val key = if (v.excludeAt) {
           k
         } else {
@@ -33,9 +34,9 @@ case class Query(value: String, args: Map[String, Value], fixed: Boolean = false
 
   def +(that: Query): Query = Query.merge(List(this, that))
 
-  def bindVars: Json = Json.obj(args.toList.map {
+  def bindVars: fabric.Value = obj(args.toList.map {
     case (key, v) => {
-      val argValue: Json = v.json
+      val argValue: fabric.Value = v.json
       key -> argValue
     }
   }: _*)

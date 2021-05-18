@@ -20,8 +20,8 @@ object APIAnalyzer {
     }
 
 
-  def post(client: HttpClient, body: PostAPIAnalyzer)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, body: PostAPIAnalyzer)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/analyzer", append = true) 
-    .restful[PostAPIAnalyzer, Json](body)
+    .restful[PostAPIAnalyzer, Value](body)
 }
