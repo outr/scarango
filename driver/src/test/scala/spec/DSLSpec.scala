@@ -40,6 +40,20 @@ class DSLSpec extends AsyncWordSpec with Matchers {
           |RETURN p""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam")
       ))
     }
+    "build a query with a remove" in {
+      val p = Person.ref
+
+      val query = aql {
+        FOR (p) IN Database.people
+        FILTER((p.age is 21) && (p.name isNot "Adam"))
+        REMOVE (p) IN Database.people
+      }
+      query should be(Query(
+        """FOR p IN people
+          |FILTER p.age == @arg1 && p.name != @arg2
+          |REMOVE p IN people""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam")
+      ))
+    }
     "build an update query" in {
       val p = Person.ref
 

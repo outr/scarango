@@ -142,6 +142,8 @@ package object query {
 
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = ForPartial(ref)
 
+  def REMOVE[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): RemovePartial[D, Model] = RemovePartial(ref)
+
   def SORT[T](f: => (Field[T], SortDirection)): Unit = {
     val context = QueryBuilderContext()
     val (refOption, (field, sort)) = withReference(f)
