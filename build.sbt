@@ -3,9 +3,9 @@ import Tests._
 
 name := "scarango"
 organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.3-SNAPSHOT"
+version in ThisBuild := "2.4.3"
 scalaVersion in ThisBuild := "2.13.6"
-crossScalaVersions in ThisBuild := List("2.13.6", "2.12.13")
+crossScalaVersions in ThisBuild := List("2.13.6", "2.12.12")
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
 resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
 resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
@@ -99,5 +99,6 @@ lazy val plugin = project.in(file("plugin"))
   .settings(
     name := "scarango-plugin",
     sbtPlugin := true,
-    crossSbtVersions := Vector("0.13.18", "1.3.8")
+    scalaVersion := "2.12.13",
+    crossSbtVersions := Vector("1.5.2")
   )

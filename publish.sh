@@ -4,5 +4,6 @@ set -e
 
 sbt +clean
 sbt test
-sbt +api/publishSigned +coreJS/publishSigned +coreJVM/publishSigned +driver/publishSigned +monitored/publishSigned ++2.12.8 plugin/publishSigned
+sbt +api/publishSigned +coreJS/publishSigned +coreJVM/publishSigned +driver/publishSigned +monitored/publishSigned
+sbt plugin/publishSigned
 sbt sonatypeBundleRelease

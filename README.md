@@ -17,7 +17,7 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "2.4.2"
+libraryDependencies += "com.outr" %% "scarango-driver" % "2.4.3"
 ```
 
 ## Introduction
