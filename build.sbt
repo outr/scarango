@@ -2,32 +2,32 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import Tests._
 
 name := "scarango"
-organization in ThisBuild := "com.outr"
-version in ThisBuild := "2.4.3"
-scalaVersion in ThisBuild := "2.13.6"
-crossScalaVersions in ThisBuild := List("2.13.6", "2.12.12")
-scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
-resolvers in ThisBuild += Resolver.sonatypeRepo("releases")
-resolvers in ThisBuild += Resolver.sonatypeRepo("snapshots")
+ThisBuild / organization := "com.outr"
+ThisBuild / version := "2.4.4-SNAPSHOT"
+ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / crossScalaVersions := List("2.13.6", "2.12.12")
+ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
+ThisBuild / resolvers += Resolver.sonatypeRepo("releases")
+ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
-publishTo in ThisBuild := sonatypePublishToBundle.value
-sonatypeProfileName in ThisBuild := "com.outr"
-publishMavenStyle in ThisBuild := true
-licenses in ThisBuild := Seq("MIT" -> url("https://github.com/outr/scarango/blob/master/LICENSE"))
-sonatypeProjectHosting in ThisBuild := Some(xerial.sbt.Sonatype.GitHubHosting("outr", "scarango", "matt@outr.com"))
-homepage in ThisBuild := Some(url("https://github.com/outr/scarango"))
-scmInfo in ThisBuild := Some(
+ThisBuild / publishTo := sonatypePublishToBundle.value
+ThisBuild / sonatypeProfileName := "com.outr"
+ThisBuild / publishMavenStyle := true
+ThisBuild / licenses := Seq("MIT" -> url("https://github.com/outr/scarango/blob/master/LICENSE"))
+ThisBuild / sonatypeProjectHosting := Some(xerial.sbt.Sonatype.GitHubHosting("outr", "scarango", "matt@outr.com"))
+ThisBuild / homepage := Some(url("https://github.com/outr/scarango"))
+ThisBuild / scmInfo := Some(
   ScmInfo(
     url("https://github.com/outr/scarango"),
     "scm:git@github.com:outr/scarango.git"
   )
 )
-developers in ThisBuild := List(
+ThisBuild / developers := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.13.18"
-val profigVersion = "3.0.4"
+val youiVersion = "0.14.0"
+val profigVersion = "3.2.3"
 val scalaTestVersion = "3.2.3"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
@@ -76,7 +76,7 @@ lazy val driver = project.in(file("driver"))
     testOptions in Test += Tests.Argument("-oD"),
     parallelExecution in Test := false,
     libraryDependencies ++= Seq(
-      "com.outr" %% "profig-all" % profigVersion,
+      "com.outr" %% "profig" % profigVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )
   )

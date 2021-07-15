@@ -4,7 +4,6 @@ import com.outr.arango.api.model.{CollectionInfo, PostAPICollection, PostAPIColl
 import com.outr.arango.api.{APICollection, APICollectionCollectionName, APICollectionCollectionNameLoad, APICollectionCollectionNameTruncate, APICollectionCollectionNameUnload, APIWalTail, WALOperations}
 import com.outr.arango.model.ArangoResponse
 import io.youi.client.HttpClient
-import profig.JsonUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 

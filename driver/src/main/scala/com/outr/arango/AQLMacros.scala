@@ -96,7 +96,7 @@ object AQLMacros {
     import c.universe._
 
     // Make sure that Profig is initialized
-    Profig.initConfigurationBlocking()
+    Profig.initConfiguration()
 
     c.prefix.tree match {
       case Apply(_, List(Apply(_, rawParts))) => {

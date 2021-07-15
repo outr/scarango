@@ -1,6 +1,9 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric.rw.{ReaderWriter, ccRW}
 
 case class AdminEchoClientStruct()
+
+object AdminEchoClientStruct {
+  implicit val rw: ReaderWriter[AdminEchoClientStruct] = ccRW
+}

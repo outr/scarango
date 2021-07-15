@@ -1,10 +1,12 @@
 package com.outr.arango
 
 import io.youi.Unique
+import fabric.rw.ReaderWriter
 
 trait DocumentModel[D <: Document[D]] {
   val collectionName: String
-  implicit val serialization: Serialization[D]
+
+  implicit val rw: ReaderWriter[D]
 
   protected def generateId(): String = Unique()
 
