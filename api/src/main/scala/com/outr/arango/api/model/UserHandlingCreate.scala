@@ -1,9 +1,13 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class UserHandlingCreate(user: String,
                               active: Option[Boolean] = None,
-                              extra: Option[Json] = None,
+                              extra: Option[Value] = None,
                               passwd: Option[String] = None)
+
+object UserHandlingCreate {
+  implicit val rw: ReaderWriter[UserHandlingCreate] = ccRW
+}

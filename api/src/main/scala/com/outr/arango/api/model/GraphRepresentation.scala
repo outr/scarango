@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class GraphRepresentation(Id: Option[String] = None,
                                Rev: Option[String] = None,
@@ -12,3 +12,7 @@ case class GraphRepresentation(Id: Option[String] = None,
                                orphanCollections: Option[List[String]] = None,
                                replicationFactor: Option[Int] = None,
                                smartGraphAttribute: Option[String] = None)
+
+object GraphRepresentation {
+  implicit val rw: ReaderWriter[GraphRepresentation] = ccRW
+}

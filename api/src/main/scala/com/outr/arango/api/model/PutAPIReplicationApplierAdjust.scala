@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPIReplicationApplierAdjust(endpoint: String,
                                           adaptivePolling: Option[Boolean] = None,
@@ -24,3 +24,7 @@ case class PutAPIReplicationApplierAdjust(endpoint: String,
                                           restrictType: Option[String] = None,
                                           username: Option[String] = None,
                                           verbose: Option[Boolean] = None)
+
+object PutAPIReplicationApplierAdjust {
+  implicit val rw: ReaderWriter[PutAPIReplicationApplierAdjust] = ccRW
+}

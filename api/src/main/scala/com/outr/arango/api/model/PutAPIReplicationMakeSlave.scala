@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPIReplicationMakeSlave(endpoint: String,
                                       adaptivePolling: Option[Boolean] = None,
@@ -23,3 +23,7 @@ case class PutAPIReplicationMakeSlave(endpoint: String,
                                       restrictType: Option[String] = None,
                                       username: Option[String] = None,
                                       verbose: Option[Boolean] = None)
+
+object PutAPIReplicationMakeSlave {
+  implicit val rw: ReaderWriter[PutAPIReplicationMakeSlave] = ccRW
+}

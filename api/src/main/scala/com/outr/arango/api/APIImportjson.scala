@@ -4,12 +4,12 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIImportjson {
 
-  def post(client: HttpClient, body: Json, `type`: String, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, body: Value, `type`: String, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/import#json", append = true) 
     .params("type" -> `type`.toString)
@@ -21,5 +21,5 @@ object APIImportjson {
     .param[Option[String]]("onDuplicate", onDuplicate, None)
     .param[Option[Boolean]]("complete", complete, None)
     .param[Option[Boolean]]("details", details, None)
-    .restful[Json, Json](body)
+    .restful[Value, Value](body)
 }

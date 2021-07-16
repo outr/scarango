@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class HTTPAPITRAVERSAL(startVertex: String,
                             direction: Option[String] = None,
@@ -19,3 +19,7 @@ case class HTTPAPITRAVERSAL(startVertex: String,
                             strategy: Option[String] = None,
                             uniqueness: Option[String] = None,
                             visitor: Option[String] = None)
+
+object HTTPAPITRAVERSAL {
+  implicit val rw: ReaderWriter[HTTPAPITRAVERSAL] = ccRW
+}

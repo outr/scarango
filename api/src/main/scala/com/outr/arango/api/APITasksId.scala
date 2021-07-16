@@ -4,7 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APITasksId {
@@ -21,8 +21,8 @@ object APITasksId {
     .call[APITaskStruct]
 
 
-  def put(client: HttpClient, id: String, body: PutAPINewTasks)(implicit ec: ExecutionContext): Future[Json] = client
+  def put(client: HttpClient, id: String, body: PutAPINewTasks)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Put)
     .path(path"/_api/tasks/{id}".withArguments(Map("id" -> id)), append = true)
-    .restful[PutAPINewTasks, Json](body)
+    .restful[PutAPINewTasks, Value](body)
 }

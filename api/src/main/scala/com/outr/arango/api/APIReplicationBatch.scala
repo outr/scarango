@@ -4,13 +4,13 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationBatch {
 
-  def post(client: HttpClient, body: PostBatchReplication)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, body: PostBatchReplication)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/replication/batch", append = true) 
-    .restful[PostBatchReplication, Json](body)
+    .restful[PostBatchReplication, Value](body)
 }

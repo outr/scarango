@@ -4,7 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphVertex {
@@ -15,8 +15,8 @@ object APIGharialGraphVertex {
     .call[GeneralGraphListVertexHttpExamplesRc200]
 
 
-  def post(client: HttpClient, graph: String)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, graph: String)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/vertex".withArguments(Map("graph" -> graph)), append = true)
-    .call[Json]
+    .call[Value]
 }

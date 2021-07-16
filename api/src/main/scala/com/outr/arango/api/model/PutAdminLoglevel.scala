@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAdminLoglevel(agency: Option[String] = None,
                             agencycomm: Option[String] = None,
@@ -43,3 +43,7 @@ case class PutAdminLoglevel(agency: Option[String] = None,
                             trx: Option[String] = None,
                             v8: Option[String] = None,
                             views: Option[String] = None)
+
+object PutAdminLoglevel {
+  implicit val rw: ReaderWriter[PutAdminLoglevel] = ccRW
+}

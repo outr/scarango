@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PostAPICollection(name: String,
                              distributeShardsLike: Option[String] = None,
@@ -18,3 +18,7 @@ case class PostAPICollection(name: String,
                              smartJoinAttribute: Option[String] = None,
                              `type`: Option[Long] = None,
                              waitForSync: Option[Boolean] = None)
+
+object PostAPICollection {
+  implicit val rw: ReaderWriter[PostAPICollection] = ccRW
+}

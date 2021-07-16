@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPISimpleWithinRectangle(collection: String,
                                        geo: Option[String] = None,
@@ -11,3 +11,7 @@ case class PutAPISimpleWithinRectangle(collection: String,
                                        longitude1: Option[String] = None,
                                        longitude2: Option[String] = None,
                                        skip: Option[String] = None)
+
+object PutAPISimpleWithinRectangle {
+  implicit val rw: ReaderWriter[PutAPISimpleWithinRectangle] = ccRW
+}

@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutApiQueryProperties(enabled: Boolean,
                                  maxQueryStringLength: Option[Long] = None,
@@ -9,3 +9,7 @@ case class PutApiQueryProperties(enabled: Boolean,
                                  slowQueryThreshold: Option[Long] = None,
                                  trackBindVars: Option[Boolean] = None,
                                  trackSlowQueries: Option[Boolean] = None)
+
+object PutApiQueryProperties {
+  implicit val rw: ReaderWriter[PutApiQueryProperties] = ccRW
+}

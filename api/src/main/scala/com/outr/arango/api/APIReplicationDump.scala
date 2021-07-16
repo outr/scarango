@@ -4,12 +4,12 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationDump {
 
-  def get(client: HttpClient, collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
+  def get(client: HttpClient, collection: String, chunkSize: Option[Double] = None, batchId: Double, from: Option[Double] = None, to: Option[Double] = None, includeSystem: Option[Boolean] = None, ticks: Option[Boolean] = None, flush: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Get)
     .path(path"/_api/replication/dump", append = true) 
     .params("collection" -> collection.toString)
@@ -20,5 +20,5 @@ object APIReplicationDump {
     .param[Option[Boolean]]("includeSystem", includeSystem, None)
     .param[Option[Boolean]]("ticks", ticks, None)
     .param[Option[Boolean]]("flush", flush, None)
-    .call[Json]
+    .call[Value]
 }

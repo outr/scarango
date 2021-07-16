@@ -4,7 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdge {
@@ -15,8 +15,8 @@ object APIGharialGraphEdge {
     .call[GeneralGraphListEdgeHttpExamplesRc200]
 
 
-  def post(client: HttpClient, graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, graph: String, body: GeneralGraphEdgeDefinitionAddHttpExamples)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial/{graph}/edge".withArguments(Map("graph" -> graph)), append = true)
-    .restful[GeneralGraphEdgeDefinitionAddHttpExamples, Json](body)
+    .restful[GeneralGraphEdgeDefinitionAddHttpExamples, Value](body)
 }
