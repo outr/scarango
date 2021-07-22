@@ -31,6 +31,7 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     .dropNullValuesInJson(true)
 
   def init()(implicit ec: ExecutionContext): Future[DatabaseState] = {
+    fabric.Obj.ExcludeNullValues = true
     assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")
     _state := DatabaseState.Initializing
     val start = System.currentTimeMillis()

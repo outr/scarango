@@ -211,7 +211,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     "delete Jane in a transaction" in {
       val query = aql"FOR user IN users FILTER user.name == 'Jane Doe' REMOVE user IN users RETURN user"
       dbExample.transaction(List(query), writeCollections = List("users")).map { response =>
-        response should be(Nil)
+        response.map(_.apply("_countTotal").asInt) should be(List(1))
       }
     }
     "list all user names and verify Jane is gone" in {
@@ -232,7 +232,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "drop the test database" in {
       dbExample.drop().map { response =>
-        response should be(Nil)
+        response should be(true)
       }
     }
   }
