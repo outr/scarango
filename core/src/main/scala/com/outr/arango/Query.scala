@@ -15,7 +15,8 @@ case class Query(value: String, args: Map[String, Value], fixed: Boolean = false
         } else {
           s"@$k"
         }
-        updatedValue = updatedValue.replace(key, Json.format(v.json))
+        val output = v.json.getString.getOrElse(Json.format(v.json))
+        updatedValue = updatedValue.replace(key, output)
         None
       }
       case (k, v) if v.json == Null => {
