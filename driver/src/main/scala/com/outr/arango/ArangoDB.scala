@@ -1,15 +1,15 @@
 package com.outr.arango
 
 import com.outr.arango.api._
-import com.outr.arango.api.model.GetAPIDatabaseNew
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
+import fabric.parse.Json
+import fabric.rw.{Asable, ReaderWriter, ccRW}
 import io.youi.client.{HttpClient, HttpClientConfig}
 import io.youi.client.intercept.Interceptor
 import io.youi.http.{Headers, HttpRequest, HttpResponse}
 import io.youi.net._
-import profig.{JsonUtil, Profig}
+import profig.Profig
 import reactify.{Val, Var}
-import io.circe.parser._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -63,9 +63,9 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     val system = new SystemDatabase(ArangoDB.this)
 
     object db extends ArangoDatabase(ArangoDB.this, client, database) {
-      def current(implicit ec: ExecutionContext): Future[ArangoResponse[DatabaseInfo]] = APIDatabaseCurrent
+      def current(implicit ec: ExecutionContext): Future[DatabaseInfo] = APIDatabaseCurrent
         .get(client)
-        .map(json => JsonUtil.fromJson[ArangoResponse[DatabaseInfo]](json))
+        .map(_.as[ArangoResponse].value[DatabaseInfo])
 
       def apply(name: String): ArangoDatabase = new ArangoDatabase(ArangoDB.this, client.path(Path.parse(s"/_db/$name/")), name)
     }
@@ -79,17 +79,18 @@ class ArangoDB(val database: String = ArangoDB.config.db,
     Future.successful(response)
   } else {
     val content = response.content.getOrElse(throw new RuntimeException(s"No content for failed response: ${request.url} (${response.status})"))
-    val json = parse(content.asString) match {
-      case Left(pf) => throw pf
-      case Right(j) => j
-    }
-    val error = JsonUtil.fromJson[ArangoError](json)
+    val json = Json.parse(content.asString)
+    val error = json.as[ArangoError]
     throw new ArangoException(error, request, response, None)
   }
 
   override def toString: String = s"ArangoDB($database)"
 
   case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
+
+  object AuthenticationResponse {
+    implicit val rw: ReaderWriter[AuthenticationResponse] = ccRW
+  }
 }
 
 object ArangoDB {

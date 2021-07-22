@@ -3,6 +3,7 @@ package com.outr.arango
 import com.outr.arango.api.model.{CollectionInfo, PostAPICollection, PostAPICollectionOpts}
 import com.outr.arango.api.{APICollection, APICollectionCollectionName, APICollectionCollectionNameLoad, APICollectionCollectionNameTruncate, APICollectionCollectionNameUnload, APIWalTail, WALOperations}
 import com.outr.arango.model.ArangoResponse
+import fabric.rw.Asable
 import io.youi.client.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,19 +58,25 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
   lazy val document: ArangoDocument = new ArangoDocument(client, dbName, collectionName)
 
   def unload()(implicit ec: ExecutionContext): Future[CollectionLoad] = {
-    APICollectionCollectionNameUnload.put(client, collectionName).map(JsonUtil.fromJson[CollectionLoad](_))
+    APICollectionCollectionNameUnload.put(client, collectionName).map(_.as[CollectionLoad])
   }
 
   def load()(implicit ec: ExecutionContext): Future[CollectionLoad] = {
-    APICollectionCollectionNameLoad.put(client, collectionName).map(JsonUtil.fromJson[CollectionLoad](_))
+    APICollectionCollectionNameLoad.put(client, collectionName).map(_.as[CollectionLoad])
   }
 
   def truncate()(implicit ec: ExecutionContext): Future[TruncateCollectionResponse] = {
-    APICollectionCollectionNameTruncate.put(client, collectionName).map(JsonUtil.fromJson[TruncateCollectionResponse](_))
+    APICollectionCollectionNameTruncate.put(client, collectionName).map(_.as[TruncateCollectionResponse])
   }
 
   def drop(isSystem: Boolean = false)(implicit ec: ExecutionContext): Future[Boolean] = APICollectionCollectionName
     .delete(client, collectionName, isSystem = Some(isSystem))
-    .map(JsonUtil.fromJson[ArangoResponse[Option[Boolean]]](_))
-    .map(!_.error)
+    .map(_.as[ArangoResponse])
+    .map { ar =>
+      if (ar.error) {
+        false
+      } else {
+        ar.value[Option[Boolean]].getOrElse(false)
+      }
+    }
 }

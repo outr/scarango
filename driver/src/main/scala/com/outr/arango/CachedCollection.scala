@@ -2,6 +2,8 @@ package com.outr.arango
 
 import reactify._
 
+import fabric.rw._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class CachedCollection[D <: Document[D]](override val collection: Collection[D]) extends WrappedCollection[D] with WritableCollection[D] { self =>
@@ -35,7 +37,8 @@ class CachedCollection[D <: Document[D]](override val collection: Collection[D])
 
   def refresh()(implicit ec: ExecutionContext): Future[Unit] = if (refreshing.isCompleted) {
     val now = System.currentTimeMillis()
-    val query = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D](model.serialization)
+    implicit val rw: ReaderWriter[D] = collection.model.rw
+    val query = graph.query(Query(s"FOR c IN $name RETURN c", Map.empty), transaction).as[D]
     refreshing = query.batchSize(Int.MaxValue).results.map { list =>
       self.synchronized {
         _cache @= list.map(d => d._id -> d).toMap

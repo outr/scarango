@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import fabric.rw.{ReaderWriter, ccRW}
+
 case class QueryResponse[T](id: Option[String],
                             result: List[T],
                             hasMore: Boolean,
@@ -8,3 +10,7 @@ case class QueryResponse[T](id: Option[String],
                             extra: QueryResponseExtras,
                             error: Boolean,
                             code: Int)
+
+object QueryResponse {
+  implicit def rw[T: ReaderWriter]: ReaderWriter[QueryResponse[T]] = ccRW
+}

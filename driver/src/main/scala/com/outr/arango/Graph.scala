@@ -1,12 +1,11 @@
 package com.outr.arango
 
 import java.util.concurrent.atomic.AtomicBoolean
-
 import com.outr.arango.api.model.ArangoLinkFieldProperties
 import com.outr.arango.model.ArangoCode
 import com.outr.arango.transaction.Transaction
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
-import io.circe.Json
+import fabric.rw.ReaderWriter
 import io.youi.client.HttpClient
 import io.youi.net.URL
 
@@ -55,13 +54,12 @@ class Graph(val databaseName: String = ArangoDB.config.db,
 
   private lazy val databaseVersion: DatabaseStore[DatabaseVersion] = DatabaseStore[DatabaseVersion](
     key = "databaseVersion",
-    graph = Graph.this,
-    serialization = Serialization.auto[DatabaseVersion]
+    graph = Graph.this
   )
 
   register(CreateDatabase)
 
-  def query(query: Query, transaction: Option[Transaction] = None): QueryBuilder[Json] = {
+  def query(query: Query, transaction: Option[Transaction] = None): QueryBuilder[fabric.Value] = {
     arangoDatabase.query(query, transaction.map(_.id))
   }
 
@@ -69,7 +67,7 @@ class Graph(val databaseName: String = ArangoDB.config.db,
   def views: List[View[_]] = _views
   def initialized: Boolean = _initialized.get()
 
-  def store[T](key: String): DatabaseStore[T] = macro GraphMacros.store[T]
+  def store[T: ReaderWriter](key: String): DatabaseStore[T] = DatabaseStore[T](key, this)
 
   def vertex[D <: Document[D]](): DocumentCollection[D] = macro GraphMacros.vertex[D]
   def vertex[D <: Document[D]](options: CollectionOptions): DocumentCollection[D] = macro GraphMacros.vertexOptions[D]

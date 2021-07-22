@@ -26,8 +26,8 @@ ThisBuild / developers := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.14.0"
-val profigVersion = "3.2.3"
+val youiVersion = "0.14.1-SNAPSHOT"
+val profigVersion = "3.2.5"
 val scalaTestVersion = "3.2.3"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
@@ -72,9 +72,9 @@ lazy val driver = project.in(file("driver"))
   .settings(
     name := "scarango-driver",
     fork := true,
-    testGrouping in Test := groupByName((definedTests in Test).value),
-    testOptions in Test += Tests.Argument("-oD"),
-    parallelExecution in Test := false,
+    Test / testGrouping := groupByName((Test / definedTests).value),
+    Test / testOptions += Tests.Argument("-oD"),
+    Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       "com.outr" %% "profig" % profigVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
@@ -86,9 +86,9 @@ lazy val monitored = project.in(file("monitored"))
   .settings(
     name := "scarango-monitored",
     fork := true,
-    testGrouping in Test := groupByName((definedTests in Test).value),
-    testOptions in Test += Tests.Argument("-oD"),
-    parallelExecution in Test := false,
+    Test / testGrouping := groupByName((Test / definedTests).value),
+    Test / testOptions += Tests.Argument("-oD"),
+    Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     )

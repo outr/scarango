@@ -3,7 +3,7 @@ package com.outr.arango.api
 import fabric.Value
 import fabric.rw.{ReaderWriter, ccRW}
 
-case class WALOperation(tick: Long,
+case class WALOperation(tick: String,
                         `type`: OperationType,
                         db: String,
                         data: Value = fabric.Obj(Map.empty),

@@ -2,9 +2,8 @@ package com.outr.arango
 
 import com.outr.arango.api.model.{ArangoLinkFieldProperties, ArangoLinkProperties, PostAPIViewFields, PostAPIViewIresearch, PostAPIViewLinkProps, PostAPIViewProps, PostAPIViewPropsConsolidation, PutAPIViewPropertiesIresearch}
 import com.outr.arango.api.{APIViewArangoSearch, APIViewViewNamePropertiesArangoSearch}
-import io.circe.Json
+import fabric.rw.Asable
 import io.youi.client.HttpClient
-import profig.JsonUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,7 +26,7 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
       )),
       `type` = Some(`type`)
     )
-  ).map(json => JsonUtil.fromJson[ViewInfo](json))
+  ).map(_.as[ViewInfo])
 
   def update(includeAllFields: Boolean,
              links: Option[List[ViewLink]] = None,
@@ -55,6 +54,6 @@ class ArangoView(client: HttpClient, dbName: String, viewName: String, `type`: S
         consolidationPolicy = consolidationPolicy,
         links = map
       )
-    ).map(json => JsonUtil.fromJson[ViewInfo](json))
+    ).map(_.as[ViewInfo])
   }
 }

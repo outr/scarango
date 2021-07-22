@@ -15,9 +15,8 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
 
   "ArangoDatabase" should {
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "fail to initialize with bad password" in {
       val db = new ArangoDB(credentials = Some(Credentials("root", "bad")))
@@ -34,22 +33,22 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
     }
     "get the current database" in {
       db.api.db.current.map { response =>
-        response.value.name should be("_system")
+        response.name should be("_system")
       }
     }
     "list the databases" in {
       db.api.db.list().map { response =>
-        response.value should contain("_system")
+        response should contain("_system")
       }
     }
     "create a test database" in {
       db.api.db("databaseExample").create().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
     "verify the database was created" in {
       db.api.db.list().map { response =>
-        response.value should contain("databaseExample")
+        response should contain("databaseExample")
       }
     }
     "check the WAL" in {
@@ -95,12 +94,12 @@ class ArangoDatabaseSpec extends AsyncWordSpec with Matchers {
     }
     "drop the test database" in {
       db.api.db("databaseExample").drop().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
     "verify the database dropped" in {
       db.api.db.list().map { response =>
-        response.value should not contain "databaseExample"
+        response should not contain "databaseExample"
       }
     }
   }

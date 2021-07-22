@@ -1,6 +1,7 @@
 package com.outr.arango
 
-import fabric.rw.ReaderWriter
+import fabric._
+import fabric.rw.{Asable, ReaderWriter}
 
 /**
   * Id represents the _key, _id, and _rev for a document
@@ -39,5 +40,19 @@ object Id {
 
   def parse[D](id: String): Id[D] = id match {
     case ExtractorRegex(collection, value) => Id[D](value, collection)
+  }
+
+  def extract[D](json: fabric.Value): Id[D] = update(json)("_id").as[Id[D]]
+
+  def update(json: fabric.Value): fabric.Value = {
+    val _key = json.get("_key").map(_.asStr.value)
+    val _id = json.get("_id").map(_.asStr.value)
+    val _identity = _id.map(parse[Any])
+
+    if (_id.nonEmpty && _key.isEmpty) {
+      json.merge(obj("_key" -> str(_identity.get.value)))
+    } else {
+      json
+    }
   }
 }

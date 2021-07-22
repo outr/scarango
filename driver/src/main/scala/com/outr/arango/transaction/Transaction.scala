@@ -1,8 +1,7 @@
 package com.outr.arango.transaction
 
 import com.outr.arango.Graph
-import io.circe.Decoder.Result
-import io.circe.{Decoder, DecodingFailure, HCursor}
+import fabric.rw.{ReaderWriter, ccRW}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,4 +39,8 @@ case class Transaction(id: String, status: TransactionStatus) {
       }
     }
   }
+}
+
+object Transaction {
+  implicit val rw: ReaderWriter[Transaction] = ccRW
 }
