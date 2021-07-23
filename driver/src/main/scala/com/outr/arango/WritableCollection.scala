@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.transaction.Transaction
+import fabric.rw.ReaderWriter
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,7 +14,8 @@ trait WritableCollection[D <: Document[D]] extends Collection[D] {
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.insertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    implicit val rw: ReaderWriter[D] = model.rw
+    arangoCollection.document.insertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)
   }
 
   def upsertOne(document: D,
@@ -22,7 +24,8 @@ trait WritableCollection[D <: Document[D]] extends Collection[D] {
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[DocumentInsert] = {
-    arangoCollection.document.upsertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    implicit val rw: ReaderWriter[D] = model.rw
+    arangoCollection.document.upsertOne(document, transactionId, waitForSync, returnNew, returnOld, silent)
   }
 
   def insert(documents: List[D],
@@ -31,7 +34,8 @@ trait WritableCollection[D <: Document[D]] extends Collection[D] {
              returnOld: Boolean = false,
              silent: Boolean = false)
             (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.insert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    implicit val rw: ReaderWriter[D] = model.rw
+    arangoCollection.document.insert(documents, transactionId, waitForSync, returnNew, returnOld, silent)
   }
 
   def upsert(documents: List[D],
@@ -40,7 +44,8 @@ trait WritableCollection[D <: Document[D]] extends Collection[D] {
              returnOld: Boolean = false,
              silent: Boolean = false)
             (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)(ec, model.serialization)
+    implicit val rw: ReaderWriter[D] = model.rw
+    arangoCollection.document.upsert(documents, transactionId, waitForSync, returnNew, returnOld, silent)
   }
 
   def batch(iterator: Iterator[D],

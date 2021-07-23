@@ -4,7 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharial {
@@ -15,9 +15,9 @@ object APIGharial {
     .call[GeneralGraphListHttpExamplesRc200]
 
 
-  def post(client: HttpClient, waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, waitForSync: Option[Boolean] = None, body: GeneralGraphCreateHttpExamples)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/gharial", append = true) 
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
-    .restful[GeneralGraphCreateHttpExamples, Json](body)
+    .restful[GeneralGraphCreateHttpExamples, Value](body)
 }

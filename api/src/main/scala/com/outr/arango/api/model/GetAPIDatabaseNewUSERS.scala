@@ -1,9 +1,13 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class GetAPIDatabaseNewUSERS(active: Option[Boolean] = None,
-                                  extra: Option[Json] = None,
+                                  extra: Option[Value] = None,
                                   passwd: Option[String] = None,
                                   username: Option[String] = None)
+
+object GetAPIDatabaseNewUSERS {
+  implicit val rw: ReaderWriter[GetAPIDatabaseNewUSERS] = ccRW
+}

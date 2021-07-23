@@ -2,6 +2,7 @@ package spec
 
 import com.outr.arango._
 import com.outr.arango.query._
+import fabric.rw.{ReaderWriter, ccRW}
 import io.youi.http.Headers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -11,13 +12,11 @@ class AQLSpec extends AsyncWordSpec with Matchers {
   private lazy val db = new ArangoDB()
   private lazy val dbExample = db.api.db("aqlExample")
   private lazy val collection = dbExample.collection(User.collectionName)
-  private implicit val serialization: Serialization[User] = User.serialization
 
   "AQL" should {
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "initialize successfully" in {
       db.init().map { state =>
@@ -76,7 +75,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "create the database" in {
       dbExample.create().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
     "create a new collection" in {
@@ -212,7 +211,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     "delete Jane in a transaction" in {
       val query = aql"FOR user IN users FILTER user.name == 'Jane Doe' REMOVE user IN users RETURN user"
       dbExample.transaction(List(query), writeCollections = List("users")).map { response =>
-        response.error should be(false)
+        response.map(_.apply("_countTotal").asInt) should be(List(1))
       }
     }
     "list all user names and verify Jane is gone" in {
@@ -233,7 +232,7 @@ class AQLSpec extends AsyncWordSpec with Matchers {
     }
     "drop the test database" in {
       dbExample.drop().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
   }
@@ -244,9 +243,10 @@ class AQLSpec extends AsyncWordSpec with Matchers {
                   _id: Id[User] = User.id()) extends Document[User]
 
   object User extends DocumentModel[User] {
+    override implicit val rw: ReaderWriter[User] = ccRW
+
     override def indexes: List[Index] = Nil
 
     override val collectionName: String = "users"
-    override implicit val serialization: Serialization[User] = Serialization.auto[User]
   }
 }

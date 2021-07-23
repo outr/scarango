@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class SystemStatisticsStruct(majorPageFaults: Option[Int] = None,
                                   minorPageFaults: Option[Int] = None,
@@ -11,3 +11,7 @@ case class SystemStatisticsStruct(majorPageFaults: Option[Int] = None,
                                   systemTime: Option[Double] = None,
                                   userTime: Option[Double] = None,
                                   virtualSize: Option[Int] = None)
+
+object SystemStatisticsStruct {
+  implicit val rw: ReaderWriter[SystemStatisticsStruct] = ccRW
+}

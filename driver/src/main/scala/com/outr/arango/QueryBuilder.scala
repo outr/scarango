@@ -2,10 +2,9 @@ package com.outr.arango
 
 import com.outr.arango.api.model.{PostAPICursor, PostAPICursorOpts}
 import com.outr.arango.api.{APICursor, APICursorCursorIdentifier}
-import io.circe.Decoder.Result
-import io.circe.{Decoder, HCursor, Json}
 import io.youi.client.HttpClient
-import profig.JsonUtil
+import fabric._
+import fabric.rw._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,18 +12,19 @@ import scala.language.experimental.macros
 
 case class QueryBuilder[R](client: HttpClient,
                            query: Query,
-                           conversion: Json => R,
+                           writer: Writer[R],
                            batchSize: Int = 100,
                            cache: Boolean = true,
                            count: Boolean = false,
                            memoryLimit: Option[Long] = None,
                            options: Option[PostAPICursorOpts] = None,
                            ttl: Option[Long] = None,
-                           logQuery: Option[Json => Unit] = None,
-                           logResponse: Option[Json => Unit] = None) {
-  def as[D](conversion: Json => D): QueryBuilder[D] = copy[D](conversion = conversion)
-  def as[D](serialization: Serialization[D]): QueryBuilder[D] = as[D](json => serialization.fromJson(json))
-  def as[D]: QueryBuilder[D] = macro GraphMacros.queryBuilderAs[D]
+                           logQuery: Option[Value => Unit] = None,
+                           logResponse: Option[Value => Unit] = None) {
+  implicit val rWriter: Writer[R] = writer
+  implicit val qrWriter: Writer[QueryResponse[R]] = ccW
+
+  def as[D: Writer]: QueryBuilder[D] = copy[D](writer = implicitly[Writer[D]])
 
   def batchSize(batchSize: Int): QueryBuilder[R] = copy(batchSize = batchSize)
   def withCache: QueryBuilder[R] = copy(cache = true)
@@ -41,18 +41,13 @@ case class QueryBuilder[R](client: HttpClient,
   def maxRuntime(max: FiniteDuration): QueryBuilder[R] = opt(_.copy(maxRuntime = Some(max.toMillis.toDouble / 1000.0)))
   def satelliteSyncWait(b: Boolean): QueryBuilder[R] = opt(_.copy(satelliteSyncWait = Some(b)))
   def stream(b: Boolean): QueryBuilder[R] = opt(_.copy(stream = Some(b)))
-  def logQuery(f: Json => Unit): QueryBuilder[R] = copy(logQuery = Some(f))
-  def logResponse(f: Json => Unit): QueryBuilder[R] = copy(logResponse = Some(f))
+  def logQuery(f: Value => Unit): QueryBuilder[R] = copy(logQuery = Some(f))
+  def logResponse(f: Value => Unit): QueryBuilder[R] = copy(logResponse = Some(f))
 
   private def opt(f: PostAPICursorOpts => PostAPICursorOpts): QueryBuilder[R] = {
     val opts = options.getOrElse(PostAPICursorOpts())
     copy(options = Some(f(opts)))
   }
-
-  private implicit lazy val dDecoder: Decoder[R] = new Decoder[R] {
-    override def apply(c: HCursor): Result[R] = Right(conversion(c.value))
-  }
-  private lazy val qrDecoder: Decoder[QueryResponse[R]] = JsonUtil.decoder[QueryResponse[R]]
 
   def cursor(implicit ec: ExecutionContext): Future[QueryResponse[R]] = {
     val bindVars = query.bindVars
@@ -66,7 +61,7 @@ case class QueryBuilder[R](client: HttpClient,
       options = options,
       ttl = ttl
     )
-    logQuery.foreach(f => f(JsonUtil.toJson(apiCursor)))
+    logQuery.foreach(f => f(apiCursor.toValue))
     APICursor
       .post(
         client = client,
@@ -74,16 +69,13 @@ case class QueryBuilder[R](client: HttpClient,
       )
       .map { response =>
         logResponse.foreach(f => f(response))
-        response.as[QueryResponse[R]](qrDecoder)
+        response.as[QueryResponse[R]]
       }
-      .map {
-        case Left(df) => throw df
-        case Right(r) => {
-          if (options.flatMap(_.fullCount).getOrElse(false)) {
-            r.copy(count = r.extra.stats.fullCount)
-          } else {
-            r
-          }
+      .map { r =>
+        if (options.flatMap(_.fullCount).getOrElse(false)) {
+          r.copy(count = r.extra.stats.fullCount)
+        } else {
+          r
         }
       }
   }
@@ -94,11 +86,7 @@ case class QueryBuilder[R](client: HttpClient,
 
   def get(id: String)(implicit ec: ExecutionContext): Future[QueryResponse[R]] = APICursorCursorIdentifier
     .put(client, id)
-    .map(_.as[QueryResponse[R]](qrDecoder))
-    .map {
-      case Left(df) => throw df
-      case Right(r) => r
-    }
+    .map(_.as[QueryResponse[R]])
 
   /**
     * Convenience method that calls `cursor` grabbing the first result returning None if there are no results.

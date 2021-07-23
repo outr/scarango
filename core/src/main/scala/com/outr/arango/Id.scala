@@ -1,8 +1,7 @@
 package com.outr.arango
 
-import io.circe.Decoder.Result
-import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
-import com.outr.arango.JsonImplicits._
+import fabric._
+import fabric.rw.{Asable, ReaderWriter}
 
 /**
   * Id represents the _key, _id, and _rev for a document
@@ -37,39 +36,21 @@ case class Id[D](value: String,
 object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
 
-  implicit def encoder[D]: Encoder[Id[D]] = new Encoder[Id[D]] {
-    override def apply(id: Id[D]): Json = Json.fromString(id._id)
-  }
-
-  implicit def decoder[D]: Decoder[Id[D]] = new Decoder[Id[D]] {
-    override def apply(c: HCursor): Result[Id[D]] = c.value.asString match {
-      case Some(s) => s match {
-        case ExtractorRegex(collection, value) => Right(Id[D](value, collection))
-        case _ => Left(DecodingFailure(s"Unable to parse string to Id: $s", Nil))
-      }
-      case None => Left(DecodingFailure(s"Unable to parse JSON ${c.value} to Id", Nil))
-    }
-  }
+  implicit def rw[D]: ReaderWriter[Id[D]] = ReaderWriter(_._id, v => parse[D](v.asStr.value))
 
   def parse[D](id: String): Id[D] = id match {
     case ExtractorRegex(collection, value) => Id[D](value, collection)
   }
 
-  def extract[D](json: Json): Id[D] = {
-    val updated = update(json)
-    decoder[D].decodeJson((updated \ "_id").get) match {
-      case Left(df) => throw df
-      case Right(id) => id
-    }
-  }
+  def extract[D](json: fabric.Value): Id[D] = update(json)("_id").as[Id[D]]
 
-  def update(json: Json): Json = {
-    val _key = (json \ "_key").flatMap(_.asString)
-    val _id = (json \ "_id").flatMap(_.asString)
+  def update(json: fabric.Value): fabric.Value = {
+    val _key = json.get("_key").map(_.asStr.value)
+    val _id = json.get("_id").map(_.asStr.value)
     val _identity = _id.map(parse[Any])
 
     if (_id.nonEmpty && _key.isEmpty) {
-      json.deepMerge(Json.obj("_key" -> Json.fromString(_identity.get.value)))
+      json.merge(obj("_key" -> str(_identity.get.value)))
     } else {
       json
     }

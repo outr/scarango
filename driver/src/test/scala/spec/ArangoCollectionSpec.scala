@@ -1,6 +1,7 @@
 package spec
 
-import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, Index, IndexType, Serialization}
+import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, Index, IndexType}
+import fabric.rw.{Convertible, ReaderWriter, ccRW}
 import io.youi.http.Headers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -13,12 +14,10 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     lazy val dbExample = db.api.db("collectionExample")
     lazy val collection = dbExample.collection("test")
     var indexId: Option[Id[Index]] = None
-    implicit val serialization: Serialization[User] = User.serialization
 
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "initialize successfully" in {
       db.init().map { state =>
@@ -28,12 +27,12 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     }
     "create a test database" in {
       dbExample.create().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
     "verify the database was created" in {
       db.api.db.list().map { response =>
-        response.value should contain("collectionExample")
+        response should contain("collectionExample")
       }
     }
     "create a new collection" in {
@@ -125,12 +124,12 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
     }
     "drop the test database" in {
       dbExample.drop().map { response =>
-        response.value should be(true)
+        response should be(true)
       }
     }
     "verify the database dropped" in {
       db.api.db.list().map { response =>
-        response.value should not contain "collectionExample"
+        response should not contain "collectionExample"
       }
     }
   }
@@ -138,9 +137,10 @@ class ArangoCollectionSpec extends AsyncWordSpec with Matchers {
   case class User(name: String, _id: Id[User] = User.id()) extends Document[User]
 
   object User extends DocumentModel[User] {
+    override implicit val rw: ReaderWriter[User] = ccRW
+
     override def indexes: List[Index] = Nil
 
     override val collectionName: String = "users"
-    override val serialization: Serialization[User] = Serialization.auto[User]
   }
 }

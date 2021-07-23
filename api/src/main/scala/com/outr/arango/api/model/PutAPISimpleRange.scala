@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPISimpleRange(collection: String,
                              attribute: Option[String] = None,
@@ -10,3 +10,7 @@ case class PutAPISimpleRange(collection: String,
                              limit: Option[Long] = None,
                              right: Option[String] = None,
                              skip: Option[String] = None)
+
+object PutAPISimpleRange {
+  implicit val rw: ReaderWriter[PutAPISimpleRange] = ccRW
+}

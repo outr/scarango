@@ -1,6 +1,7 @@
 package com.outr.arango
 
-import com.outr.arango.api.model.ArangoLinkProperties
+import com.outr.arango.api.model.{ArangoLinkProperties, PostAPIViewProps}
+import fabric.rw.{ReaderWriter, ccRW}
 
 case class ViewInfo(globallyUniqueId: String,
                     id: String,
@@ -13,3 +14,8 @@ case class ViewInfo(globallyUniqueId: String,
                     writebufferIdle: Long,
                     writebufferSizeMax: Long,
                     links: Map[String, ArangoLinkProperties])
+
+object ViewInfo {
+  implicit def linksRW: ReaderWriter[Map[String, ArangoLinkProperties]] = PostAPIViewProps.linksRW
+  implicit val rw: ReaderWriter[ViewInfo] = ccRW
+}

@@ -1,22 +1,14 @@
 package com.outr.arango.api
 
-import io.circe.Decoder.Result
+import fabric.parse.Json
+import fabric.rw.Asable
 import io.youi.client.HttpClient
 import io.youi.http.{HeaderKey, HttpMethod}
 import io.youi.net._
-import io.circe.{Decoder, DecodingFailure, HCursor}
-import profig.JsonUtil
 
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIWalTail {
-  private implicit def operationTypeDecoder: Decoder[OperationType] = new Decoder[OperationType] {
-    override def apply(c: HCursor): Result[OperationType] = c.value.asNumber match {
-      case Some(n) => Right(OperationType(n.toInt.get))
-      case None => Left(DecodingFailure(s"OperationType not a number: ${c.value}", Nil))
-    }
-  }
-
   def get(client: HttpClient,
           global: Option[Boolean] = None,
           from: Option[Long] = None,
@@ -41,7 +33,7 @@ object APIWalTail {
       .map { response =>
         val lines = response.content.map(_.asString).getOrElse("").split('\n').toList
         val operations = lines.map(_.trim).collect {
-          case line if line.nonEmpty => JsonUtil.fromJsonString[WALOperation](line)
+          case line if line.nonEmpty => Json.parse(line).as[WALOperation]
         }
         val headers = response.headers
         WALOperations(

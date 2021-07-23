@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class CollectionFigures(alive: Option[CollectionFiguresAlive] = None,
                              compactionStatus: Option[CompactionStatusAttributes] = None,
@@ -16,3 +16,7 @@ case class CollectionFigures(alive: Option[CollectionFiguresAlive] = None,
                              revisions: Option[CollectionFiguresRevisions] = None,
                              uncollectedLogfileEntries: Option[Long] = None,
                              waitingFor: Option[String] = None)
+
+object CollectionFigures {
+  implicit val rw: ReaderWriter[CollectionFigures] = ccRW
+}

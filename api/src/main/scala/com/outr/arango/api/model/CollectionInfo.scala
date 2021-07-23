@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class CollectionInfo(keyOptions: KeyGeneratorType,
                           doCompact: Option[Boolean] = None,
@@ -21,3 +21,7 @@ case class CollectionInfo(keyOptions: KeyGeneratorType,
                           statusString: Option[String] = None,
                           `type`: Option[Int] = None,
                           waitForSync: Option[Boolean] = None)
+
+object CollectionInfo {
+  implicit val rw: ReaderWriter[CollectionInfo] = ccRW
+}

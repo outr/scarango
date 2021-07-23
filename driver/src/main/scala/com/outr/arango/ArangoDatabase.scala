@@ -1,28 +1,30 @@
 package com.outr.arango
 
 import com.outr.arango.api.{APICollection, APIDatabase, APIDatabaseUser, APIQuery, APITransaction, APIView, APIWalTail, WALOperations}
-import com.outr.arango.JsonImplicits._
 import com.outr.arango.api.model.{PostAPITransaction, PostApiQueryProperties}
 import com.outr.arango.model.ArangoResponse
 import com.outr.arango.transaction.Transaction
-import io.circe.Json
+import fabric._
+import fabric.parse.Json
+import fabric.rw.{Asable, ReaderWriter}
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import profig.JsonUtil
+import io.youi.net.Path
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: String) {
-  def create()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = db.api.system.create(name)
+  def create()(implicit ec: ExecutionContext): Future[Boolean] = db.api.system.create(name)
 
-  def list(accessibleOnly: Boolean = true)(implicit ec: ExecutionContext): Future[ArangoResponse[List[String]]] = {
+  def list(accessibleOnly: Boolean = true)(implicit ec: ExecutionContext): Future[List[String]] = {
     val future = if (accessibleOnly) {
       APIDatabaseUser.get(client)
     } else {
       APIDatabase.get(client)
     }
-    future.map(json => JsonUtil.fromJson[ArangoResponse[List[String]]](json))
+//    implicit val listStringRW: ReaderWriter[List[String]] =
+    future.map(_.as[ArangoResponse].value[List[String]])
   }
 
   def collection(name: String): ArangoCollection = {
@@ -32,12 +34,13 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
   def collections(excludeSystem: Boolean = true)
                  (implicit ec: ExecutionContext): Future[List[CollectionDetail]] = {
     APICollection.get(client, Some(excludeSystem)).map { json =>
-      JsonUtil.fromJson[List[CollectionDetail]]((json \ "result").get)
+      json("result").as[List[CollectionDetail]]
     }
   }
 
   def views()(implicit ec: ExecutionContext): Future[List[ViewDetail]] = {
-    APIView.get(client).map(JsonUtil.fromJson[ArangoResponse[List[ViewDetail]]](_).result.getOrElse(Nil))
+    APIView.get(client)
+      .map(_.as[ArangoResponse].value[List[ViewDetail]])
   }
 
   def searchView(name: String): ArangoView = {
@@ -46,9 +49,9 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
 
   def validate(query: String)(implicit ec: ExecutionContext): Future[ValidationResult] = APIQuery
     .post(client, PostApiQueryProperties(query))
-    .map(json => JsonUtil.fromJson[ValidationResult](json))
+    .map(_.as[ValidationResult])
     .recover {
-      case exc: ArangoException => JsonUtil.fromJsonString[ValidationResult](exc.response.content.get.asString)
+      case exc: ArangoException => Json.parse(exc.response.content.get.asString).as[ValidationResult]
     }
 
   def transaction(queries: List[Query],
@@ -58,10 +61,10 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
                   waitForSync: Boolean = false,
                   lockTimeout: Option[Long] = None,
                   maxTransactionSize: Option[Long] = None)
-                 (implicit ec: ExecutionContext): Future[ArangoResponse[Vector[Json]]] = {
+                 (implicit ec: ExecutionContext): Future[List[Value]] = {
     assert(queries.nonEmpty, "Cannot create a transaction with no queries!")
     val queryString = queries.map(_.fix()).map { q =>
-      val params = q.bindVars.spaces2
+      val params = Json.format(q.bindVars)
       s"""results.push(db._query("${q.value}", $params));"""
     }.mkString("\n  ")
     val function =
@@ -72,17 +75,17 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
          |  return results;
          |}""".stripMargin
     APITransaction.post(client, PostAPITransaction(
-      collections = Json.obj(
-        "write" -> Json.arr(writeCollections.map(Json.fromString): _*),
-        "read" -> Json.arr(readCollections.map(Json.fromString): _*),
-        "exclusive" -> Json.arr(exclusiveCollections.map(Json.fromString): _*)
+      collections = obj(
+        "write" -> arr(writeCollections.map(str): _*),
+        "read" -> arr(readCollections.map(str): _*),
+        "exclusive" -> arr(exclusiveCollections.map(str): _*)
       ),
       action = Some(function),
       lockTimeout = lockTimeout,
       maxTransactionSize = maxTransactionSize,
       params = None,
       waitForSync = Some(waitForSync)
-    )).map(json => JsonUtil.fromJson[ArangoResponse[Vector[Json]]](json))
+    )).map(_.as[ArangoResponse].value[List[Value]])
   }
 
   def transactionCreate(writeCollections: List[String] = Nil,
@@ -92,68 +95,68 @@ class ArangoDatabase(db: ArangoDB, protected val client: HttpClient, val name: S
                         allowImplicit: Boolean = false,
                         maxTransactionSize: Long = -1L)
                        (implicit ec: ExecutionContext): Future[Transaction] = {
-    var request = Json.obj(
-      "collections" -> Json.obj(
-        "write" -> Json.arr(writeCollections.map(Json.fromString): _*),
-        "read" -> Json.arr(readCollections.map(Json.fromString): _*),
-        "exclusive" -> Json.arr(exclusiveCollections.map(Json.fromString): _*)
+    var request: Value = obj(
+      "collections" -> obj(
+        "write" -> arr(writeCollections.map(str): _*),
+        "read" -> arr(readCollections.map(str): _*),
+        "exclusive" -> arr(exclusiveCollections.map(str): _*)
       ),
-      "waitForSync" -> Json.fromBoolean(waitForSync),
-      "allowImplicit" -> Json.fromBoolean(allowImplicit)
+      "waitForSync" -> bool(waitForSync),
+      "allowImplicit" -> bool(allowImplicit)
     )
     if (maxTransactionSize != -1L) {
-      request = request.deepMerge(Json.obj("maxTransactionSize" -> Json.fromLong(maxTransactionSize)))
+      request = request.merge(obj("maxTransactionSize" -> num(maxTransactionSize.toDouble)))
     }
     client
       .method(HttpMethod.Post)
       .path(path"/_api/transaction/begin", append = true)
-      .restful[Json, ArangoResponse[Transaction]](request)
-      .map(_.value)
+      .restful[Value, ArangoResponse](request)
+      .map(_.value[Transaction])
   }
 
   def transactionStatus(id: String)(implicit ec: ExecutionContext): Future[Transaction] = {
     client
       .method(HttpMethod.Get)
       .path(Path.parse(s"/_api/transaction/$id"), append = true)
-      .call[ArangoResponse[Transaction]]
-      .map(_.value)
+      .call[ArangoResponse]
+      .map(_.value[Transaction])
   }
 
   def transactionCommit(id: String)(implicit ec: ExecutionContext): Future[Transaction] = {
     client
       .method(HttpMethod.Put)
       .path(Path.parse(s"/_api/transaction/$id"), append = true)
-      .call[ArangoResponse[Transaction]]
-      .map(_.value)
+      .call[ArangoResponse]
+      .map(_.value[Transaction])
   }
 
   def transactionAbort(id: String)(implicit ec: ExecutionContext): Future[Transaction] = {
     client
       .method(HttpMethod.Delete)
       .path(Path.parse(s"/_api/transaction/$id"), append = true)
-      .call[ArangoResponse[Transaction]]
-      .map(_.value)
+      .call[ArangoResponse]
+      .map(_.value[Transaction])
   }
 
   def transactionList()(implicit ec: ExecutionContext): Future[List[Transaction]] = {
     client
       .method(HttpMethod.Get)
       .path(path"/_api/transaction", append = true)
-      .call[Json]
+      .call[Value]
       .map { json =>
-        JsonUtil.fromJson[List[Transaction]]((json \\ "transactions").head)
+        json("transactions").as[List[Transaction]]
       }
   }
 
-  def query(query: Query, transactionId: Option[String] = None): QueryBuilder[Json] = {
+  def query(query: Query, transactionId: Option[String] = None): QueryBuilder[Value] = {
     val c = transactionId match {
       case Some(tId) => client.header("x-arango-trx-id", tId)
       case None => client
     }
-    QueryBuilder[Json](c, query.fix(), identity)
+    QueryBuilder[Value](c, query.fix(), identity)
   }
 
   lazy val wal: ArangoWriteAheadLog = new ArangoWriteAheadLog(client)
 
-  def drop()(implicit ec: ExecutionContext): Future[ArangoResponse[Boolean]] = db.api.system.drop(name)
+  def drop()(implicit ec: ExecutionContext): Future[Boolean] = db.api.system.drop(name)
 }

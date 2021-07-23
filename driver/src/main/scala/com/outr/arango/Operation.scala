@@ -1,10 +1,10 @@
 package com.outr.arango
 
 import com.outr.arango.api.{OperationType, WALOperation}
-import profig.JsonUtil
+import fabric.rw.{Asable, ReaderWriter, ccRW}
 
 case class Operation[D <: Document[D]](underlying: WALOperation, graph: Graph) {
-  private lazy val data = JsonUtil.fromJson[Data](underlying.data)
+  private lazy val data = underlying.data.as[Data]
 
   def db: String = underlying.db
 
@@ -19,4 +19,8 @@ case class Operation[D <: Document[D]](underlying: WALOperation, graph: Graph) {
   lazy val collectionName: Option[String] = collection.map(_.name)
 
   case class Data(_id: Option[Id[D]], _key: Option[String], _rev: Option[String])
+
+  object Data {
+    implicit val rw: ReaderWriter[Data] = ccRW
+  }
 }

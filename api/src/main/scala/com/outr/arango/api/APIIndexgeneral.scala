@@ -4,14 +4,14 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIIndexgeneral {
 
-  def post(client: HttpClient, collection: String, body: Json)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, collection: String, body: Value)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/index", append = true)
     .params("collection" -> collection.toString)
-    .restful[Json, Json](body)
+    .restful[Value, Value](body)
 }

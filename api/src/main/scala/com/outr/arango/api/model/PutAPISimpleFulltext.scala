@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPISimpleFulltext(collection: String,
                                 attribute: Option[String] = None,
@@ -9,3 +9,7 @@ case class PutAPISimpleFulltext(collection: String,
                                 limit: Option[String] = None,
                                 query: Option[String] = None,
                                 skip: Option[String] = None)
+
+object PutAPISimpleFulltext {
+  implicit val rw: ReaderWriter[PutAPISimpleFulltext] = ccRW
+}

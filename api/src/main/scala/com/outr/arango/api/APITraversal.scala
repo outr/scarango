@@ -4,13 +4,13 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APITraversal {
 
-  def post(client: HttpClient, body: HTTPAPITRAVERSAL)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, body: HTTPAPITRAVERSAL)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/traversal", append = true) 
-    .restful[HTTPAPITRAVERSAL, Json](body)
+    .restful[HTTPAPITRAVERSAL, Value](body)
 }

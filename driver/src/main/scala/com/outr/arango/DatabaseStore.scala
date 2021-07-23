@@ -1,18 +1,19 @@
 package com.outr.arango
 
+import fabric.rw._
 import reactify.Var
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class DatabaseStore[T](key: String, graph: Graph, serialization: Serialization[T]) {
+case class DatabaseStore[T: ReaderWriter](key: String, graph: Graph) {
   def get(implicit ec: ExecutionContext): Future[Option[T]] = {
-    graph.backingStore.get(BackingStore.id(key)).map(_.map(bs => serialization.fromJson(bs.data)))
+    graph.backingStore.get(BackingStore.id(key)).map(_.map(_.data.as[T]))
   }
   def apply(default: => T)(implicit ec: ExecutionContext): Future[T] = {
     get(ec).map(_.getOrElse(default))
   }
   def set(value: T)(implicit ec: ExecutionContext): Future[Unit] = {
-    val json = serialization.toJson(value)
+    val json = value.toValue
     graph.backingStore.upsertOne(BackingStore(json, BackingStore.id(key))).map(_ => ())
   }
 

@@ -3,6 +3,7 @@ package spec
 import com.outr.arango._
 import com.outr.arango.monitored.{Materialized, MaterializedPart, MonitoredSupport, QueryInfo, Reference}
 import com.outr.arango.query.AQLInterpolator
+import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.Assertion
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
@@ -43,9 +44,8 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
     }
 
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "initialize the database" in {
       database.init().map { _ =>
@@ -204,36 +204,39 @@ class MaterializedSpec extends AsyncWordSpec with Matchers with Eventually {
 
   case class User(name: String, age: Int, _id: Id[User] = User.id()) extends Document[User]
   object User extends DocumentModel[User] {
+    implicit val rw: ReaderWriter[User] = ccRW
+
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
 
     override val collectionName: String = "users"
-    override implicit val serialization: Serialization[User] = Serialization.auto[User]
 
     override def indexes: List[Index] = Nil
   }
 
   case class Location(userId: Id[User], city: String, state: String, _id: Id[Location] = Location.id()) extends Document[Location]
   object Location extends DocumentModel[Location] {
+    implicit val rw: ReaderWriter[Location] = ccRW
+
     val userId: Field[Id[User]] = field("userId")
     val city: Field[String] = field("city")
     val state: Field[String] = field("state")
 
     override val collectionName: String = "locations"
-    override implicit val serialization: Serialization[Location] = Serialization.auto[Location]
 
     override def indexes: List[Index] = Nil
   }
 
   case class FullUser(name: String, age: Int, locations: List[Location], locationCount: Int, _id: Id[FullUser]) extends Document[FullUser]
   object FullUser extends DocumentModel[FullUser] {
+    implicit val rw: ReaderWriter[FullUser] = ccRW
+
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
     val locations: Field[List[Location]] = field("locations")
     val locationCount: Field[Int] = field("locationCount")
 
     override val collectionName: String = "materializedUsers"
-    override implicit val serialization: Serialization[FullUser] = Serialization.auto[FullUser]
 
     override def indexes: List[Index] = Nil
   }

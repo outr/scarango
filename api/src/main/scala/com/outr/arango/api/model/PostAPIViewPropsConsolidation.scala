@@ -1,6 +1,10 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PostAPIViewPropsConsolidation()
+
+object PostAPIViewPropsConsolidation {
+  implicit val rw: ReaderWriter[PostAPIViewPropsConsolidation] = ccRW
+}

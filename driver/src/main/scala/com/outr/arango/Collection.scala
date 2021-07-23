@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.transaction.Transaction
+import fabric.rw.ReaderWriter
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
@@ -9,6 +10,8 @@ trait Collection[D <: Document[D]] {
 
   def id: String = _id
   lazy val arangoCollection: ArangoCollection = graph.arangoDatabase.collection(name)
+
+  private implicit val rw: ReaderWriter[D] = model.rw
 
   addCollection()
 
@@ -25,14 +28,14 @@ trait Collection[D <: Document[D]] {
   def withTransaction(transaction: Transaction): Collection[D] = new TransactionCollection[D](this, transaction)
 
   def get(id: Id[D])(implicit ec: ExecutionContext): Future[Option[D]] = {
-    arangoCollection.document.get(id, transactionId)(ec, model.serialization)
+    arangoCollection.document.get(id, transactionId)
   }
 
   def byIds(ids: Id[D]*)(implicit ec: ExecutionContext): Future[List[D]] = if (ids.nonEmpty) {
     graph.query(
       query = Query(s"FOR c IN $name FILTER c._id IN @ids RETURN c", Map("ids" -> Value.values(ids.map(Value.id)))),
       transaction = transaction
-    ).as[D](model.serialization).batchSize(ids.length).results
+    ).as[D].batchSize(ids.length).results
   } else {
     Future.successful(Nil)
   }

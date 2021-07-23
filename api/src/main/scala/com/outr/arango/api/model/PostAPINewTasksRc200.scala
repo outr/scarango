@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PostAPINewTasksRc200(id: String,
                                 code: Option[Double] = None,
@@ -12,3 +12,7 @@ case class PostAPINewTasksRc200(id: String,
                                 offset: Option[Double] = None,
                                 period: Option[Double] = None,
                                 `type`: Option[String] = None)
+
+object PostAPINewTasksRc200 {
+  implicit val rw: ReaderWriter[PostAPINewTasksRc200] = ccRW
+}

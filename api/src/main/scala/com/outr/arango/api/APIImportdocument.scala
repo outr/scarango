@@ -4,12 +4,12 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIImportdocument {
 
-  def post(client: HttpClient, body: Json, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Json] = client
+  def post(client: HttpClient, body: Value, collection: String, fromPrefix: Option[String] = None, toPrefix: Option[String] = None, overwrite: Option[Boolean] = None, waitForSync: Option[Boolean] = None, onDuplicate: Option[String] = None, complete: Option[Boolean] = None, details: Option[Boolean] = None)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Post)
     .path(path"/_api/import#document", append = true) 
     .params("collection" -> collection.toString)
@@ -20,5 +20,5 @@ object APIImportdocument {
     .param[Option[String]]("onDuplicate", onDuplicate, None)
     .param[Option[Boolean]]("complete", complete, None)
     .param[Option[Boolean]]("details", details, None)
-    .restful[Json, Json](body)
+    .restful[Value, Value](body)
 }

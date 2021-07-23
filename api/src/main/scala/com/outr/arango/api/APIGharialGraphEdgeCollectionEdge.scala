@@ -4,7 +4,7 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIGharialGraphEdgeCollectionEdge {
@@ -24,22 +24,22 @@ object APIGharialGraphEdgeCollectionEdge {
     .call[GeneralGraphEdgeGetHttpExamplesRc200]
 
 
-  def patch(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Json)(implicit ec: ExecutionContext): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
+  def patch(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: Value)(implicit ec: ExecutionContext): Future[GeneralGraphEdgeModifyHttpExamplesRc200] = client
     .method(HttpMethod.Patch)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[Json, GeneralGraphEdgeModifyHttpExamplesRc200](body)
+    .restful[Value, GeneralGraphEdgeModifyHttpExamplesRc200](body)
 
 
-  def put(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples)(implicit ec: ExecutionContext): Future[Json] = client
+  def put(client: HttpClient, graph: String, collection: String, edge: String, waitForSync: Option[Boolean] = None, keepNull: Option[Boolean] = None, returnOld: Option[Boolean] = None, returnNew: Option[Boolean] = None, ifMatch: Option[String] = None, body: GeneralGraphEdgeReplaceHttpExamples)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Put)
     .path(path"/_api/gharial/{graph}/edge/{collection}/{edge}".withArguments(Map("graph" -> graph, "collection" -> collection, "edge" -> edge)), append = true)
     .param[Option[Boolean]]("waitForSync", waitForSync, None)
     .param[Option[Boolean]]("keepNull", keepNull, None)
     .param[Option[Boolean]]("returnOld", returnOld, None)
     .param[Option[Boolean]]("returnNew", returnNew, None)
-    .restful[GeneralGraphEdgeReplaceHttpExamples, Json](body)
+    .restful[GeneralGraphEdgeReplaceHttpExamples, Value](body)
 }

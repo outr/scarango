@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.model.ArangoCode
+import fabric.rw.{ReaderWriter, ccRW}
 
 case class ValidationResult(error: Boolean,
                             errorMessage: Option[String],
@@ -11,4 +12,8 @@ case class ValidationResult(error: Boolean,
                             bindVars: List[String] = Nil,
                             ast: List[AST] = Nil) {
   lazy val errorCode: ArangoCode = ArangoCode(errorNum.get)
+}
+
+object ValidationResult {
+  implicit val rw: ReaderWriter[ValidationResult] = ccRW
 }

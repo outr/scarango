@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutAPIReplicationSynchronize(endpoint: String,
                                         database: Option[String] = None,
@@ -12,3 +12,7 @@ case class PutAPIReplicationSynchronize(endpoint: String,
                                         restrictCollections: Option[List[String]] = None,
                                         restrictType: Option[String] = None,
                                         username: Option[String] = None)
+
+object PutAPIReplicationSynchronize {
+  implicit val rw: ReaderWriter[PutAPIReplicationSynchronize] = ccRW
+}

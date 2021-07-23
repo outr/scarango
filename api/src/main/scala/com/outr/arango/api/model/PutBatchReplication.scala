@@ -1,6 +1,10 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class PutBatchReplication(ttl: Long)
+
+object PutBatchReplication {
+  implicit val rw: ReaderWriter[PutBatchReplication] = ccRW
+}

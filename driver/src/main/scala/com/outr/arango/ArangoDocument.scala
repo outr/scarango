@@ -2,14 +2,14 @@ package com.outr.arango
 
 import com.outr.arango.api.{APIDocumentCollection, APIDocumentDocumentHandle}
 import com.outr.arango.model.ArangoCode
-import io.circe.Json
+import fabric._
+import fabric.rw._
 import io.youi.client.HttpClient
-import profig.JsonUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ArangoDocument(client: HttpClient, dbName: String, collectionName: String) {
-  def create(document: Json,
+  def create(document: fabric.Value,
              transactionId: Option[String] = None,
              waitForSync: Boolean = false,
              returnNew: Boolean = true,
@@ -24,72 +24,73 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
     APIDocumentCollection.post(
       client = c,
       collection = collectionName,
-      body = document,
+      body = Id.update(document),
       waitForSync = Some(waitForSync),
       returnNew = Some(returnNew),
       returnOld = Some(returnOld),
       silent = Some(silent),
       overwrite = Some(overwrite)
     ).map { json =>
-      json.asArray match {
-        case Some(array) => array.toList.map(json => JsonUtil.fromJson[DocumentInsert](Id.update(json)))
-        case None => List(JsonUtil.fromJson[DocumentInsert](Id.update(json)))
+      if (json.isArr) {
+        json.asArr.value.toList.map(Id.update).map(_.as[DocumentInsert])
+      } else {
+        List(Id.update(json).as[DocumentInsert])
       }
     }
   }
 
-  def insertOne[D](document: D,
+  def insertOne[D: Reader](document: D,
                    transactionId: Option[String] = None,
                    waitForSync: Boolean = false,
                    returnNew: Boolean = false,
                    returnOld: Boolean = false,
                    silent: Boolean = false)
-                  (implicit ec: ExecutionContext, serialization: Serialization[D]): Future[DocumentInsert] = {
-    val json = serialization.toJson(document)
+                  (implicit ec: ExecutionContext): Future[DocumentInsert] = {
+    val json = document.toValue
     create(json, transactionId, waitForSync, returnNew, returnOld, silent)(ec).map(_.head)
   }
 
-  def upsertOne[D](document: D,
+  def upsertOne[D: Reader](document: D,
                    transactionId: Option[String] = None,
                    waitForSync: Boolean = false,
                    returnNew: Boolean = false,
                    returnOld: Boolean = false,
                    silent: Boolean = false)
-                  (implicit ec: ExecutionContext, serialization: Serialization[D]): Future[DocumentInsert] = {
-    val json = serialization.toJson(document)
+                  (implicit ec: ExecutionContext): Future[DocumentInsert] = {
+    val json = document.toValue
     create(json, transactionId, waitForSync, returnNew, returnOld, silent, overwrite = true)(ec).map(_.head)
   }
 
-  def insert[D](documents: List[D],
+  def insert[D: Reader](documents: List[D],
                 transactionId: Option[String] = None,
                 waitForSync: Boolean = false,
                 returnNew: Boolean = false,
                 returnOld: Boolean = false,
                 silent: Boolean = false)
-               (implicit ec: ExecutionContext, serialization: Serialization[D]): Future[List[DocumentInsert]] = {
-    val json = Json.arr(documents.map(serialization.toJson): _*)
+               (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
+    val json = arr(documents.map(d => Id.update(d.toValue)): _*)
     create(json, transactionId, waitForSync, returnNew, returnOld, silent)(ec)
   }
 
-  def upsert[D](documents: List[D],
+  def upsert[D: Reader](documents: List[D],
                 transactionId: Option[String] = None,
                 waitForSync: Boolean = false,
                 returnNew: Boolean = false,
                 returnOld: Boolean = false,
                 silent: Boolean = false)
-               (implicit ec: ExecutionContext, serialization: Serialization[D]): Future[List[DocumentInsert]] = {
-    val json = Json.arr(documents.map(serialization.toJson): _*)
+               (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
+    val json = arr(documents.map(d => Id.update(d.toValue)): _*)
     create(json, transactionId, waitForSync, returnNew, returnOld, silent, overwrite = true)(ec)
   }
 
-  def get[D](id: Id[D], transactionId: Option[String] = None)(implicit ec: ExecutionContext, serialization: Serialization[D]): Future[Option[D]] = {
+  def get[D: Writer](id: Id[D], transactionId: Option[String] = None)(implicit ec: ExecutionContext): Future[Option[D]] = {
     val c = transactionId match {
       case Some(tId) => client.header("x-arango-trx-id", tId)
       case None => client
     }
     APIDocumentDocumentHandle
       .get(c, collectionName, id._key)
-      .map(serialization.fromJson)
+      .map(_.as[D])
       .map(Some.apply)
       .recover {
         case exc: ArangoException if exc.error.errorCode == ArangoCode.ArangoDocumentNotFound => None
@@ -131,13 +132,13 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
     }
     APIDocumentCollection.delete(
       client = c,
-      body = JsonUtil.toJson(ids),
+      body = ids.toValue,
       collection = collectionName,
       waitForSync = Some(waitForSync),
       returnOld = Some(returnOld),
       ignoreRevs = Some(ignoreRevs)
     ).map { json =>
-      json.asArray.getOrElse(throw new RuntimeException(s"Not an array: $json")).toList.map(Id.extract[D])
+      json.asArr.value.toList.map(Id.extract[D])
     }
   }
 }

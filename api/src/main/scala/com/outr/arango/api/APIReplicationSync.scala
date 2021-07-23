@@ -4,13 +4,13 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object APIReplicationSync {
 
-  def put(client: HttpClient, body: PutAPIReplicationSynchronize)(implicit ec: ExecutionContext): Future[Json] = client
+  def put(client: HttpClient, body: PutAPIReplicationSynchronize)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Put)
     .path(path"/_api/replication/sync", append = true) 
-    .restful[PutAPIReplicationSynchronize, Json](body)
+    .restful[PutAPIReplicationSynchronize, Value](body)
 }

@@ -4,19 +4,19 @@ import com.outr.arango.api.model._
 import io.youi.client.HttpClient
 import io.youi.http.HttpMethod
 import io.youi.net._
-import io.circe.Json
+import fabric.Value
 import scala.concurrent.{ExecutionContext, Future}
       
 object AdminWalProperties {
 
-  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
+  def get(client: HttpClient)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Get)
     .path(path"/_admin/wal/properties", append = true) 
-    .call[Json]
+    .call[Value]
 
 
-  def put(client: HttpClient)(implicit ec: ExecutionContext): Future[Json] = client
+  def put(client: HttpClient)(implicit ec: ExecutionContext): Future[Value] = client
     .method(HttpMethod.Put)
     .path(path"/_admin/wal/properties", append = true) 
-    .call[Json]
+    .call[Value]
 }

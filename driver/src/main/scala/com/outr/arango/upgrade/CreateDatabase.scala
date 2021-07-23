@@ -12,7 +12,7 @@ object CreateDatabase extends DatabaseUpgrade {
   override def upgrade(graph: Graph): Future[Unit] = {
     for {
       databases <- graph.arangoDB.api.system.list()
-      _ <- if (databases.result.getOrElse(Nil).contains(graph.databaseName)) {
+      _ <- if (databases.contains(graph.databaseName)) {
         Future.successful(())             // Database already exists
       } else {
         graph.arangoDatabase.create()     // Database needs to be created

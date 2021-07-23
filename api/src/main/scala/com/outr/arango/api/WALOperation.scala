@@ -1,11 +1,12 @@
 package com.outr.arango.api
 
-import io.circe.Json
+import fabric.Value
+import fabric.rw.{ReaderWriter, ccRW}
 
-case class WALOperation(tick: Long,
+case class WALOperation(tick: String,
                         `type`: OperationType,
                         db: String,
-                        data: Json = Json.obj(),
+                        data: Value = fabric.Obj(Map.empty),
                         cuid: Option[String],
                         tid: Option[String]) {
   lazy val collectionId: Option[String] = cuid.flatMap { s =>
@@ -18,9 +19,15 @@ case class WALOperation(tick: Long,
   }
 }
 
+object WALOperation {
+  implicit val rw: ReaderWriter[WALOperation] = ccRW
+}
+
 sealed abstract class OperationType(val value: Int)
 
 object OperationType {
+  implicit val rw: ReaderWriter[OperationType] = ReaderWriter(t => fabric.Num(t.value), v => apply(v.asNum.asInt))
+
   case object CreatedDatabase extends OperationType(1100)
   case object DropDatabase extends OperationType(1101)
   case object CreateCollection extends OperationType(2000)

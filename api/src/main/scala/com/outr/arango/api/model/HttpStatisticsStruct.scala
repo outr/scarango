@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class HttpStatisticsStruct(requestsAsync: Option[Int] = None,
                                 requestsDelete: Option[Int] = None,
@@ -13,3 +13,7 @@ case class HttpStatisticsStruct(requestsAsync: Option[Int] = None,
                                 requestsPost: Option[Int] = None,
                                 requestsPut: Option[Int] = None,
                                 requestsTotal: Option[Int] = None)
+
+object HttpStatisticsStruct {
+  implicit val rw: ReaderWriter[HttpStatisticsStruct] = ccRW
+}

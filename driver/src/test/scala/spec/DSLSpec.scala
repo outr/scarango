@@ -1,7 +1,8 @@
 package spec
 
-import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field, Graph, Id, Index, Query, Serialization}
+import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field, Graph, Id, Index, Query}
 import com.outr.arango.query._
+import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -9,9 +10,8 @@ import profig.Profig
 class DSLSpec extends AsyncWordSpec with Matchers {
   "DSL" should {
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "build a simple query" in {
       val p = Person.ref
@@ -93,6 +93,8 @@ class DSLSpec extends AsyncWordSpec with Matchers {
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
+    override implicit val rw: ReaderWriter[Person] = ccRW
+
     val name: Field[String] = Field[String]("name")
     val age: Field[Int] = Field[Int]("age")
 
@@ -101,6 +103,5 @@ class DSLSpec extends AsyncWordSpec with Matchers {
     def ref: DocumentRef[Person, Person.type] = DocumentRef(this, Some("p"))
 
     override val collectionName: String = "people"
-    override implicit val serialization: Serialization[Person] = Serialization.auto[Person]
   }
 }

@@ -3,6 +3,7 @@ package spec
 import com.outr.arango._
 import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
+import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -16,9 +17,8 @@ class GraphSpec extends AsyncWordSpec with Matchers {
     val doDrop: Boolean = false
 
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "initialize" in {
       database.register(DataImportUpgrade)
@@ -175,12 +175,13 @@ class GraphSpec extends AsyncWordSpec with Matchers {
                      _id: Id[Airport] = Airport.id()) extends Document[Airport]
 
   object Airport extends DocumentModel[Airport] {
+    override implicit val rw: ReaderWriter[Airport] = ccRW
+
     val name: Field[String] = Field[String]("name")
 
     override def indexes: List[Index] = Nil
 
     override val collectionName: String = "airports"
-    override implicit val serialization: Serialization[Airport] = Serialization.auto[Airport]
   }
 
   case class Flight(_from: Id[Airport],
@@ -200,13 +201,18 @@ class GraphSpec extends AsyncWordSpec with Matchers {
                     _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
 
   object Flight extends DocumentModel[Flight] {
+    override implicit val rw: ReaderWriter[Flight] = ccRW
+
     override def indexes: List[Index] = Nil
 
     override val collectionName: String = "flights"
-    override implicit val serialization: Serialization[Flight] = Serialization.auto[Flight]
   }
 
   case class AirportName(fullName: String)
+
+  object AirportName {
+    implicit val rw: ReaderWriter[AirportName] = ccRW
+  }
 
   object DataImportUpgrade extends DatabaseUpgrade {
     override def applyToNew: Boolean = true

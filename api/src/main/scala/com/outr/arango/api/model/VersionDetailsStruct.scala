@@ -1,7 +1,7 @@
 package com.outr.arango.api.model
 
-import io.circe.Json
-
+import fabric._
+import fabric.rw._
 
 case class VersionDetailsStruct(architecture: Option[String] = None,
                                 arm: Option[String] = None,
@@ -36,3 +36,7 @@ case class VersionDetailsStruct(architecture: Option[String] = None,
                                 v8Version: Option[String] = None,
                                 vpackVersion: Option[String] = None,
                                 zlibVersion: Option[String] = None)
+
+object VersionDetailsStruct {
+  implicit val rw: ReaderWriter[VersionDetailsStruct] = ccRW
+}

@@ -3,6 +3,7 @@ package spec
 import com.outr.arango.transaction.{Transaction, TransactionStatus}
 import com.outr.arango._
 import com.outr.arango.query._
+import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -14,9 +15,8 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
 
   "Advanced" should {
     "initialize configuration" in {
-      Profig.initConfiguration().map { _ =>
-        succeed
-      }
+      Profig.initConfiguration()
+      succeed
     }
     "initialize" in {
       database.init().map { _ =>
@@ -151,12 +151,13 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
+    override implicit val rw: ReaderWriter[Person] = ccRW
+
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
 
     override def indexes: List[Index] = Nil
 
     override val collectionName: String = "people"
-    override implicit val serialization: Serialization[Person] = Serialization.auto[Person]
   }
 }
