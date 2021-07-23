@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango.{ArangoDB, ArangoException, DatabaseState, Document, DocumentModel, Id, Index, IndexType}
-import fabric.rw.{ReaderWriter, ccRW}
+import fabric.rw.{Convertible, ReaderWriter, ccRW}
 import io.youi.http.Headers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

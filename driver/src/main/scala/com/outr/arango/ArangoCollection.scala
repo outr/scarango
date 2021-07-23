@@ -72,11 +72,5 @@ class ArangoCollection(client: HttpClient, dbName: String, collectionName: Strin
   def drop(isSystem: Boolean = false)(implicit ec: ExecutionContext): Future[Boolean] = APICollectionCollectionName
     .delete(client, collectionName, isSystem = Some(isSystem))
     .map(_.as[ArangoResponse])
-    .map { ar =>
-      if (ar.error) {
-        false
-      } else {
-        ar.value[Option[Boolean]].getOrElse(false)
-      }
-    }
+    .map(!_.error)
 }

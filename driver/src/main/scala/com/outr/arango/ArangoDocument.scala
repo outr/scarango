@@ -24,7 +24,7 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
     APIDocumentCollection.post(
       client = c,
       collection = collectionName,
-      body = document,
+      body = Id.update(document),
       waitForSync = Some(waitForSync),
       returnNew = Some(returnNew),
       returnOld = Some(returnOld),
@@ -68,7 +68,7 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    val json = arr(documents.map(_.toValue): _*)
+    val json = arr(documents.map(d => Id.update(d.toValue)): _*)
     create(json, transactionId, waitForSync, returnNew, returnOld, silent)(ec)
   }
 
@@ -79,7 +79,7 @@ class ArangoDocument(client: HttpClient, dbName: String, collectionName: String)
                 returnOld: Boolean = false,
                 silent: Boolean = false)
                (implicit ec: ExecutionContext): Future[List[DocumentInsert]] = {
-    val json = arr(documents.map(_.toValue): _*)
+    val json = arr(documents.map(d => Id.update(d.toValue)): _*)
     create(json, transactionId, waitForSync, returnNew, returnOld, silent, overwrite = true)(ec)
   }
 
