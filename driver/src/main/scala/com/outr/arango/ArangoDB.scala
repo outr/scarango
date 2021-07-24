@@ -2,6 +2,7 @@ package com.outr.arango
 
 import com.outr.arango.api._
 import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
+import fabric.Obj
 import fabric.parse.Json
 import fabric.rw.{Asable, ReaderWriter, ccRW}
 import io.youi.client.{HttpClient, HttpClientConfig}
@@ -99,7 +100,7 @@ object ArangoDB {
     timeout = 5.minutes
   )
 
-  def config: Config = Profig("arango").as[Config]
+  def config: Config = Profig("arango").get().getOrElse(Obj.empty).as[Config]
 
   def credentials: Option[Credentials] = if (config.authentication) {
     Some(config.credentials)

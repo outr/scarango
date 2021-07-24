@@ -26,6 +26,7 @@ object AQLMacros {
     val extras = c.prefix.tree
     q"""
        import _root_.com.outr.arango.Value._
+       import _root_.fabric.rw._
        _root_.com.outr.arango.FieldAndValue($extras.thisField, ${type2Value(c)(value)._1})
      """
   }
@@ -88,7 +89,7 @@ object AQLMacros {
     } else if (vt <:< typeOf[NamedRef]) {
       (q"string($value.name)", true)
     } else {
-      n(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
+      n(q"json($value.toValue)")
     }
   }
 
@@ -175,7 +176,7 @@ object AQLMacros {
                 excludeAt = true
                 Some(q"""static($value.name, true)""")
               } else {
-                Some(q"json(_root_.profig.JsonUtil.toJson[$vt]($value))")
+                Some(q"json($value.toValue)")
               }
               if (special) {
                 argName = s"@$argName"
@@ -210,6 +211,7 @@ object AQLMacros {
           q"""
               import _root_.com.outr.arango.Value._
               import _root_.com.outr.arango.Query
+              import _root_.fabric.rw._
 
               Query($query, $argsMap).fix()
             """)
