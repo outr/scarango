@@ -1,3 +1,4 @@
+/*
 package com.outr.arango.model
 
 import fabric.Value
@@ -19,4 +20,4 @@ case class ArangoResponse(error: Boolean,
 
 object ArangoResponse {
   implicit def rw[R]: ReaderWriter[ArangoResponse] = ccRW
-}
+}*/

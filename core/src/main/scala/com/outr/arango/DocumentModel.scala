@@ -1,6 +1,5 @@
 package com.outr.arango
 
-import io.youi.Unique
 import fabric.rw.ReaderWriter
 
 trait DocumentModel[D <: Document[D]] {

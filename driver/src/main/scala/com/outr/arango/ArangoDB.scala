@@ -1,110 +1,72 @@
 package com.outr.arango
 
-import com.outr.arango.api._
-import com.outr.arango.model.{ArangoResponse, DatabaseInfo}
-import fabric.Obj
-import fabric.parse.Json
-import fabric.rw.{Asable, ReaderWriter, ccRW}
-import io.youi.client.{HttpClient, HttpClientConfig}
-import io.youi.client.intercept.Interceptor
-import io.youi.http.{Headers, HttpRequest, HttpResponse}
-import io.youi.net._
-import profig.Profig
-import reactify.{Val, Var}
+import cats.effect.IO
+import com.arangodb.async.{ArangoCollectionAsync, ArangoDBAsync, ArangoDatabaseAsync}
+import com.arangodb.model.CollectionCreateOptions
+import com.outr.arango.util.JavaHelpers._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
+class ArangoDBServer(connection: ArangoDBAsync) {
+  lazy val db: ArangoDB = new ArangoDB(connection.db())
 
-class ArangoDB(val database: String = ArangoDB.config.db,
-               baseURL: URL = ArangoDB.config.url,
-               credentials: Option[Credentials] = ArangoDB.credentials,
-               httpClient: HttpClient = HttpClient) extends Interceptor {
-  private[arango] val _state: Var[DatabaseState] = Var(DatabaseState.Uninitialized)
-  def state: Val[DatabaseState] = _state
-  def session: ArangoSession = state() match {
-    case DatabaseState.Initialized(session, _) => session
-    case DatabaseState.Error(t) => throw t
-    case s => throw new RuntimeException(s"Not initialized: $s")
-  }
-  def client: HttpClient = session
-    .client
-    .interceptor(this)
-    .dropNullValuesInJson(true)
+  def db(name: String): ArangoDB = new ArangoDB(connection.db(name))
+}
 
-  def init()(implicit ec: ExecutionContext): Future[DatabaseState] = {
-    fabric.Obj.ExcludeNullValues = true
-    assert(state() == DatabaseState.Uninitialized, s"Cannot init, not in uninitialized state: ${state()}")
-    _state := DatabaseState.Initializing
-    val start = System.currentTimeMillis()
-    val client = httpClient
-      .url(baseURL)
-      .path(Path.parse(s"/_db/$database/"))
-      .noFailOnHttpStatus
-    val futureSession = credentials match {
-      case Some(c) => client
-        .path(path"/_open/auth")
-        .post
-        .restful[Credentials, AuthenticationResponse](c)
-        .map { r =>
-          ArangoSession(client.header(Headers.Request.Authorization(s"bearer ${r.jwt}")))
-        }
-      case None => Future.successful(ArangoSession(client))
-    }
-    futureSession
-      .map(session => DatabaseState.Initialized(session, System.currentTimeMillis() - start))
-      .recover {
-        case t: Throwable => DatabaseState.Error(t)
-      }
-      .map { state =>
-        _state := state
-        state
-      }
-  }
+class ArangoDB(db: ArangoDatabaseAsync) {
+  def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
-  object api {
-    val system = new SystemDatabase(ArangoDB.this)
+  def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
+}
 
-    object db extends ArangoDatabase(ArangoDB.this, client, database) {
-      def current(implicit ec: ExecutionContext): Future[DatabaseInfo] = APIDatabaseCurrent
-        .get(client)
-        .map(_.as[ArangoResponse].value[DatabaseInfo])
-
-      def apply(name: String): ArangoDatabase = new ArangoDatabase(ArangoDB.this, client.path(Path.parse(s"/_db/$name/")), name)
-    }
-  }
-
-  def dispose(): Unit = _state := DatabaseState.Uninitialized
-
-  override def before(request: HttpRequest): Future[HttpRequest] = Future.successful(request)
-
-  override def after(request: HttpRequest, response: HttpResponse): Future[HttpResponse] = if (response.status.isSuccess) {
-    Future.successful(response)
-  } else {
-    val content = response.content.getOrElse(throw new RuntimeException(s"No content for failed response: ${request.url} (${response.status})"))
-    val json = Json.parse(content.asString)
-    val error = json.as[ArangoError]
-    throw new ArangoException(error, request, response, None)
-  }
-
-  override def toString: String = s"ArangoDB($database)"
-
-  case class AuthenticationResponse(jwt: String, must_change_password: Option[Boolean] = None)
-
-  object AuthenticationResponse {
-    implicit val rw: ReaderWriter[AuthenticationResponse] = ccRW
+class ArangoDBCollection(collection: ArangoCollectionAsync) {
+  def create(options: CreateCollectionOptions = CreateCollectionOptions()) = {
+    val o = options
+    collection.create(new CollectionCreateOptions {
+      name(collection.name())
+      o.journalSize.foreach(journalSize(_))
+      o.replicationFactor.foreach(replicationFactor(_))
+      o.satelite.foreach(satellite(_))
+      o.minReplicationFactor.foreach(minReplicationFactor(_))
+      o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment.orNull, k.offset.orNull))
+    }).toIO
   }
 }
 
-object ArangoDB {
-  HttpClientConfig.default := HttpClientConfig(
-    timeout = 5.minutes
-  )
+case class CreateCollectionOptions(journalSize: Option[Long] = None,
+                                   replicationFactor: Option[Int] = None,
+                                   satelite: Option[Boolean] = None,
+                                   minReplicationFactor: Option[Int] = None,
+                                   keyOptions: Option[KeyOptions] = None,
+                                   waitForSync: Option[Boolean] = None,
+                                   doCompact: Option[Boolean] = None,
+                                   isVolatile: Option[Boolean] = None,
+                                   shardKeys: Option[List[String]] = None,
+                                   numberOfShards: Option[Int] = None,
+                                   isSystem: Option[Boolean] = None,
+                                   `type`: Option[CollectionType] = None,
+                                   indexBuckets: Option[Int] = None,
+                                   distributeShardsLike: Option[String] = None,
+                                   shardingStrategy: Option[String] = None,
+                                   smartJoinAttribute: Option[String] = None,
+                                   collectionSchema: CollectionSchema = CollectionSchema())
 
-  def config: Config = Profig("arango").get().getOrElse(Obj.empty).as[Config]
+case class KeyOptions(allowUserKeys: Boolean, `type`: KeyType, increment: Option[Int], offset: Option[Int])
 
-  def credentials: Option[Credentials] = if (config.authentication) {
-    Some(config.credentials)
-  } else {
-    None
-  }
+sealed trait KeyType
+
+object KeyType {
+  case object Traditional extends KeyType
+  case object AutoIncrement extends KeyType
+  case object UUID extends KeyType
+  case object Padded extends KeyType
+}
+
+case class CollectionSchema(rule: Option[String] = None, level: Option[Level] = None, message: Option[String] = None)
+
+sealed trait Level
+
+object Level {
+  case object None extends Level
+  case object New extends Level
+  case object Moderate extends Level
+  case object Strict extends Level
 }
