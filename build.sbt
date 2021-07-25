@@ -28,7 +28,7 @@ ThisBuild / developers := List(
 
 val youiVersion = "0.14.1-SNAPSHOT"
 val profigVersion = "3.2.6"
-val scalaTestVersion = "3.2.3"
+val scalaTestVersion = "3.2.9"
 
 def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
   tests.groupBy(_.name).map {
