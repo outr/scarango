@@ -3,7 +3,7 @@ package com.outr.arango
 import cats.effect.IO
 import com.arangodb.async.{ArangoCollectionAsync, ArangoDBAsync, ArangoDatabaseAsync}
 import com.arangodb.model.CollectionCreateOptions
-import com.outr.arango.util.JavaHelpers._
+import com.outr.arango.util.Helpers._
 
 class ArangoDBServer(connection: ArangoDBAsync) {
   lazy val db: ArangoDB = new ArangoDB(connection.db())
@@ -12,13 +12,20 @@ class ArangoDBServer(connection: ArangoDBAsync) {
 }
 
 class ArangoDB(db: ArangoDatabaseAsync) {
+  // TODO: db.parseQuery to validate queries in AQL interpolation
+
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
 }
 
 class ArangoDBCollection(collection: ArangoCollectionAsync) {
-  def create(options: CreateCollectionOptions = CreateCollectionOptions()) = {
+  // TODO: insert documents
+  // TODO: queries
+  // TODO: create and delete indexes
+  // TODO: collection info
+
+  def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
     val o = options
     collection.create(new CollectionCreateOptions {
       name(collection.name())
@@ -26,8 +33,19 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
       o.replicationFactor.foreach(replicationFactor(_))
       o.satelite.foreach(satellite(_))
       o.minReplicationFactor.foreach(minReplicationFactor(_))
-      o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment.orNull, k.offset.orNull))
-    }).toIO
+      o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment, k.offset))
+    }).toIO.map { entity =>
+      CollectionInfo(
+        id = entity.getId,
+        name = entity.getName,
+        waitForSync = entity.getWaitForSync,
+        isVolatile = entity.getIsVolatile,
+        isSystem = entity.getIsSystem,
+        status = entity.getStatus,
+        `type` = entity.getType,
+        schema = entity.getSchema
+      )
+    }
   }
 }
 
@@ -69,4 +87,23 @@ object Level {
   case object New extends Level
   case object Moderate extends Level
   case object Strict extends Level
+}
+
+case class CollectionInfo(id: String,
+                          name: String,
+                          waitForSync: Boolean,
+                          isVolatile: Boolean,
+                          isSystem: Boolean,
+                          status: CollectionStatus,
+                          `type`: CollectionType,
+                          schema: CollectionSchema)
+
+sealed trait CollectionStatus
+
+object CollectionStatus {
+  case object New extends CollectionStatus
+  case object Unloaded extends CollectionStatus
+  case object Loaded extends CollectionStatus
+  case object Loading extends CollectionStatus
+  case object Deleted extends CollectionStatus
 }
