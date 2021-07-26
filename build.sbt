@@ -49,7 +49,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "scarango-core",
     libraryDependencies ++= Seq(
-      dep.profig
+      dep.profig,
+      dep.scalaTest
     )
   )
 

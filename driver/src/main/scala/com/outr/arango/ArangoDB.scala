@@ -23,7 +23,7 @@ class ArangoDB(db: ArangoDatabaseAsync) {
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
 }
 
-case class ArangoDocument(_key: String, values: Map[String, Value])
+case class ArangoDocument(_key: String, values: fabric.Obj)
 
 class ArangoDBCollection(collection: ArangoCollectionAsync) {
   // TODO: insert documents
@@ -44,7 +44,7 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
 
   object document {
-    def insert(key: String, document: Map[String, Value]) = collection.insertDocuments()
+//    def insert(key: String, document: Map[String, Value]) = collection.insertDocuments()
   }
 
   object index {

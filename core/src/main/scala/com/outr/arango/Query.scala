@@ -1,52 +1,52 @@
 package com.outr.arango
 
-import fabric.{Null, obj}
-import fabric.parse.Json
-
-case class Query(value: String, args: Map[String, Value], fixed: Boolean = false) {
-  def fix(): Query = if (fixed) {
-    this
-  } else {
-    var updatedValue = value
-    val updatedArgs = args.flatMap {
-      case (k, v) if v.static => {
-        val key = if (v.excludeAt) {
-          k
-        } else {
-          s"@$k"
+case class Query(parts: List[QueryPart]) {
+  lazy val (variables: Map[String, fabric.Value], reverseLookup: Map[fabric.Value, String]) = {
+    var counter = 0
+    var map = Map.empty[String, fabric.Value]
+    var reverseMap = Map.empty[fabric.Value, String]
+    parts.foreach {
+      case QueryPart.Variable(v) => {
+        val id = reverseMap.get(v) match {
+          case Some(idValue) => idValue
+          case None => {
+            val idValue = s"@arg$counter"
+            counter += 1
+            idValue
+          }
         }
-        val output = v.json.getString.getOrElse(Json.format(v.json))
-        updatedValue = updatedValue.replace(key, output)
-        None
+        map += id -> v
+        reverseMap += v -> id
       }
-      case (k, v) if v.json == Null => {
-        val key = if (v.excludeAt) {
-          k
-        } else {
-          s"@$k"
+      case QueryPart.NamedVariable(name, v) => map.get(s"@$name") match {
+        case Some(value) if v != value => throw new RuntimeException(s"Duplicate named variable with different values: @$name with $v and $value")
+        case Some(_) => // Already added
+        case None => {
+          val id = s"@$name"
+          map += id -> v
+          reverseMap += v -> id
         }
-        updatedValue = updatedValue.replace(key, "null")
-        None
       }
-      case (k, v) => Some((k, v))
+      case _ => // Ignore static
     }
-    Query(updatedValue, updatedArgs, fixed = true)
+    map -> reverseMap
   }
+
+  lazy val string: String = parts.map {
+    case QueryPart.Static(v) => v
+    case QueryPart.Variable(v) => reverseLookup(v)
+    case QueryPart.NamedVariable(name, _) => s"@$name"
+  }.mkString
 
   def +(that: Query): Query = Query.merge(List(this, that))
 
-  def bindVars: fabric.Value = obj(args.toList.map {
-    case (key, v) => {
-      val argValue: fabric.Value = v.json
-      key -> argValue
-    }
-  }: _*)
-
-  override def toString: String = s"[$value] (${args.map(t => s"${t._1}: ${t._2}").mkString(", ")})"
+  override def toString: String = s"$string (${variables.map(t => s"${t._1}: ${t._2}")})"
 }
 
 object Query {
-  private val ExtractNumeric = """(.+)(\d+)""".r
+  def apply(query: String): Query = Query(List(QueryPart.Static(query)))
+
+  def apply(parts: QueryPart*): Query = Query(parts.toList)
 
   /**
     * Merges queries and renames overlapping argument names
@@ -56,42 +56,13 @@ object Query {
     * @return merge quest
     */
   def merge(queries: List[Query], separator: String = "\n"): Query = {
-    var usedKeys = Set.empty[String]
-    val updatedQueries: List[Query] = queries.map { q =>
-      var query = q
-      val localKeys = query.args.keys.toSet
-
-      @scala.annotation.tailrec
-      def nextKey(key: String): String = key match {
-        case ExtractNumeric(prefix, n) => {
-          val newKey = s"$prefix${n.toInt + 1}"
-          if (!usedKeys.contains(newKey) && !localKeys.contains(newKey)) {
-            newKey
-          } else {
-            nextKey(newKey)
-          }
-        }
-        case _ => nextKey(s"${key}1")
+    val parts = queries.map(_.parts).foldLeft(List.empty[QueryPart])((merged, current) => {
+      if (merged.isEmpty) {
+        current
+      } else {
+        merged ::: List(QueryPart.Static(separator)) ::: current
       }
-
-      query.args.keys.foreach {
-        case key if usedKeys.contains(key) => {
-          val newKey = nextKey(key)
-          usedKeys += newKey
-          query = query.copy(
-            value = query.value.replace(s"@$key", s"@$newKey"),
-            args = query.args.map {
-              case (k, v) if k == key => newKey -> v
-              case (k, v) => k -> v
-            }
-          )
-        }
-        case key => usedKeys += key
-      }
-      query
-    }
-    val value = updatedQueries.map(_.value).mkString(separator)
-    val args = updatedQueries.flatMap(_.args).toMap
-    Query(value, args)
+    })
+    Query(parts)
   }
 }

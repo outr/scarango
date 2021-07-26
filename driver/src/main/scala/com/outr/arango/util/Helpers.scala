@@ -83,7 +83,7 @@ object Helpers {
   implicit def documentConversion(d: ArangoDocument): BaseDocument = {
     val o = new BaseDocument(d._key)
 
-
+    // TODO: Implement
 
     o
   }
