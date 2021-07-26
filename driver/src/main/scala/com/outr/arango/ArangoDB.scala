@@ -1,9 +1,13 @@
 package com.outr.arango
 
 import cats.effect.IO
+import cats.implicits._
 import com.arangodb.async.{ArangoCollectionAsync, ArangoDBAsync, ArangoDatabaseAsync}
-import com.arangodb.model.CollectionCreateOptions
+import com.arangodb.entity.IndexEntity
+import com.arangodb.model.{CollectionCreateOptions, FulltextIndexOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
 import com.outr.arango.util.Helpers._
+
+import scala.jdk.CollectionConverters._
 
 class ArangoDBServer(connection: ArangoDBAsync) {
   lazy val db: ArangoDB = new ArangoDB(connection.db())
@@ -19,11 +23,11 @@ class ArangoDB(db: ArangoDatabaseAsync) {
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
 }
 
+case class ArangoDocument(_key: String, values: Map[String, Value])
+
 class ArangoDBCollection(collection: ArangoCollectionAsync) {
   // TODO: insert documents
   // TODO: queries
-  // TODO: create and delete indexes
-  // TODO: collection info
 
   def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
     val o = options
@@ -34,17 +38,55 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
       o.satelite.foreach(satellite(_))
       o.minReplicationFactor.foreach(minReplicationFactor(_))
       o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment, k.offset))
-    }).toIO.map { entity =>
-      CollectionInfo(
-        id = entity.getId,
-        name = entity.getName,
-        waitForSync = entity.getWaitForSync,
-        isVolatile = entity.getIsVolatile,
-        isSystem = entity.getIsSystem,
-        status = entity.getStatus,
-        `type` = entity.getType,
-        schema = entity.getSchema
-      )
+    }).toIO.map(collectionEntityConversion)
+  }
+
+  def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
+
+  object document {
+    def insert(key: String, document: Map[String, Value]) = collection.insertDocuments()
+  }
+
+  object index {
+    def query(): IO[List[IndexInfo]] = {
+      collection.getIndexes.toIO.map(_.asScala.toList).map(_.map(indexEntityConversion))
+    }
+
+    def ensure(indexes: List[Index]): IO[List[IndexInfo]] = {
+      val generate: List[IO[IndexEntity]] = indexes.map { i =>
+        val fields = i.fields.asJava
+        i.`type` match {
+          case IndexType.Persistent => {
+            val options = new PersistentIndexOptions
+            options.sparse(i.sparse)
+            options.unique(i.unique)
+            options.estimates(i.estimates)
+            collection.ensurePersistentIndex(fields, options).toIO
+          }
+          case IndexType.Geo => {
+            val options = new GeoIndexOptions
+            options.geoJson(i.geoJson)
+            collection.ensureGeoIndex(fields, options).toIO
+          }
+          case IndexType.FullText => {
+            val options = new FulltextIndexOptions
+            options.minLength(i.minLength.toInt)
+            collection.ensureFulltextIndex(fields, options).toIO
+          }
+          case IndexType.TTL => {
+            val options = new TtlIndexOptions
+            options.expireAfter(i.expireAfterSeconds)
+            collection.ensureTtlIndex(fields, options).toIO
+          }
+        }
+      }
+      generate.map(_.map(indexEntityConversion)).sequence
+    }
+
+    def delete(indexIds: List[String]): IO[List[String]] = {
+      indexIds.map { indexId =>
+        collection.deleteIndex(indexId).toIO
+      }.sequence
     }
   }
 }

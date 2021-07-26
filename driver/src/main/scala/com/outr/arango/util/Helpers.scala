@@ -2,17 +2,30 @@ package com.outr.arango.util
 
 import cats.effect.IO
 import com.arangodb.entity
+import com.arangodb.entity.BaseDocument
 import com.arangodb.model
-import com.outr.arango.{CollectionSchema, CollectionStatus, CollectionType, KeyType, Level}
+import com.outr.arango.{ArangoDocument, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, Id, Index, IndexInfo, KeyType, Level}
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
 object Helpers {
   implicit class CompletableFutureExtras[T](cf: CompletableFuture[T]) {
     def toIO: IO[T] = IO.fromFuture(IO(cf.asScala))
   }
+
+  implicit def collectionEntityConversion(ce: entity.CollectionEntity): CollectionInfo = CollectionInfo(
+    id = ce.getId,
+    name = ce.getName,
+    waitForSync = ce.getWaitForSync,
+    isVolatile = ce.getIsVolatile,
+    isSystem = ce.getIsSystem,
+    status = ce.getStatus,
+    `type` = ce.getType,
+    schema = ce.getSchema
+  )
 
   implicit def statusConversion(status: entity.CollectionStatus): CollectionStatus = status match {
     case entity.CollectionStatus.NEW_BORN_COLLECTION => CollectionStatus.New
@@ -56,4 +69,22 @@ object Helpers {
   }
 
   implicit def option2Integer(i: Option[Int]): Integer = i.map(Integer.valueOf).orNull
+
+  implicit def indexEntityConversion(e: entity.IndexEntity): IndexInfo = IndexInfo(
+    `type` = e.getType.name(),
+    fields = Option(e.getFields).map(_.asScala.toList),
+    unique = Option(e.getUnique),
+    sparse = Option(e.getSparse),
+    id = e.getId,
+    isNewlyCreated = Option(e.getIsNewlyCreated),
+    selectivityEstimate = Option(e.getSelectivityEstimate)
+  )
+
+  implicit def documentConversion(d: ArangoDocument): BaseDocument = {
+    val o = new BaseDocument(d._key)
+
+
+
+    o
+  }
 }

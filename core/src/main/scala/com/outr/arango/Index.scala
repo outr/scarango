@@ -4,7 +4,7 @@ case class Index(`type`: IndexType,
                  fields: List[String],
                  sparse: Boolean = false,
                  unique: Boolean = false,
-                 deduplicate: Boolean = true,
+                 estimates: Boolean = true,
                  geoJson: Boolean = true,
                  minLength: Long = 3L,
                  expireAfterSeconds: Int = -1) {
