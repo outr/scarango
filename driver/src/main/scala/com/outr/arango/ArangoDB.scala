@@ -3,7 +3,7 @@ package com.outr.arango
 import cats.effect.IO
 import cats.implicits._
 import com.arangodb.async.{ArangoCollectionAsync, ArangoDBAsync, ArangoDatabaseAsync}
-import com.arangodb.entity.IndexEntity
+import com.arangodb.entity.{BaseDocument, IndexEntity}
 import com.arangodb.model.{CollectionCreateOptions, FulltextIndexOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
 import com.outr.arango.util.Helpers._
 
@@ -20,10 +20,23 @@ class ArangoDB(db: ArangoDatabaseAsync) {
 
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
+  object query {
+    def apply(query: Query) = {
+      val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
+        case (key, value) => key -> value2AnyRef(value)
+      }.asJava
+
+      fs2.Stream.force(db.query(query.string, bindVars, classOf[BaseDocument]).toIO.map { c =>
+        c.stream().count()
+        val cursor: java.util.Iterator[BaseDocument] = c
+        val iterator: Iterator[BaseDocument] = cursor.asScala
+        fs2.Stream.fromBlockingIterator[IO](iterator, 512)
+      })
+    }
+  }
+
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
 }
-
-case class ArangoDocument(_key: String, values: fabric.Obj)
 
 class ArangoDBCollection(collection: ArangoCollectionAsync) {
   // TODO: insert documents
@@ -44,7 +57,7 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
 
   object document {
-//    def insert(key: String, document: Map[String, Value]) = collection.insertDocuments()
+//    def insert(doc: fabric.Obj) = collection.insertDocument()
   }
 
   object index {

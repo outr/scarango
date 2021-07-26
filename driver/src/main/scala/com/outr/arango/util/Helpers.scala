@@ -2,9 +2,8 @@ package com.outr.arango.util
 
 import cats.effect.IO
 import com.arangodb.entity
-import com.arangodb.entity.BaseDocument
 import com.arangodb.model
-import com.outr.arango.{ArangoDocument, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, Id, Index, IndexInfo, KeyType, Level}
+import com.outr.arango.{CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, IndexInfo, KeyType, Level}
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
@@ -80,11 +79,14 @@ object Helpers {
     selectivityEstimate = Option(e.getSelectivityEstimate)
   )
 
-  implicit def documentConversion(d: ArangoDocument): BaseDocument = {
-    val o = new BaseDocument(d._key)
-
-    // TODO: Implement
-
-    o
+  implicit def value2AnyRef(v: fabric.Value): AnyRef = v match {
+    case fabric.Obj(map) => map.map {
+      case (key, value) => key -> value2AnyRef(value)
+    }
+    case fabric.Str(s) => s
+    case fabric.Num(n) => n.underlying()
+    case fabric.Bool(b) => java.lang.Boolean.valueOf(b)
+    case fabric.Arr(a) => a.map(value2AnyRef).asJava
+    case fabric.Null => None.orNull
   }
 }

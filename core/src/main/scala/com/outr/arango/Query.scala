@@ -6,26 +6,23 @@ case class Query(parts: List[QueryPart]) {
     var map = Map.empty[String, fabric.Value]
     var reverseMap = Map.empty[fabric.Value, String]
     parts.foreach {
-      case QueryPart.Variable(v) => {
+      case QueryPart.Variable(v) =>
         val id = reverseMap.get(v) match {
           case Some(idValue) => idValue
-          case None => {
-            val idValue = s"@arg$counter"
+          case None =>
+            val idValue = s"arg$counter"
             counter += 1
             idValue
-          }
         }
         map += id -> v
         reverseMap += v -> id
-      }
-      case QueryPart.NamedVariable(name, v) => map.get(s"@$name") match {
-        case Some(value) if v != value => throw new RuntimeException(s"Duplicate named variable with different values: @$name with $v and $value")
+      case QueryPart.NamedVariable(name, v) => map.get(name) match {
+        case Some(value) if v != value => throw new RuntimeException(s"Duplicate named variable with different values: $name with $v and $value")
         case Some(_) => // Already added
-        case None => {
-          val id = s"@$name"
+        case None =>
+          val id = name
           map += id -> v
           reverseMap += v -> id
-        }
       }
       case _ => // Ignore static
     }
@@ -34,7 +31,7 @@ case class Query(parts: List[QueryPart]) {
 
   lazy val string: String = parts.map {
     case QueryPart.Static(v) => v
-    case QueryPart.Variable(v) => reverseLookup(v)
+    case QueryPart.Variable(v) => s"@${reverseLookup(v)}"
     case QueryPart.NamedVariable(name, _) => s"@$name"
   }.mkString
 

@@ -18,7 +18,7 @@ class QuerySpec extends AnyWordSpec with Matchers {
         QueryPart.Variable(fabric.Str("Matt")),
         QueryPart.Static(" RETURN t")
       ))
-      q.variables should be(Map("@arg0" -> fabric.Str("Matt")))
+      q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @arg0 RETURN t")
     }
     "convert a reused variable properly" in {
@@ -29,7 +29,7 @@ class QuerySpec extends AnyWordSpec with Matchers {
         QueryPart.Variable(fabric.Str("Matt")),
         QueryPart.Static(" RETURN t")
       ))
-      q.variables should be(Map("@arg0" -> fabric.Str("Matt")))
+      q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @arg0 || t.firstName == @arg0 RETURN t")
     }
     "convert a reused variable properly with the DSL" in {
@@ -37,10 +37,10 @@ class QuerySpec extends AnyWordSpec with Matchers {
         "FOR t IN test FILTER t.name == ",
         fabric.Str("Matt"),
         " || t.firstName == ",
-        fabric.Str("Matt"),
+        "arg0" -> fabric.Str("Matt"),
         " RETURN t"
       )
-      q.variables should be(Map("@arg0" -> fabric.Str("Matt")))
+      q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @arg0 || t.firstName == @arg0 RETURN t")
     }
     "convert a simple scenario with a named variable" in {
@@ -49,7 +49,7 @@ class QuerySpec extends AnyWordSpec with Matchers {
         QueryPart.NamedVariable("name", fabric.Str("Matt")),
         QueryPart.Static(" RETURN t")
       ))
-      q.variables should be(Map("@name" -> fabric.Str("Matt")))
+      q.variables should be(Map("name" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @name RETURN t")
     }
     "error when using the same name with different named variable values" in {
@@ -61,9 +61,9 @@ class QuerySpec extends AnyWordSpec with Matchers {
         QueryPart.Static(" RETURN t")
       ))
       val caught = intercept[RuntimeException] {
-        q.variables should be(Map("@arg0" -> fabric.Str("Matt")))
+        q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       }
-      caught.getMessage should be("""Duplicate named variable with different values: @name with "Bob" and "Adam"""")
+      caught.getMessage should be("""Duplicate named variable with different values: name with "Bob" and "Adam"""")
     }
   }
 }
