@@ -3,9 +3,10 @@ package com.outr.arango
 import cats.effect.IO
 import cats.implicits._
 import com.arangodb.async.{ArangoCollectionAsync, ArangoDBAsync, ArangoDatabaseAsync}
-import com.arangodb.entity.{BaseDocument, IndexEntity}
-import com.arangodb.model.{CollectionCreateOptions, FulltextIndexOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
+import com.arangodb.entity.IndexEntity
+import com.arangodb.model.{CollectionCreateOptions, DocumentCreateOptions, FulltextIndexOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
 import com.outr.arango.util.Helpers._
+import fabric.Value
 
 import scala.jdk.CollectionConverters._
 
@@ -16,22 +17,24 @@ class ArangoDBServer(connection: ArangoDBAsync) {
 }
 
 class ArangoDB(db: ArangoDatabaseAsync) {
-  // TODO: db.parseQuery to validate queries in AQL interpolation
-
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
   object query {
-    def apply(query: Query) = {
+    def parse(query: Query): IO[AQLParseResult] = {
+      db.parseQuery(query.string).toIO.map(aqlParseEntityConversion)
+    }
+
+    def apply(query: Query): fs2.Stream[IO, Value] = {
       val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
         case (key, value) => key -> value2AnyRef(value)
       }.asJava
 
-      fs2.Stream.force(db.query(query.string, bindVars, classOf[BaseDocument]).toIO.map { c =>
-        c.stream().count()
-        val cursor: java.util.Iterator[BaseDocument] = c
-        val iterator: Iterator[BaseDocument] = cursor.asScala
+      fs2.Stream.force(db.query(query.string, bindVars, classOf[String]).toIO.map { c =>
+        // TODO: Consider c.stream() instead
+        val cursor: java.util.Iterator[String] = c
+        val iterator: Iterator[String] = cursor.asScala
         fs2.Stream.fromBlockingIterator[IO](iterator, 512)
-      })
+      }).map(fabric.parse.Json.parse)
     }
   }
 
@@ -57,7 +60,21 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
 
   object document {
-//    def insert(doc: fabric.Obj) = collection.insertDocument()
+    def insert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Insert): IO[CreateResult] = collection
+      .insertDocument(fabric.parse.Json.format(doc), options)
+      .toIO
+      .map(createDocumentEntityConversion)
+
+    def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
+
+    object batch {
+      def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults] = collection
+        .insertDocuments(docs.map(fabric.parse.Json.format).asJava, options)
+        .toIO
+        .map(multiDocumentEntityConversion)
+
+      def upsert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Upsert): IO[CreateResults] = insert(docs, options)
+    }
   }
 
   object index {
@@ -161,4 +178,42 @@ object CollectionStatus {
   case object Loaded extends CollectionStatus
   case object Loading extends CollectionStatus
   case object Deleted extends CollectionStatus
+}
+
+case class AQLParseResult(collections: List[String], bindVars: List[String], ast: List[ASTNode])
+
+case class ASTNode(`type`: String, subNodes: List[ASTNode], name: String, id: Long, value: AnyRef)
+
+sealed trait OverwriteMode
+
+object OverwriteMode {
+  case object None extends OverwriteMode
+  case object Ignore extends OverwriteMode
+  case object Replace extends OverwriteMode
+  case object Update extends OverwriteMode
+  case object UpdateMerge extends OverwriteMode
+  case object Conflict extends OverwriteMode
+}
+
+case class CreateOptions(waitForSync: Boolean = false,
+                         returnNew: Boolean = false,
+                         returnOld: Boolean = false,
+                         overwrite: OverwriteMode = OverwriteMode.None,
+                         silent: Boolean = true,
+                         streamTransactionId: Option[String] = None)
+
+object CreateOptions {
+  val Insert: CreateOptions = CreateOptions()
+  val Upsert: CreateOptions = CreateOptions(overwrite = OverwriteMode.Replace)
+}
+
+case class CreateResult(key: Option[String], id: Option[String], rev: Option[String], newDocument: Option[fabric.Value], oldDocument: Option[fabric.Value])
+
+case class CreateResults(results: List[Either[ArangoError, CreateResult]]) {
+  lazy val documents: List[CreateResult] = results.collect {
+    case Right(cr) => cr
+  }
+  lazy val errors: List[ArangoError] = results.collect {
+    case Left(e) => e
+  }
 }

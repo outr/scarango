@@ -2,8 +2,10 @@ package com.outr.arango.util
 
 import cats.effect.IO
 import com.arangodb.entity
+import com.arangodb.entity.ErrorEntity
 import com.arangodb.model
-import com.outr.arango.{CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, IndexInfo, KeyType, Level}
+import com.arangodb.model.DocumentCreateOptions
+import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, IndexInfo, KeyType, Level, OverwriteMode}
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
@@ -89,4 +91,63 @@ object Helpers {
     case fabric.Arr(a) => a.map(value2AnyRef).asJava
     case fabric.Null => None.orNull
   }
+
+  implicit def aqlParseEntityConversion(e: entity.AqlParseEntity): AQLParseResult = AQLParseResult(
+    collections = e.getCollections.asScala.toList,
+    bindVars = e.getBindVars.asScala.toList,
+    ast = parseASTNodes(e.getAst.asScala.toList)
+  )
+
+  private def parseASTNodes(nodes: List[entity.AqlParseEntity.AstNode]): List[ASTNode] = nodes.map { n =>
+    ASTNode(
+      `type` = n.getType,
+      subNodes = parseASTNodes(n.getSubNodes.asScala.toList),
+      name = n.getName,
+      id = n.getId,
+      value = n.getValue
+    )
+  }
+
+  implicit def createOptionsConversion(o: CreateOptions): model.DocumentCreateOptions = {
+    val dco = new DocumentCreateOptions
+    dco.waitForSync(o.waitForSync)
+    dco.returnNew(o.returnNew)
+    dco.returnOld(o.returnOld)
+    dco.overwrite(o.overwrite != OverwriteMode.None)
+    o.overwrite match {
+      case OverwriteMode.None => // Not set
+      case OverwriteMode.Ignore => dco.overwriteMode(model.OverwriteMode.ignore)
+      case OverwriteMode.Replace => dco.overwriteMode(model.OverwriteMode.replace)
+      case OverwriteMode.Update | OverwriteMode.UpdateMerge => dco.overwriteMode(model.OverwriteMode.update)
+      case OverwriteMode.Conflict => dco.overwriteMode(model.OverwriteMode.conflict)
+    }
+    dco.silent(o.silent)
+    o.streamTransactionId.foreach(dco.streamTransactionId)
+    if (o.overwrite == OverwriteMode.UpdateMerge) {
+      dco.mergeObjects(true)
+    }
+    dco
+  }
+
+  implicit def multiDocumentEntityConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults = CreateResults(
+    results = e.getDocumentsAndErrors.asScala.toList.map {
+      case ce: entity.DocumentCreateEntity[String] => Right(ce)
+      case err: ErrorEntity => Left(err)
+    }
+  )
+
+  implicit def createDocumentEntityConversion(e: entity.DocumentCreateEntity[String]): CreateResult = CreateResult(
+    key = Option(e.getKey),
+    id = Option(e.getId),
+    rev = Option(e.getRev),
+    newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
+    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+  )
+
+  implicit def errorEntityConversion(e: entity.ErrorEntity): ArangoError = ArangoError(
+    code = e.getCode,
+    num = e.getErrorNum,
+    message = e.getErrorMessage,
+    exception = e.getException
+  )
 }
