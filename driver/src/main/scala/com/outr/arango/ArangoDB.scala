@@ -19,6 +19,8 @@ class ArangoDBServer(connection: ArangoDBAsync) {
 class ArangoDB(db: ArangoDatabaseAsync) {
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
+  def drop(): IO[Boolean] = db.drop().toIO.map(_.booleanValue())
+
   object query {
     def parse(query: Query): IO[AQLParseResult] = {
       db.parseQuery(query.string).toIO.map(aqlParseEntityConversion)
@@ -42,9 +44,6 @@ class ArangoDB(db: ArangoDatabaseAsync) {
 }
 
 class ArangoDBCollection(collection: ArangoCollectionAsync) {
-  // TODO: insert documents
-  // TODO: queries
-
   def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
     val o = options
     collection.create(new CollectionCreateOptions {
@@ -57,6 +56,8 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
     }).toIO.map(collectionEntityConversion)
   }
 
+  def drop(): IO[Unit] = collection.drop().toIO.map(_ => ())
+
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
 
   object document {
@@ -67,6 +68,10 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
 
     def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
 
+    // TODO: Update support
+
+    def delete(key: String) = collection.deleteDocument(key, classOf[String], options).toIO.map(_ => ())
+
     object batch {
       def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults] = collection
         .insertDocuments(docs.map(fabric.parse.Json.format).asJava, options)
@@ -74,6 +79,8 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
         .map(multiDocumentEntityConversion)
 
       def upsert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Upsert): IO[CreateResults] = insert(docs, options)
+
+      // TODO: delete support
     }
   }
 
