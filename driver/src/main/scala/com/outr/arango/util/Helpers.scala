@@ -131,7 +131,7 @@ object Helpers {
 
   implicit def multiDocumentEntityConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults = CreateResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
-      case ce: entity.DocumentCreateEntity[String] => Right(ce)
+      case ce: entity.DocumentCreateEntity[String @unchecked] => Right(ce)
       case err: ErrorEntity => Left(err)
     }
   )
