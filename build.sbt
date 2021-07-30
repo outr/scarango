@@ -69,7 +69,8 @@ lazy val driver = project.in(file("driver"))
       dep.jacksonDataformatVelocypack,
       dep.catsEffect,
       dep.fs2,
-      dep.scalaTest
+      dep.scalaTest,
+      dep.catsEffectTesting
     )
   )
   .dependsOn(coreJVM)

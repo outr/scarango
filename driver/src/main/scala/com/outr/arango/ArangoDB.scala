@@ -16,8 +16,19 @@ class ArangoDBServer(connection: ArangoDBAsync) {
   def db(name: String): ArangoDB = new ArangoDB(connection.db(name))
 }
 
+object ArangoDBServer {
+  def apply(connection: ArangoDBAsync): ArangoDBServer = new ArangoDBServer(connection)
+
+  // TODO: add configuration options
+  def apply(password: String = "root"): ArangoDBServer = apply(new ArangoDBAsync.Builder()
+    .password(password)
+    .build())
+}
+
 class ArangoDB(db: ArangoDatabaseAsync) {
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
+
+  def exists(): IO[Boolean] = db.exists().toIO.map(_.booleanValue())
 
   def drop(): IO[Boolean] = db.drop().toIO.map(_.booleanValue())
 
@@ -69,8 +80,8 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
     def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
 
     // TODO: Update support
-
-    def delete(key: String) = collection.deleteDocument(key, classOf[String], options).toIO.map(_ => ())
+    // TODO: Delete support
+//    def delete(key: String) = collection.deleteDocument(key, classOf[String], options).toIO.map(_ => ())
 
     object batch {
       def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults] = collection

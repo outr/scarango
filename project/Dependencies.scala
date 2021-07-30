@@ -8,6 +8,7 @@ object Dependencies {
     val catsEffect: String = "3.1.1"
     val fs2: String = "3.0.4"
     val scalaTest: String = "3.2.3"
+    val catsEffectTesting: String = "1.1.1"
   }
 
   val profig: ModuleID = "com.outr" %% "profig" % version.profig
@@ -17,4 +18,5 @@ object Dependencies {
   val fs2: ModuleID = "co.fs2" %% "fs2-core" % version.fs2
 
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % version.scalaTest % "test"
+  val catsEffectTesting: ModuleID = "org.typelevel" %% "cats-effect-testing-scalatest" % version.catsEffectTesting % "test"
 }
