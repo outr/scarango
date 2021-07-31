@@ -55,11 +55,14 @@ object Helpers {
     case entity.CollectionType.EDGES => CollectionType.Edge
   }
 
-  implicit def collectionSchemaConversion(cs: model.CollectionSchema): CollectionSchema = CollectionSchema(
-    rule = Option(cs.getRule),
-    level = cs.getLevel,
-    message = Option(cs.getMessage)
-  )
+  implicit def collectionSchemaConversion(cs: model.CollectionSchema): CollectionSchema = Option(cs) match {
+    case Some(_) => CollectionSchema(
+      rule = Option(cs.getRule),
+      level = cs.getLevel,
+      message = Option(cs.getMessage)
+    )
+    case None => CollectionSchema()
+  }
 
   implicit def levelConversion(l: model.CollectionSchema.Level): Option[Level] = Option(l).map(_.name()).flatMap {
     case "none" => Some(Level.None)

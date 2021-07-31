@@ -20,8 +20,8 @@ object ArangoDBServer {
   def apply(connection: ArangoDBAsync): ArangoDBServer = new ArangoDBServer(connection)
 
   // TODO: add configuration options
-  def apply(password: String = "root"): ArangoDBServer = apply(new ArangoDBAsync.Builder()
-    .password(password)
+  def apply(password: Option[String] = None): ArangoDBServer = apply(new ArangoDBAsync.Builder()
+    .password(password.orNull)
     .build())
 }
 
@@ -61,11 +61,13 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
       name(collection.name())
       o.journalSize.foreach(journalSize(_))
       o.replicationFactor.foreach(replicationFactor(_))
-      o.satelite.foreach(satellite(_))
+      o.satellite.foreach(satellite(_))
       o.minReplicationFactor.foreach(minReplicationFactor(_))
       o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment, k.offset))
     }).toIO.map(collectionEntityConversion)
   }
+
+  def exists(): IO[Boolean] = collection.exists().toIO.map(_.booleanValue())
 
   def drop(): IO[Unit] = collection.drop().toIO.map(_ => ())
 
@@ -141,7 +143,7 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
 
 case class CreateCollectionOptions(journalSize: Option[Long] = None,
                                    replicationFactor: Option[Int] = None,
-                                   satelite: Option[Boolean] = None,
+                                   satellite: Option[Boolean] = None,
                                    minReplicationFactor: Option[Int] = None,
                                    keyOptions: Option[KeyOptions] = None,
                                    waitForSync: Option[Boolean] = None,
