@@ -82,6 +82,11 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
     def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
 
     // TODO: Update support
+    def update(doc: fabric.Obj, options: UpdateOptions) = collection
+      .updateDocument(fabric.parse.Json.format(doc, options))
+      .toIO
+      .map(updateDocumentEntityConversion)
+
     def delete(key: String, options: DeleteOptions = DeleteOptions.Default): IO[DeleteResult] = collection
       .deleteDocument(key, classOf[String], options)
       .toIO
