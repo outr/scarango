@@ -82,19 +82,28 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
     def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
 
     // TODO: Update support
-    // TODO: Delete support
-//    def delete(key: String) = collection.deleteDocument(key, classOf[String], options).toIO.map(_ => ())
+    def delete(key: String, options: DeleteOptions = DeleteOptions.Default): IO[DeleteResult] = collection
+      .deleteDocument(key, classOf[String], options)
+      .toIO
+      .map(deleteDocumentEntityConversion)
 
     object batch {
       def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults] = collection
         .insertDocuments(docs.map(fabric.parse.Json.format).asJava, options)
         .toIO
-        .map(multiDocumentEntityConversion)
+        .map(multiDocumentCreateConversion)
 
       def upsert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Upsert): IO[CreateResults] = insert(docs, options)
 
-      // TODO: delete support
+      def delete(docs: List[fabric.Obj], options: DeleteOptions = DeleteOptions.Default): IO[DeleteResults] = collection
+        .deleteDocuments(docs.map(fabric.parse.Json.format).asJava, classOf[String], options)
+        .toIO
+        .map(multiDocumentDeleteConversion)
     }
+  }
+
+  object field {
+    def apply[F](name: String): Field[F] = Field[F](name)
   }
 
   object index {
@@ -223,8 +232,8 @@ case class CreateOptions(waitForSync: Boolean = false,
                          streamTransactionId: Option[String] = None)
 
 object CreateOptions {
-  val Insert: CreateOptions = CreateOptions()
-  val Upsert: CreateOptions = CreateOptions(overwrite = OverwriteMode.Replace)
+  lazy val Insert: CreateOptions = CreateOptions()
+  lazy val Upsert: CreateOptions = CreateOptions(overwrite = OverwriteMode.Replace)
 }
 
 case class CreateResult(key: Option[String], id: Option[String], rev: Option[String], newDocument: Option[fabric.Value], oldDocument: Option[fabric.Value])
@@ -232,6 +241,27 @@ case class CreateResult(key: Option[String], id: Option[String], rev: Option[Str
 case class CreateResults(results: List[Either[ArangoError, CreateResult]]) {
   lazy val documents: List[CreateResult] = results.collect {
     case Right(cr) => cr
+  }
+  lazy val errors: List[ArangoError] = results.collect {
+    case Left(e) => e
+  }
+}
+
+case class DeleteOptions(waitForSync: Boolean = false,
+                         ifMatch: Option[String] = None,
+                         returnOld: Boolean = false,
+                         silent: Boolean = true,
+                         streamTransactionId: Option[String] = None)
+
+object DeleteOptions {
+  lazy val Default: DeleteOptions = DeleteOptions()
+}
+
+case class DeleteResult(key: Option[String], id: Option[String], rev: Option[String], oldDocument: Option[fabric.Value])
+
+case class DeleteResults(results: List[Either[ArangoError, DeleteResult]]) {
+  lazy val documents: List[DeleteResult] = results.collect {
+    case Right(dr) => dr
   }
   lazy val errors: List[ArangoError] = results.collect {
     case Left(e) => e

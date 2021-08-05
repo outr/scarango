@@ -4,8 +4,8 @@ import cats.effect.IO
 import com.arangodb.entity
 import com.arangodb.entity.ErrorEntity
 import com.arangodb.model
-import com.arangodb.model.DocumentCreateOptions
-import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, IndexInfo, KeyType, Level, OverwriteMode}
+import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions}
+import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, DeleteOptions, DeleteResult, DeleteResults, IndexInfo, KeyType, Level, OverwriteMode}
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
@@ -132,9 +132,26 @@ object Helpers {
     dco
   }
 
-  implicit def multiDocumentEntityConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults = CreateResults(
+  implicit def deleteOptionsConversion(o: DeleteOptions): model.DocumentDeleteOptions = {
+    val ddo = new DocumentDeleteOptions
+    ddo.waitForSync(o.waitForSync)
+    ddo.ifMatch(o.ifMatch.orNull)
+    ddo.returnOld(o.returnOld)
+    ddo.silent(o.silent)
+    ddo.streamTransactionId(o.streamTransactionId.orNull)
+    ddo
+  }
+
+  implicit def multiDocumentCreateConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults = CreateResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
       case ce: entity.DocumentCreateEntity[String @unchecked] => Right(ce)
+      case err: ErrorEntity => Left(err)
+    }
+  )
+
+  implicit def multiDocumentDeleteConversion(e: entity.MultiDocumentEntity[entity.DocumentDeleteEntity[String]]): DeleteResults = DeleteResults(
+    results = e.getDocumentsAndErrors.asScala.toList.map {
+      case de: entity.DocumentDeleteEntity[String @unchecked] => Right(de)
       case err: ErrorEntity => Left(err)
     }
   )
@@ -144,6 +161,13 @@ object Helpers {
     id = Option(e.getId),
     rev = Option(e.getRev),
     newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
+    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+  )
+
+  implicit def deleteDocumentEntityConversion(e: entity.DocumentDeleteEntity[String]): DeleteResult = DeleteResult(
+    key = Option(e.getKey),
+    id = Option(e.getId),
+    rev = Option(e.getRev),
     oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
   )
 
