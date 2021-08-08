@@ -81,9 +81,8 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
 
     def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult] = insert(doc, options)
 
-    // TODO: Update support
-    def update(doc: fabric.Obj, options: UpdateOptions) = collection
-      .updateDocument(fabric.parse.Json.format(doc, options))
+    def update(key: String, doc: fabric.Obj, options: UpdateOptions): IO[UpdateResult] = collection
+      .updateDocument(key, fabric.parse.Json.format(doc), options)
       .toIO
       .map(updateDocumentEntityConversion)
 
@@ -251,6 +250,23 @@ case class CreateResults(results: List[Either[ArangoError, CreateResult]]) {
     case Left(e) => e
   }
 }
+
+case class UpdateOptions(keepNull: Boolean = false,
+                         mergeObjects: Boolean = true,
+                         waitForSync: Boolean = false,
+                         ignoreRevs: Boolean = true,
+                         ifMatch: Option[String] = None,
+                         returnNew: Boolean = false,
+                         returnOld: Boolean = false,
+                         serializeNull: Boolean = true,
+                         silent: Boolean = true,
+                         streamTransactionId: Option[String] = None)
+
+object UpdateOptions {
+  lazy val Default: UpdateOptions = UpdateOptions()
+}
+
+case class UpdateResult(key: Option[String], id: Option[String], rev: Option[String], oldRev: Option[String], newDocument: Option[fabric.Value], oldDocument: Option[fabric.Value])
 
 case class DeleteOptions(waitForSync: Boolean = false,
                          ifMatch: Option[String] = None,

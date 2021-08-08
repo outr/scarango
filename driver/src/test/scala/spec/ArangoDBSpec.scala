@@ -1,7 +1,7 @@
 package spec
 
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.outr.arango.{ArangoDBServer, CollectionType, CreateOptions, DeleteOptions, Query}
+import com.outr.arango.{ArangoDBServer, CollectionType, CreateOptions, DeleteOptions, Query, UpdateOptions}
 import fabric._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -15,6 +15,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
 
     var nameFieldId: String = ""
     var johnDoeKey: String = ""
+    var fiveKey: String = ""
 
     "verify the database does not exist" in {
       db.exists().asserting { exists =>
@@ -91,12 +92,66 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         result.oldDocument.flatMap(_.get("name").map(_.asString)) should be(Some("John Doe"))
       }
     }
-    // TODO: Insert a batch of records
-    // TODO: Verify the records
-    // TODO: Verify querying documents with arguments
-    // TODO: Delete one record
-    // TODO: Update a record
-    // TODO: Verify the records
+    "verify the document was deleted" in {
+      db.query(Query("FOR s IN simple RETURN s")).compile.toList.asserting { results =>
+        results should be(Nil)
+      }
+    }
+    "insert a batch of records" in {
+      coll.document.batch.insert(List(
+        obj("name" -> "one"),
+        obj("name" -> "two"),
+        obj("name" -> "three"),
+        obj("name" -> "four"),
+        obj("name" -> "five"),
+        obj("name" -> "six"),
+        obj("name" -> "seven"),
+        obj("name" -> "eight"),
+        obj("name" -> "nine"),
+        obj("name" -> "ten"),
+      ), CreateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { results =>
+        results.errors should be(Nil)
+        results.documents.flatMap(_.newDocument).flatMap(_.get("name")).map(_.asString).toSet should be(
+          Set("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+        )
+        results.documents.length should be(10)
+      }
+    }
+    "verify the records were created successfully" in {
+      db.query(Query("FOR s IN simple RETURN s")).compile.toList.asserting { results =>
+        results.flatMap(_.get("name")).map(_.asString).toSet should be(
+          Set("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+        )
+        results.length should be(10)
+      }
+    }
+    "verify querying for a single document" in {
+      val q = Query(
+        "FOR s IN simple FILTER s.name == ",
+        str("five"),
+        " RETURN s"
+      )
+      db.query(q).compile.toList.asserting { results =>
+        results.flatMap(_.get("name")).map(_.asString).toSet should be(
+          Set("five")
+        )
+        fiveKey = results.head("_key").asString
+        results.length should be(1)
+      }
+    }
+    "update a document" in {
+      coll.document.update(fiveKey, obj("name" -> "cinco"), UpdateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
+        result.newDocument.flatMap(_.get("name")).map(_.asString) should be(Some("cinco"))
+      }
+    }
+    "verify the one record was updated properly" in {
+      db.query(Query("FOR s IN simple RETURN s")).compile.toList.asserting { results =>
+        results.flatMap(_.get("name")).map(_.asString).toSet should be(
+          Set("one", "two", "three", "four", "cinco", "six", "seven", "eight", "nine", "ten")
+        )
+        results.length should be(10)
+      }
+    }
     "delete the index" in {
       coll.index.delete(List(nameFieldId)).asserting { list =>
         list should be(List(nameFieldId))

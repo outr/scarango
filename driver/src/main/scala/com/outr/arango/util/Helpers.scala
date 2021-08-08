@@ -4,8 +4,8 @@ import cats.effect.IO
 import com.arangodb.entity
 import com.arangodb.entity.ErrorEntity
 import com.arangodb.model
-import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions}
-import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, DeleteOptions, DeleteResult, DeleteResults, IndexInfo, KeyType, Level, OverwriteMode}
+import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
+import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, DeleteOptions, DeleteResult, DeleteResults, IndexInfo, KeyType, Level, OverwriteMode, UpdateOptions, UpdateResult}
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
@@ -132,6 +132,21 @@ object Helpers {
     dco
   }
 
+  implicit def updateOptionsConversion(o: UpdateOptions): model.DocumentUpdateOptions = {
+    val duo = new DocumentUpdateOptions
+    duo.keepNull(o.keepNull)
+    duo.mergeObjects(o.mergeObjects)
+    duo.waitForSync(o.waitForSync)
+    duo.ignoreRevs(o.ignoreRevs)
+    duo.ifMatch(o.ifMatch.orNull)
+    duo.returnNew(o.returnNew)
+    duo.returnOld(o.returnOld)
+    duo.serializeNull(o.serializeNull)
+    duo.silent(o.silent)
+    duo.streamTransactionId(o.streamTransactionId.orNull)
+    duo
+  }
+
   implicit def deleteOptionsConversion(o: DeleteOptions): model.DocumentDeleteOptions = {
     val ddo = new DocumentDeleteOptions
     ddo.waitForSync(o.waitForSync)
@@ -160,6 +175,15 @@ object Helpers {
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
+    newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
+    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+  )
+
+  implicit def updateDocumentEntityConversion(e: entity.DocumentUpdateEntity[String]): UpdateResult = UpdateResult(
+    key = Option(e.getKey),
+    id = Option(e.getId),
+    rev = Option(e.getRev),
+    oldRev = Option(e.getOldRev),
     newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
     oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
   )
