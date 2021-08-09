@@ -5,7 +5,8 @@ import com.arangodb.entity
 import com.arangodb.entity.ErrorEntity
 import com.arangodb.model
 import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
-import com.outr.arango.{AQLParseResult, ASTNode, ArangoError, CollectionInfo, CollectionSchema, CollectionStatus, CollectionType, CreateOptions, CreateResult, CreateResults, DeleteOptions, DeleteResult, DeleteResults, IndexInfo, KeyType, Level, OverwriteMode, UpdateOptions, UpdateResult}
+import com.outr.arango._
+import com.outr.arango.core._
 
 import java.util.concurrent.CompletableFuture
 import scala.jdk.FutureConverters._
