@@ -2,8 +2,8 @@ package com.outr.arango.core
 
 import com.outr.arango.ArangoError
 
-case class CreateResults(results: List[Either[ArangoError, CreateResult]]) {
-  lazy val documents: List[CreateResult] = results.collect {
+case class CreateResults[T](results: List[Either[ArangoError, CreateResult[T]]]) {
+  lazy val documents: List[CreateResult[T]] = results.collect {
     case Right(cr) => cr
   }
   lazy val errors: List[ArangoError] = results.collect {

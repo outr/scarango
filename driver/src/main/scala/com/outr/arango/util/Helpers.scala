@@ -158,21 +158,21 @@ object Helpers {
     ddo
   }
 
-  implicit def multiDocumentCreateConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults = CreateResults(
+  implicit def multiDocumentCreateConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults[fabric.Value] = CreateResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
       case ce: entity.DocumentCreateEntity[String @unchecked] => Right(ce)
       case err: ErrorEntity => Left(err)
     }
   )
 
-  implicit def multiDocumentDeleteConversion(e: entity.MultiDocumentEntity[entity.DocumentDeleteEntity[String]]): DeleteResults = DeleteResults(
+  implicit def multiDocumentDeleteConversion(e: entity.MultiDocumentEntity[entity.DocumentDeleteEntity[String]]): DeleteResults[fabric.Value] = DeleteResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
       case de: entity.DocumentDeleteEntity[String @unchecked] => Right(de)
       case err: ErrorEntity => Left(err)
     }
   )
 
-  implicit def createDocumentEntityConversion(e: entity.DocumentCreateEntity[String]): CreateResult = CreateResult(
+  implicit def createDocumentEntityConversion(e: entity.DocumentCreateEntity[String]): CreateResult[fabric.Value] = CreateResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
@@ -180,7 +180,7 @@ object Helpers {
     oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
   )
 
-  implicit def updateDocumentEntityConversion(e: entity.DocumentUpdateEntity[String]): UpdateResult = UpdateResult(
+  implicit def updateDocumentEntityConversion(e: entity.DocumentUpdateEntity[String]): UpdateResult[fabric.Value] = UpdateResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
@@ -189,7 +189,7 @@ object Helpers {
     oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
   )
 
-  implicit def deleteDocumentEntityConversion(e: entity.DocumentDeleteEntity[String]): DeleteResult = DeleteResult(
+  implicit def deleteDocumentEntityConversion(e: entity.DocumentDeleteEntity[String]): DeleteResult[fabric.Value] = DeleteResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),

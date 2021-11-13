@@ -8,7 +8,6 @@ import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.Future
 import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
@@ -213,7 +212,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     implicit val rw: ReaderWriter[AirportName] = ccRW
   }
 
-  /*object DataImportUpgrade extends DatabaseUpgrade {
+  object DataImportUpgrade extends DatabaseUpgrade {
     override def applyToNew: Boolean = true
     override def blockStartup: Boolean = true
 
@@ -261,5 +260,5 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     } yield {
       ()
     }
-  }*/
+  }
 }
