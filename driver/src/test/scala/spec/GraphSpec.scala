@@ -230,6 +230,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
             _id = Airport.id(d(0))
           )
         }
+        database.airports.document.batch.insert(airports)
         database.airports.batch(airports).map { inserted =>
           inserted should be(3375)
         }

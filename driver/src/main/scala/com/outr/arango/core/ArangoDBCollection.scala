@@ -10,7 +10,7 @@ import com.outr.arango.{Field, Index, IndexInfo, IndexType}
 import scala.jdk.CollectionConverters._
 import cats.implicits._
 
-class ArangoDBCollection(collection: ArangoCollectionAsync) {
+class ArangoDBCollection(val collection: ArangoCollectionAsync) {
   def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
     val o = options
     collection.create(new CollectionCreateOptions {
@@ -29,38 +29,7 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
 
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
 
-  object document {
-    def insert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Insert): IO[CreateResult[fabric.Value]] = collection
-      .insertDocument(fabric.parse.Json.format(doc), options)
-      .toIO
-      .map(createDocumentEntityConversion)
-
-    def upsert(doc: fabric.Obj, options: CreateOptions = CreateOptions.Upsert): IO[CreateResult[fabric.Value]] = insert(doc, options)
-
-    def update(key: String, doc: fabric.Obj, options: UpdateOptions): IO[UpdateResult[fabric.Value]] = collection
-      .updateDocument(key, fabric.parse.Json.format(doc), options)
-      .toIO
-      .map(updateDocumentEntityConversion)
-
-    def delete(key: String, options: DeleteOptions = DeleteOptions.Default): IO[DeleteResult[fabric.Value]] = collection
-      .deleteDocument(key, classOf[String], options)
-      .toIO
-      .map(deleteDocumentEntityConversion)
-
-    object batch {
-      def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults[fabric.Value]] = collection
-        .insertDocuments(docs.map(fabric.parse.Json.format(_)).asJava, options)
-        .toIO
-        .map(multiDocumentCreateConversion)
-
-      def upsert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Upsert): IO[CreateResults[fabric.Value]] = insert(docs, options)
-
-      def delete(docs: List[fabric.Obj], options: DeleteOptions = DeleteOptions.Default): IO[DeleteResults[fabric.Value]] = collection
-        .deleteDocuments(docs.map(fabric.parse.Json.format(_)).asJava, classOf[String], options)
-        .toIO
-        .map(multiDocumentDeleteConversion)
-    }
-  }
+  lazy val document = new ArangoDBDocuments[fabric.Value](collection, fabric.parse.Json.parse, fabric.parse.Json.format(_))
 
   object field {
     def apply[F](name: String): Field[F] = Field[F](name)

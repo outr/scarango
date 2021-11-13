@@ -158,42 +158,42 @@ object Helpers {
     ddo
   }
 
-  implicit def multiDocumentCreateConversion(e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]]): CreateResults[fabric.Value] = CreateResults(
+  implicit def multiDocumentCreateConversion[T](e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[String]], toT: String => T): CreateResults[T] = CreateResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
-      case ce: entity.DocumentCreateEntity[String @unchecked] => Right(ce)
+      case ce: entity.DocumentCreateEntity[String @unchecked] => Right(createDocumentEntityConversion(ce, toT))
       case err: ErrorEntity => Left(err)
     }
   )
 
-  implicit def multiDocumentDeleteConversion(e: entity.MultiDocumentEntity[entity.DocumentDeleteEntity[String]]): DeleteResults[fabric.Value] = DeleteResults(
+  implicit def multiDocumentDeleteConversion[T](e: entity.MultiDocumentEntity[entity.DocumentDeleteEntity[String]], toT: String => T): DeleteResults[T] = DeleteResults(
     results = e.getDocumentsAndErrors.asScala.toList.map {
-      case de: entity.DocumentDeleteEntity[String @unchecked] => Right(de)
+      case de: entity.DocumentDeleteEntity[String @unchecked] => Right(deleteDocumentEntityConversion(de, toT))
       case err: ErrorEntity => Left(err)
     }
   )
 
-  implicit def createDocumentEntityConversion(e: entity.DocumentCreateEntity[String]): CreateResult[fabric.Value] = CreateResult(
+  implicit def createDocumentEntityConversion[T](e: entity.DocumentCreateEntity[String], toT: String => T): CreateResult[T] = CreateResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
-    newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
-    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+    newDocument = Option(e.getNew).map(toT),
+    oldDocument = Option(e.getOld).map(toT)
   )
 
-  implicit def updateDocumentEntityConversion(e: entity.DocumentUpdateEntity[String]): UpdateResult[fabric.Value] = UpdateResult(
+  implicit def updateDocumentEntityConversion[T](e: entity.DocumentUpdateEntity[String], toT: String => T): UpdateResult[T] = UpdateResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
     oldRev = Option(e.getOldRev),
-    newDocument = Option(e.getNew).map(fabric.parse.Json.parse),
-    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+    newDocument = Option(e.getNew).map(toT),
+    oldDocument = Option(e.getOld).map(toT)
   )
 
-  implicit def deleteDocumentEntityConversion(e: entity.DocumentDeleteEntity[String]): DeleteResult[fabric.Value] = DeleteResult(
+  implicit def deleteDocumentEntityConversion[T](e: entity.DocumentDeleteEntity[String], toT: String => T): DeleteResult[T] = DeleteResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
-    oldDocument = Option(e.getOld).map(fabric.parse.Json.parse)
+    oldDocument = Option(e.getOld).map(toT)
   )
 
   implicit def errorEntityConversion(e: entity.ErrorEntity): ArangoError = ArangoError(
