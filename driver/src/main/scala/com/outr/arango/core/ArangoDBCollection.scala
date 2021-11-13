@@ -49,14 +49,14 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
 
     object batch {
       def insert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Insert): IO[CreateResults] = collection
-        .insertDocuments(docs.map(fabric.parse.Json.format).asJava, options)
+        .insertDocuments(docs.map(fabric.parse.Json.format(_)).asJava, options)
         .toIO
         .map(multiDocumentCreateConversion)
 
       def upsert(docs: List[fabric.Obj], options: CreateOptions = CreateOptions.Upsert): IO[CreateResults] = insert(docs, options)
 
       def delete(docs: List[fabric.Obj], options: DeleteOptions = DeleteOptions.Default): IO[DeleteResults] = collection
-        .deleteDocuments(docs.map(fabric.parse.Json.format).asJava, classOf[String], options)
+        .deleteDocuments(docs.map(fabric.parse.Json.format(_)).asJava, classOf[String], options)
         .toIO
         .map(multiDocumentDeleteConversion)
     }
@@ -75,28 +75,24 @@ class ArangoDBCollection(collection: ArangoCollectionAsync) {
       val generate: List[IO[IndexEntity]] = indexes.map { i =>
         val fields = i.fields.asJava
         i.`type` match {
-          case IndexType.Persistent => {
+          case IndexType.Persistent =>
             val options = new PersistentIndexOptions
             options.sparse(i.sparse)
             options.unique(i.unique)
             options.estimates(i.estimates)
             collection.ensurePersistentIndex(fields, options).toIO
-          }
-          case IndexType.Geo => {
+          case IndexType.Geo =>
             val options = new GeoIndexOptions
             options.geoJson(i.geoJson)
             collection.ensureGeoIndex(fields, options).toIO
-          }
-          case IndexType.FullText => {
+          case IndexType.FullText =>
             val options = new FulltextIndexOptions
             options.minLength(i.minLength.toInt)
             collection.ensureFulltextIndex(fields, options).toIO
-          }
-          case IndexType.TTL => {
+          case IndexType.TTL =>
             val options = new TtlIndexOptions
             options.expireAfter(i.expireAfterSeconds)
             collection.ensureTtlIndex(fields, options).toIO
-          }
         }
       }
       generate.map(_.map(indexEntityConversion)).sequence

@@ -9,6 +9,8 @@ import fabric.Value
 import scala.jdk.CollectionConverters._
 
 class ArangoDB(db: ArangoDatabaseAsync) {
+  def name: String = db.name()
+
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 
   def exists(): IO[Boolean] = db.exists().toIO.map(_.booleanValue())

@@ -52,7 +52,7 @@ object Helpers {
   }
 
   implicit def collectionTypeConversion(ct: entity.CollectionType): CollectionType = ct match {
-    case entity.CollectionType.DOCUMENT => CollectionType.Document
+    case entity.CollectionType.DOCUMENT => CollectionType.Vertex
     case entity.CollectionType.EDGES => CollectionType.Edge
   }
 

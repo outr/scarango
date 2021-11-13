@@ -19,7 +19,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       Profig.initConfiguration()
       succeed
     }
-    /*"initialize" in {
+    "initialize" in {
       database.register(DataImportUpgrade)
       database.init().map { _ =>
         succeed
@@ -124,7 +124,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       } else {
         succeed
       }
-    }*/
+    }
   }
 
   def csvToIterator(fileName: String): Iterator[Vector[String]] = {
@@ -152,16 +152,16 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
   }
 
-  object database extends Graph(databaseName = "graphTest") {
-    val airports: DocumentCollection[Airport] = vertex[Airport]
-    val flights: DocumentCollection[Flight] = edge[Flight]
-    val airportSearch: View[Airport] = view(
-      name = "airportSearch",
-      collection = airports,
-      analyzers = List(Analyzer.Identity),
-      includeAllFields = true,
-      fields = Airport.name -> List(Analyzer.TextEnglish)
-    )
+  object database extends Graph(name = "graphTest") {
+    val airports: DocumentCollection[Airport] = vertex[Airport](Airport)
+    val flights: DocumentCollection[Flight] = edge[Flight](Flight)
+//    val airportSearch: View[Airport] = view(
+//      name = "airportSearch",
+//      collection = airports,
+//      analyzers = List(Analyzer.Identity),
+//      includeAllFields = true,
+//      fields = Airport.name -> List(Analyzer.TextEnglish)
+//    )
   }
 
   case class Airport(name: String,
@@ -213,7 +213,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     implicit val rw: ReaderWriter[AirportName] = ccRW
   }
 
-  object DataImportUpgrade extends DatabaseUpgrade {
+  /*object DataImportUpgrade extends DatabaseUpgrade {
     override def applyToNew: Boolean = true
     override def blockStartup: Boolean = true
 
@@ -261,5 +261,5 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     } yield {
       ()
     }
-  }
+  }*/
 }

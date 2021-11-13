@@ -9,7 +9,7 @@ import org.scalatest.wordspec.AsyncWordSpec
 
 class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   "ArangoDB" should {
-    lazy val server = ArangoDBServer()
+    lazy val server = ArangoDBServer(ArangoDBConfig())
     lazy val db = server.db("scarango_simple")
     lazy val coll = db.collection("simple")
     lazy val nameField = coll.field[String]("name")
@@ -40,7 +40,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "create a collection" in {
       coll.create().asserting { info =>
-        info.`type` should be(CollectionType.Document)
+        info.`type` should be(CollectionType.Vertex)
         info.name should be("simple")
       }
     }
@@ -51,7 +51,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "get the collection info" in {
       coll.info().asserting { info =>
-        info.`type` should be(CollectionType.Document)
+        info.`type` should be(CollectionType.Vertex)
         info.name should be("simple")
       }
     }

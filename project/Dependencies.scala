@@ -2,13 +2,13 @@ import sbt._
 
 object Dependencies {
   object version {
-    val profig: String = "3.2.6"
-    val arangoDBJavaDriver: String = "6.12.3"
-    val jackson: String = "2.0.0"
-    val catsEffect: String = "3.1.1"
-    val fs2: String = "3.0.4"
-    val scalaTest: String = "3.2.3"
-    val catsEffectTesting: String = "1.1.1"
+    val profig: String = "3.2.7"
+    val arangoDBJavaDriver: String = "6.14.0"
+    val jackson: String = "3.0.0"
+    val catsEffect: String = "3.2.9"
+    val fs2: String = "3.2.2"
+    val scalaTest: String = "3.2.10"
+    val catsEffectTesting: String = "1.3.0"
   }
 
   val profig: ModuleID = "com.outr" %% "profig" % version.profig

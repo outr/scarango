@@ -1,5 +1,6 @@
 package com.outr.arango
 
+import com.outr.arango.core.CreateCollectionOptions
 import fabric.rw.ReaderWriter
 
 trait DocumentModel[D <: Document[D]] {
@@ -17,6 +18,8 @@ trait DocumentModel[D <: Document[D]] {
   }
 
   def indexes: List[Index]
+
+  def collectionOptions: CreateCollectionOptions = CreateCollectionOptions()
 
   def id(value: String = generateId()): Id[D] = {
     val index = value.indexOf('/')
