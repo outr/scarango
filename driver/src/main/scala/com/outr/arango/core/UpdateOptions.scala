@@ -9,7 +9,7 @@ case class UpdateOptions(keepNull: Boolean = false,
                          returnOld: Boolean = false,
                          serializeNull: Boolean = true,
                          silent: Boolean = true,
-                         streamTransactionId: Option[String] = None)
+                         streamTransaction: Option[StreamTransaction] = None)
 
 object UpdateOptions {
   lazy val Default: UpdateOptions = UpdateOptions()

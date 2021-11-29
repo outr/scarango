@@ -1,7 +1,9 @@
 package spec
 
+import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
+import com.outr.arango.upgrade.DatabaseUpgrade
 import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
@@ -216,7 +218,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     override def applyToNew: Boolean = true
     override def blockStartup: Boolean = true
 
-    override def upgrade(graph: Graph): Future[Unit] = for {
+    override def upgrade(graph: Graph): IO[Unit] = for {
       _ <- {
         val airports = csvToIterator("airports.csv").map { d =>
           Airport(

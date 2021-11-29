@@ -126,7 +126,7 @@ object Helpers {
       case OverwriteMode.Conflict => dco.overwriteMode(model.OverwriteMode.conflict)
     }
     dco.silent(o.silent)
-    o.streamTransactionId.foreach(dco.streamTransactionId)
+    o.streamTransaction.map(_.id).foreach(dco.streamTransactionId)
     if (o.overwrite == OverwriteMode.UpdateMerge) {
       dco.mergeObjects(true)
     }
@@ -144,7 +144,7 @@ object Helpers {
     duo.returnOld(o.returnOld)
     duo.serializeNull(o.serializeNull)
     duo.silent(o.silent)
-    duo.streamTransactionId(o.streamTransactionId.orNull)
+    duo.streamTransactionId(o.streamTransaction.map(_.id).orNull)
     duo
   }
 
@@ -154,7 +154,7 @@ object Helpers {
     ddo.ifMatch(o.ifMatch.orNull)
     ddo.returnOld(o.returnOld)
     ddo.silent(o.silent)
-    ddo.streamTransactionId(o.streamTransactionId.orNull)
+    ddo.streamTransactionId(o.streamTransaction.map(_.id).orNull)
     ddo
   }
 
