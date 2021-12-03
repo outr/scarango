@@ -1,6 +1,7 @@
 package spec
 
-import com.outr.arango._
+import com.outr.arango.{Query, QueryPart}
+import com.outr.arango.core._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

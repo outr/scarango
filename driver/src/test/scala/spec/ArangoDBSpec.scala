@@ -1,7 +1,7 @@
 package spec
 
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.outr.arango.{CollectionType, Query}
+import com.outr.arango._
 import com.outr.arango.core._
 import fabric._
 import org.scalatest.matchers.should.Matchers

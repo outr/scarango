@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import scala.annotation.tailrec
+
 case class Query(parts: List[QueryPart]) {
   lazy val (variables: Map[String, fabric.Value], reverseLookup: Map[fabric.Value, String]) = {
     var counter = 0
@@ -29,11 +31,15 @@ case class Query(parts: List[QueryPart]) {
     map -> reverseMap
   }
 
-  lazy val string: String = parts.map {
+  lazy val string: String = parts.map(part2String).mkString
+
+  @tailrec
+  private def part2String(part: QueryPart): String = part match {
     case QueryPart.Static(v) => v
     case QueryPart.Variable(v) => s"@${reverseLookup(v)}"
     case QueryPart.NamedVariable(name, _) => s"@$name"
-  }.mkString
+    case support: QueryPart.Support => part2String(support.toQueryPart)
+  }
 
   def +(that: Query): Query = Query.merge(List(this, that))
 

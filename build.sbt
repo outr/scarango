@@ -4,8 +4,8 @@ import Tests._
 name := "scarango"
 ThisBuild / organization := "com.outr"
 ThisBuild / version := "3.0.0-SNAPSHOT"
-ThisBuild / scalaVersion := "2.13.6"
-ThisBuild / crossScalaVersions := List("2.13.6", "2.12.12")
+ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / crossScalaVersions := List("3.1.0", "2.13.7", "2.12.12")
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
 ThisBuild / resolvers += Resolver.sonatypeRepo("releases")
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
@@ -61,13 +61,14 @@ lazy val driver = project.in(file("driver"))
     name := "scarango-driver",
     fork := true,
     Test / testGrouping := groupByName((Test / definedTests).value),
-    Test / testOptions += Tests.Argument("-oD"),
+    Test / testOptions += Tests.Argument("-oF"),
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       dep.arangoDBJavaDriver,
       dep.jacksonDataformatVelocypack,
       dep.catsEffect,
       dep.fs2,
+      dep.scribeSlf4j,
       dep.scalaTest,
       dep.catsEffectTesting
     )

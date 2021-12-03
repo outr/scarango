@@ -6,8 +6,7 @@ import com.arangodb.entity.StreamTransactionStatus
 import com.arangodb.model.StreamTransactionOptions
 import com.outr.arango._
 import com.outr.arango.util.Helpers._
-import fabric.{Str, Value}
-import fabric.rw.ReaderWriter
+import fabric._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
@@ -70,7 +69,7 @@ class ArangoDB(db: ArangoDatabaseAsync) {
       }
       db.beginStreamTransaction(options)
         .toIO
-        .map(entity => new StreamTransaction(entity.getId))
+        .map(entity => StreamTransaction(entity.getId))
     }
 
     private def t2Status(status: StreamTransactionStatus): TransactionStatus = status match {
@@ -94,7 +93,7 @@ class ArangoDB(db: ArangoDatabaseAsync) {
     def all: IO[List[(StreamTransaction, TransactionStatus)]] = db.getStreamTransactions
       .toIO
       .map(_.asScala.toList.map { entity =>
-        (new StreamTransaction(entity.getId), t2Status(entity.getStatus))
+        (StreamTransaction(entity.getId), t2Status(entity.getStatus))
       })
   }
 

@@ -7,6 +7,14 @@ import com.outr.arango.util.Helpers._
 import scala.jdk.CollectionConverters._
 
 class ArangoDBDocuments[T](collection: ArangoCollectionAsync, toT: String => T, fromT: T => String) {
+  def apply(key: String,
+            default: String => T = key => throw NotFoundException(key)): IO[T] = get(key).map(_.getOrElse(default(key)))
+
+  def get(key: String): IO[Option[T]] = collection
+    .getDocument(key, classOf[String])
+    .toIO
+    .map(s => Option(s).map(toT))
+
   def insert(doc: T, options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] = collection
     .insertDocument(fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
@@ -38,5 +46,31 @@ class ArangoDBDocuments[T](collection: ArangoCollectionAsync, toT: String => T, 
       .deleteDocuments(docs.map(fromT).asJava, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
       .map(multiDocumentDeleteConversion(_, toT))
+  }
+
+  object stream {
+    def apply(docs: fs2.Stream[IO, T], chunkSize: Int, process: fs2.Chunk[T] => IO[Int]): IO[Int] = docs
+      .chunkN(chunkSize)
+      .evalMap(process)
+      .compile
+      .foldMonoid
+
+    def insert(docs: fs2.Stream[IO, T],
+               chunkSize: Int = 1000,
+               options: CreateOptions = CreateOptions.Insert,
+               transaction: StreamTransaction = None.orNull): IO[Int] =
+      apply(docs, chunkSize, chunk => batch.insert(chunk.toList, options, transaction).as(chunk.size))
+
+    def upsert(docs: fs2.Stream[IO, T],
+               chunkSize: Int = 1000,
+               options: CreateOptions = CreateOptions.Upsert,
+               transaction: StreamTransaction = None.orNull): IO[Int] =
+      apply(docs, chunkSize, chunk => batch.upsert(chunk.toList, options, transaction).as(chunk.size))
+
+    def delete(docs: fs2.Stream[IO, T],
+               chunkSize: Int = 1000,
+               options: DeleteOptions = DeleteOptions.Default,
+               transaction: StreamTransaction = None.orNull): IO[Int] =
+      apply(docs, chunkSize, chunk => batch.delete(chunk.toList, options, transaction).as(chunk.size))
   }
 }
