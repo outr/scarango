@@ -1,13 +1,14 @@
 package com.outr.arango.query
 
-import scala.annotation.tailrec
-
-case class Query(parts: List[QueryPart]) {
+case class Query(parts: List[QueryPart]) extends QueryPart.Support {
   lazy val (variables: Map[String, fabric.Value], reverseLookup: Map[fabric.Value, String]) = {
     var counter = 0
     var map = Map.empty[String, fabric.Value]
     var reverseMap = Map.empty[fabric.Value, String]
-    parts.foreach {
+
+    def parsePart(part: QueryPart): Unit = part match {
+      case QueryPart.Container(parts) => parts.foreach(parsePart)
+      case QueryPart.Static(_) => // Ignore static
       case QueryPart.Variable(v) =>
         val id = reverseMap.get(v) match {
           case Some(idValue) => idValue
@@ -26,15 +27,19 @@ case class Query(parts: List[QueryPart]) {
           map += id -> v
           reverseMap += v -> id
       }
-      case _ => // Ignore static
+      case support: QueryPart.Support => parsePart(support.toQueryPart)
     }
+
+    parts.foreach(parsePart)
     map -> reverseMap
   }
 
   lazy val string: String = parts.map(part2String).mkString
 
-  @tailrec
+  def compressed: String = string.replaceAll("\\s+", " ")
+
   private def part2String(part: QueryPart): String = part match {
+    case QueryPart.Container(parts) => parts.map(part2String).mkString
     case QueryPart.Static(v) => v
     case QueryPart.Variable(v) => s"@${reverseLookup(v)}"
     case QueryPart.NamedVariable(name, _) => s"@$name"
@@ -43,7 +48,14 @@ case class Query(parts: List[QueryPart]) {
 
   def +(that: Query): Query = Query.merge(List(this, that))
 
+  override def toQueryPart: QueryPart = QueryPart.Container(parts)
+
   override def toString: String = s"$string (${variables.map(t => s"${t._1}: ${t._2}")})"
+
+  override def equals(obj: Any): Boolean = obj match {
+    case that: Query => this.compressed == that.compressed && this.variables == that.variables
+    case _ => false
+  }
 }
 
 object Query {

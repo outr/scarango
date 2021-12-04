@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.query.QueryPart
+import com.outr.arango.query.{QueryPart, toValue}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -23,6 +23,8 @@ case class Field[F](fieldName: String) extends QueryPart.Support {
       Index(IndexType.TTL, List(fieldName), expireAfterSeconds = seconds)
     }
   }
+
+  def apply(value: F): FieldAndValue[F] = FieldAndValue(this, toValue(value))
 
   lazy val opt: Field[Option[F]] = Field[Option[F]](fieldName)
 
