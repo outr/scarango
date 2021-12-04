@@ -15,6 +15,7 @@ class ArangoDBCollection(val collection: ArangoCollectionAsync) {
     val o = options
     collection.create(new CollectionCreateOptions {
       name(collection.name())
+      o.`type`.foreach(t => `type`(t))
       o.journalSize.foreach(journalSize(_))
       o.replicationFactor.foreach(replicationFactor(_))
       o.satellite.foreach(satellite(_))

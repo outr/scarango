@@ -3,6 +3,7 @@ package spec
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.core._
+import com.outr.arango.query.Query
 import fabric._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

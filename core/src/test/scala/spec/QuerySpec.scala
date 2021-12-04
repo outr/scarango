@@ -1,7 +1,7 @@
 package spec
 
-import com.outr.arango.{Query, QueryPart}
 import com.outr.arango.core._
+import com.outr.arango.query._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -21,6 +21,19 @@ class QuerySpec extends AnyWordSpec with Matchers {
       ))
       q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @arg0 RETURN t")
+    }
+    "convert a simple scenario with interpolator" in {
+      val name = "Matt"
+      val q =
+        aql"""
+            FOR t IN test
+            FILTER t.name == $name
+            RETURN t
+           """
+      q.variables should be(Map("arg0" -> fabric.Str("Matt")))
+      q.string
+        .trim
+        .replaceAll("\\s+", " ") should be("FOR t IN test FILTER t.name == @arg0 RETURN t")
     }
     "convert a reused variable properly" in {
       val q = Query(List(

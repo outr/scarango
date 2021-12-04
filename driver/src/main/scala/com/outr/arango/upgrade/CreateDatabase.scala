@@ -2,7 +2,7 @@ package com.outr.arango.upgrade
 
 import cats.effect.IO
 import cats.implicits._
-import com.outr.arango.core.CreateCollectionOptions
+import com.outr.arango.core.{CreateCollectionOptions, View}
 import com.outr.arango.{Collection, DatabaseStore, Document, DocumentCollection, Graph}
 
 object CreateDatabase extends DatabaseUpgrade {
@@ -22,6 +22,7 @@ object CreateDatabase extends DatabaseUpgrade {
     _ = assert(databaseCreated, s"${graph.databaseName} database was not created successfully")
     _ = scribe.info(s"Verifying ${graph.collections.length} collections (${graph.collections.map(_.name).mkString(", ")})...")
     _ <- graph.collections.map(verifyCollection).sequence
+    _ <- graph.views.map(verifyView).sequence
     _ <- graph.stores.map(verifyStore).sequence
   } yield {
     ()
@@ -42,7 +43,20 @@ object CreateDatabase extends DatabaseUpgrade {
     _ = assert(created, s"${collection.dbName}.${collection.name} collection was not created successfully")
     indexes = collection.model.indexes
     _ <- collection.collection.index.ensure(indexes)
-    // TODO: Support views
+  } yield {
+    ()
+  }
+
+  private def verifyView(view: View): IO[Unit] = for {
+    exists <- view.exists()
+    created <- if (exists) {
+      // Nothing to do
+      IO(true)
+    } else {
+      scribe.info(s"${view.dbName}.${view.name} view doesn't exist. Creating...")
+      view.create().map(_ => true)
+    }
+    _ = assert(created, s"${view.name} view was not created successfully")
   } yield {
     ()
   }

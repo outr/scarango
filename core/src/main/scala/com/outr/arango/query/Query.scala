@@ -1,4 +1,4 @@
-package com.outr.arango
+package com.outr.arango.query
 
 import scala.annotation.tailrec
 

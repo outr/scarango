@@ -1,21 +1,25 @@
 package com.outr.arango
 
 import cats.effect.IO
-import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, CollectionInfo}
+import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, View, CollectionInfo, ConsolidationPolicy, SortCompression, ViewLink}
+import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
 import fabric.obj
 import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 class Graph(private[arango] val db: ArangoDB) {
   private val _initialized = new AtomicBoolean(false)
 
   private var _collections: List[DocumentCollection[_]] = Nil
+  private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
   protected def storeCollectionName: String = "backingStore"
 
   def collections: List[DocumentCollection[_]] = _collections
+  def views: List[View] = _views
   def stores: List[DatabaseStore] = _stores
 
   def this(name: String, server: ArangoDBServer) = {
@@ -52,6 +56,10 @@ class Graph(private[arango] val db: ArangoDB) {
     assert(initialized, "Database has not been initialized yet")
     f
   }
+
+  def queryAs[T: ReaderWriter](query: Query): fs2.Stream[IO, T] = db
+    .query(query)
+    .map(_.as[T])
 
   def databaseName: String = db.name
 
@@ -106,11 +114,26 @@ class Graph(private[arango] val db: ArangoDB) {
     c
   }
 
+  def view(name: String,
+           links: List[ViewLink],
+           primarySort: List[Sort] = Nil,
+           primarySortCompression: SortCompression = SortCompression.LZ4,
+           consolidationInterval: FiniteDuration = 1.second,
+           commitInterval: FiniteDuration = 1.second,
+           cleanupIntervalStep: Int = 2,
+           consolidationPolicy: ConsolidationPolicy = ConsolidationPolicy.BytesAccum()): View = synchronized {
+    val view = db.view(name, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep, consolidationPolicy)
+    _views = _views ::: List(view)
+    view
+  }
+
   def keyStore(collectionName: String): DatabaseStore = synchronized {
     val s = DatabaseStore(db.collection(collectionName))
     _stores = _stores ::: List(s)
     s
   }
+
+  def drop(): IO[Boolean] = db.drop()
 }
 
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
@@ -120,13 +143,10 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
   override def dbName: String = graph.databaseName
   override def name: String = collection.collection.name()
 
-  override def query(query: Query): fs2.Stream[IO, D] = graph
-    .db
-    .query(query)
-    .map(_.as[D](model.rw))
+  override def query(query: Query): fs2.Stream[IO, D] = graph.queryAs[D](query)(model.rw)
 }
 
-trait WritableCollection[D <: Document[D]] extends Collection[D] {
+trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
   protected def collection: ArangoDBCollection
 
   def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
@@ -153,13 +173,16 @@ trait WritableCollection[D <: Document[D]] extends Collection[D] {
   lazy val document = new ArangoDBDocuments[D](collection.collection, string2Doc, doc2String)
 }
 
-trait Collection[D <: Document[D]] extends QueryPart.Support {
+trait ReadableCollection[D <: Document[D]] extends Collection {
   def model: DocumentModel[D]
+
+  def query(query: Query): fs2.Stream[IO, D]
+}
+
+trait Collection extends QueryPart.Support {
   def `type`: CollectionType
   def dbName: String
   def name: String
-
-  def query(query: Query): fs2.Stream[IO, D]
 
   override def toQueryPart: QueryPart = QueryPart.Static(name)
 }

@@ -56,6 +56,11 @@ object Helpers {
     case entity.CollectionType.EDGES => CollectionType.Edge
   }
 
+  implicit def collectionTypeConversionToJava(ct: CollectionType): entity.CollectionType = ct match {
+    case CollectionType.Vertex => entity.CollectionType.DOCUMENT
+    case CollectionType.Edge => entity.CollectionType.EDGES
+  }
+
   implicit def collectionSchemaConversion(cs: model.CollectionSchema): CollectionSchema = Option(cs) match {
     case Some(_) => CollectionSchema(
       rule = Option(cs.getRule),

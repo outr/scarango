@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.core._
+import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
 import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
@@ -30,26 +31,21 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database.collections.map(_.name).toSet should be(Set("airports", "flights"))
     }
     "query VIP airports" in {
-      val query = Query(
-        "FOR airport IN ", database.airports,
-        " FILTER airport.vip",
-        " RETURN airport"
-      )
-      // TODO: Switch back to interpolator
-//      val query =
-//        aql"""
-//             FOR airport IN ${database.airports}
-//             FILTER airport.vip
-//             RETURN airport
-//           """
+      val query =
+        aql"""
+             FOR airport IN ${database.airports}
+             FILTER airport.vip
+             RETURN airport
+           """
       database.airports.query(query).compile.toList.asserting { results =>
         results.map(_._id.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
       }
     }
-    /*"query JFK airport" in {
+    "query JFK airport" in {
       val query = aql"RETURN DOCUMENT(${Airport.id("JFK")})"
-      database.airports.query(query).one.map { airport =>
-        airport.name should be("John F Kennedy Intl")
+      database.airports.query(query).compile.toList.map { airports =>
+        airports.length should be(1)
+        airports.head.name should be("John F Kennedy Intl")
       }
     }
     "query just the airport's full name" in {
@@ -60,14 +56,14 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER a._key IN $keys
              RETURN {fullName: a.name}
            """
-      database.query(query).includeCount.as[AirportName].cursor.map { response =>
-        response.count should be(2)
-        response.result.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
+      database.queryAs[AirportName](query).compile.toList.map { airportNames =>
+        airportNames.length should be(2)
+        airportNames.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
       }
     }
     "count all the airports" in {
       val query = aql"RETURN COUNT(${database.airports})"
-      database.query(query).as[Int].one.map { count =>
+      database.queryAs[Int](query).compile.lastOrError.map { count =>
         count should be(3375)
       }
     }
@@ -78,8 +74,8 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FOR airport IN 1..1 OUTBOUND $lax ${database.flights}
              RETURN DISTINCT airport.name
            """
-      database.query(query).as[String].cursor.map { response =>
-        response.result.length should be(82)
+      database.queryAs[String](query).compile.toList.map { response =>
+        response.length should be(82)
       }
     }
     "traverse all airports reachable from LAX" in {
@@ -90,8 +86,8 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              OPTIONS { bfs: true, uniqueVertices: 'global' }
              RETURN airport
            """
-      database.airports.query(query).cursor.map { response =>
-        response.result.length should be(82)
+      database.airports.query(query).compile.toList.map { response =>
+        response.length should be(82)
       }
     }
     "find the shortest path between BIS and JFK" in {
@@ -103,14 +99,12 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              SHORTEST_PATH $bis TO $jfk ${database.flights}
              RETURN v.${Airport.name}
            """
-      database.query(query).as[String].cursor.map { response =>
-        response.result should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
+      database.queryAs[String](query).compile.toList.map { response =>
+        response should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
       }
     }
     "query the views and verify one exists" in {
-      database.arangoDatabase.views().map { views =>
-        views.map(_.name) should contain("airportSearch")
-      }
+      database.views.map(_.name) should be(List("airportSearch"))
     }
     "search the view" in {
       val word = "navajo"
@@ -118,20 +112,20 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         aql"""
              FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, ${Analyzer.TextEnglish}) RETURN a
            """
-      database.airports.query(query).cursor.map { response =>
-        val names = response.result.map(_.name)
+      database.airports.query(query).compile.toList.map { response =>
+        val names = response.map(_.name)
         names should be(List("Navajo State Park"))
       }
     }
     "drop the database" in {
       if (doDrop) {
-        database.drop().map { _ =>
-          succeed
+        database.drop().map { success =>
+          success should be(true)
         }
       } else {
         succeed
       }
-    }*/
+    }
   }
 
   def csv2Stream(fileName: String): fs2.Stream[IO, Vector[String]] = {
@@ -162,13 +156,13 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   object database extends Graph(name = "graphTest") {
     val airports: DocumentCollection[Airport] = vertex[Airport](Airport)
     val flights: DocumentCollection[Flight] = edge[Flight](Flight)
-//    val airportSearch: View[Airport] = view(
-//      name = "airportSearch",
-//      collection = airports,
-//      analyzers = List(Analyzer.Identity),
-//      includeAllFields = true,
-//      fields = Airport.name -> List(Analyzer.TextEnglish)
-//    )
+
+    val airportSearch: View = view(
+      name = "airportSearch",
+      links = List(ViewLink(airports, fields = List(
+        Airport.name -> List(Analyzer.TextEnglish)
+      )))
+    )
 
     override def upgrades: List[DatabaseUpgrade] = List(
       DataImportUpgrade

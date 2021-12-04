@@ -1,5 +1,7 @@
 package com.outr.arango
 
+import com.outr.arango.query.QueryPart
+
 import scala.language.implicitConversions
 
 package object core {
