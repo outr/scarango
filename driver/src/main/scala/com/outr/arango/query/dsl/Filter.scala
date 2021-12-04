@@ -1,6 +1,6 @@
 package com.outr.arango.query.dsl
 
-import com.outr.arango.query.Query
+import com.outr.arango.query._
 
 class Filter(left: Query, condition: String, right: Query) {
   def &&(filter: Filter): Filter = {

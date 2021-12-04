@@ -20,7 +20,7 @@ class QueryBuilderContext private() {
       refNames.get(ref) match {
         case Some(name) => name
         case None => {
-          val name = createArg
+          val name = createRef
           refNames += ref -> name
           name
         }
@@ -28,7 +28,7 @@ class QueryBuilderContext private() {
     }
   }
 
-  def createArg: String = s"arg${incrementer.incrementAndGet()}"
+  def createRef: String = s"ref${incrementer.incrementAndGet()}"
 
   def toQuery: Query = {
     if (queries.isEmpty) throw new RuntimeException("Empty query is not allowed")

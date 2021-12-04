@@ -11,10 +11,12 @@ import scala.jdk.CollectionConverters._
 import cats.implicits._
 
 class ArangoDBCollection(val collection: ArangoCollectionAsync) {
+ def name: String = collection.name()
+
   def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
     val o = options
     collection.create(new CollectionCreateOptions {
-      name(collection.name())
+      this.name(collection.name())
       o.`type`.foreach(t => `type`(t))
       o.journalSize.foreach(journalSize(_))
       o.replicationFactor.foreach(replicationFactor(_))
@@ -29,6 +31,8 @@ class ArangoDBCollection(val collection: ArangoCollectionAsync) {
   def drop(): IO[Unit] = collection.drop().toIO.map(_ => ())
 
   def info(): IO[CollectionInfo] = collection.getInfo.toIO.map(collectionEntityConversion)
+
+  def truncate(): IO[CollectionInfo] = collection.truncate().toIO.map(collectionEntityConversion)
 
   lazy val document = new ArangoDBDocuments[fabric.Value](collection, fabric.parse.Json.parse, fabric.parse.Json.format(_))
 

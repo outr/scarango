@@ -1,6 +1,7 @@
 package com.outr.arango.query
 
-import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
+import cats.effect.IO
+import com.outr.arango.{Document, DocumentCollection, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
 import fabric._
 
 import scala.language.implicitConversions
@@ -8,7 +9,8 @@ import scala.language.implicitConversions
 package object dsl {
   private var forced = false
 
-  implicit def int2Value(i: Int): Value = num(i.toDouble)
+  implicit def int2Value(i: Int): Value = num(i)
+  implicit def string2Value(s: String): Value = str(s)
 
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
@@ -28,6 +30,22 @@ package object dsl {
       val right = Query(arr(values.map(conversion): _*))
 
       new Filter(left, condition, right)
+    }
+  }
+
+  implicit class DocumentCollectionExtras[D <: Document[D]](val collection: DocumentCollection[D]) extends AnyVal {
+    def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
+      val v = DocumentRef[D, DocumentModel[D]](collection.model, None)
+      val count = ref("count")
+
+      val query = aql {
+        FOR(v) IN collection
+        FILTER(withReference(v)(filter))
+        UPDATE(v, fieldAndValues: _*)
+        COLLECT WITH COUNT INTO count
+        RETURN(count)
+      }
+      collection.graph.queryAs[Int](query).compile.lastOrError
     }
   }
 

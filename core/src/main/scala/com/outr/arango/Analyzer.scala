@@ -3,7 +3,7 @@ package com.outr.arango
 import com.outr.arango.query.QueryPart
 
 sealed abstract class Analyzer(val name: String) extends QueryPart.Support {
-  override def toQueryPart: QueryPart = QueryPart.Static(s"\"$name\"")
+  override def toQueryPart: QueryPart = QueryPart.Static(s""""$name"""")
 }
 
 object Analyzer {

@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object version {
-    val profig: String = "3.2.7"
+    val profig: String = "3.2.8"
     val arangoDBJavaDriver: String = "6.14.0"
     val jackson: String = "3.0.0"
     val catsEffect: String = "3.3.0"

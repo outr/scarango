@@ -1,10 +1,12 @@
 package com.outr.arango
 
 import cats.effect.IO
-import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, View, CollectionInfo, ConsolidationPolicy, SortCompression, ViewLink}
+import cats.implicits._
+import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression, View, ViewLink}
+import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
-import fabric.obj
+import fabric._
 import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -63,6 +65,8 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def databaseName: String = db.name
 
+  lazy val transaction = new ArangoDBTransaction[Collection](db.db, _.name)
+
   def upgrades: List[DatabaseUpgrade] = Nil
 
   protected def doUpgrades(allUpgrades: List[DatabaseUpgrade],
@@ -103,6 +107,8 @@ class Graph(private[arango] val db: ArangoDB) {
     }
   }
 
+  def truncate(): IO[Unit] = collections.map(_.truncate()).sequence.map(_ => ())
+
   def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
     collection(model, CollectionType.Vertex)
   def edge[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
@@ -141,7 +147,7 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            val model: DocumentModel[D],
                                            val `type`: CollectionType) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
-  override def name: String = collection.collection.name()
+  override def name: String = collection.name
 
   override def query(query: Query): fs2.Stream[IO, D] = graph.queryAs[D](query)(model.rw)
 }
@@ -151,6 +157,7 @@ trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
 
   def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
   def exists(): IO[Boolean] = collection.exists()
+  def truncate(): IO[CollectionInfo] = collection.truncate()
   def drop(): IO[Unit] = collection.drop()
   def info(): IO[CollectionInfo] = collection.info()
 

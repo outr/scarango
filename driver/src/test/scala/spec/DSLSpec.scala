@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.arango._
-import com.outr.arango.query.{AQLInterpolator, Query}
+import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import fabric.rw._
 import org.scalatest.matchers.should.Matchers

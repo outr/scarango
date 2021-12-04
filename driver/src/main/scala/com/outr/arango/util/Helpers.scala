@@ -95,7 +95,8 @@ object Helpers {
       case (key, value) => key -> value2AnyRef(value)
     }
     case fabric.Str(s) => s
-    case fabric.Num(n) => n.underlying()
+    case fabric.NumInt(n) => Long.box(n)
+    case fabric.NumDec(n) => n.underlying()
     case fabric.Bool(b) => java.lang.Boolean.valueOf(b)
     case fabric.Arr(a) => a.map(value2AnyRef).asJava
     case fabric.Null => None.orNull

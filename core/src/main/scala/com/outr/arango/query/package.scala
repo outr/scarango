@@ -41,6 +41,8 @@ package object query {
     case null => Null
     case s: String => str(s)
     case i: Int => num(i)
-    case l: Long => num(l.toDouble)
+    case l: Long => num(l)
+    case f: Float => num(f.toDouble)
+    case d: Double => num(d)
   }
 }
