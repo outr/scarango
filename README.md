@@ -41,3 +41,4 @@ This needs to be updated with instructions for 2.0, but for now, take a look at 
 - ScalaDocs
 - Getting Started documentation
 - AQL validation support
+- Add GitHub CI
