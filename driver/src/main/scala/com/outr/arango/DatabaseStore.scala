@@ -1,27 +1,24 @@
 package com.outr.arango
 
+import cats.effect.IO
+import com.outr.arango.core.{ArangoDBCollection, CreateResult, DeleteResult, NotFoundException}
+import fabric.Value
 import fabric.rw._
-import reactify.Var
 
-import scala.concurrent.{ExecutionContext, Future}
+case class DatabaseStore(collection: ArangoDBCollection) {
+  def get[T: ReaderWriter](key: String): IO[Option[T]] = collection
+    .document
+    .get(key)
+    .map(_.map(_.as[StoreValue].value.as[T]))
 
-case class DatabaseStore[T: ReaderWriter](key: String, graph: Graph) {
-  def get(implicit ec: ExecutionContext): Future[Option[T]] = {
-    graph.backingStore.get(BackingStore.id(key)).map(_.map(_.data.as[T]))
-  }
-  def apply(default: => T)(implicit ec: ExecutionContext): Future[T] = {
-    get(ec).map(_.getOrElse(default))
-  }
-  def set(value: T)(implicit ec: ExecutionContext): Future[Unit] = {
-    val json = value.toValue
-    graph.backingStore.upsertOne(BackingStore(json, BackingStore.id(key))).map(_ => ())
-  }
+  def apply[T: ReaderWriter](key: String,
+                             default: String => T = (key: String) => throw NotFoundException(key)): IO[T] = get[T](key)
+    .map(_.getOrElse(default(key)))
 
-  def prop(default: => T)
-          (implicit ec: ExecutionContext): Future[Var[T]] = get.map { o =>
-    val initial = o.getOrElse(default)
-    val v = Var[T](initial)
-    v.attach(set)
-    v
-  }
+  def update[T: ReaderWriter](key: String, value: T): IO[CreateResult[T]] = collection
+    .document
+    .upsert(StoreValue(key, value.toValue).toValue)
+    .map(_.convert(_.as[T]))
+
+  def delete(key: String): IO[DeleteResult[Value]] = collection.document.delete(key)
 }

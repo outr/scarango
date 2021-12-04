@@ -1,17 +1,17 @@
 package spec
 
-import com.outr.arango.transaction.{Transaction, TransactionStatus}
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
+import com.outr.arango.core.{StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
+import com.outr.arango.query.dsl._
 import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
-import scala.concurrent.Future
-
-class AdvancedSpec extends AsyncWordSpec with Matchers {
-  private var transaction: Transaction = _
+class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
+  private var transaction: StreamTransaction = _
 
   "Advanced" should {
     "initialize configuration" in {
@@ -29,7 +29,7 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
       }
     }
     "insert two records" in {
-      database.people.insert(List(
+      database.people.document.batch.insert(List(
         Person("Adam", 21),
         Person("Bethany", 19)
       )).map { _ =>
@@ -40,72 +40,41 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .results
+        .compile
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
         }
     }
-    "create a paged result" in {
-      database
-        .people
-        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
-        .paged
-        .map { page =>
-          page.results.length should be(1)
-          page.results.head.name should be("Adam")
-        }
-    }
-    "create a process result" in {
-      database
-        .people
-        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
-        .process { response =>
-          Future.successful(response.result.map(_.name))
-        }
-        .map { list =>
-          list should be(List(List("Adam")))
-        }
-    }
-    "create an iterate result" in {
-      var results = List.empty[String]
-      database
-        .people
-        .query(aql"FOR p IN ${database.people} FILTER p.${Person.name} == 'Adam' RETURN p")
-        .iterate { person =>
-          results = person.name :: results
-          Future.successful(())
-        }
-        .map { _ =>
-          results should be(List("Adam"))
-        }
-    }
     "create a transaction" in {
-      database.transaction().map { t =>
-        transaction = t
-        t.status should be(TransactionStatus.Running)
-      }
-    }
-    "check the status of the transaction" in {
-      transaction.checkStatus().map { t =>
-        t.status should be(TransactionStatus.Running)
-      }
-    }
-    "abort the transaction" in {
-      transaction.abort().map { _ =>
+      database.transaction.begin().map { transaction =>
+        this.transaction = transaction
         succeed
       }
     }
+    "check the status of the transaction" in {
+      database.transaction.status(transaction).map { status =>
+        status should be(TransactionStatus.Running)
+      }
+    }
+    "abort the transaction" in {
+      database.transaction.abort(transaction).map { status =>
+        status should be(TransactionStatus.Aborted)
+      }
+    }
     "create a second transaction" in {
-      database.transaction(write = List(database.people)).map { t =>
-        transaction = t
-        t.status should be(TransactionStatus.Running)
+      database.transaction.begin(locks = List(
+        database.people -> TransactionLock.Write
+      )).map { transaction =>
+        this.transaction = transaction
+        succeed
       }
     }
     "insert two records in a transaction" in {
-      database.people.withTransaction(transaction).insert(List(
+      database.people.document.batch.insert(List(
         Person("Charles", 35),
         Person("Donna", 41)
-      )).map { _ =>
+      ), transaction = transaction).map { _ =>
         succeed
       }
     }
@@ -113,28 +82,29 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .results
+        .compile
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
         }
     }
     "commit the transaction" in {
-      transaction.commit().map { _ =>
-        succeed
+      database.transaction.commit(transaction).map { status =>
+        status should be(TransactionStatus.Committed)
       }
     }
     "verify the four records" in {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .results
+        .compile
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany", "Charles", "Donna"))
+          people.map(_.age).toSet should be(Set(21, 19, 35, 41))
         }
     }
     "update the records using DSL" in {
-      import com.outr.arango.query._
-
       database
         .people
         .update(Person.age is 21, Person.age(22))
@@ -144,8 +114,8 @@ class AdvancedSpec extends AsyncWordSpec with Matchers {
     }
   }
 
-  object database extends Graph(databaseName = "advanced") {
-    val people: DocumentCollection[Person] = vertex[Person]
+  object database extends Graph("advanced") {
+    val people: DocumentCollection[Person] = vertex[Person](Person)
   }
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]

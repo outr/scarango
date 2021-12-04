@@ -1,8 +1,9 @@
 package spec
 
-import com.outr.arango.{Collection, Document, DocumentModel, DocumentRef, Field, Graph, Id, Index, Query}
+import com.outr.arango._
 import com.outr.arango.query._
-import fabric.rw.{ReaderWriter, ccRW}
+import com.outr.arango.query.dsl._
+import fabric.rw._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -17,77 +18,82 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       val p = Person.ref
 
       val query = aql {
-        FOR (p) IN Database.people
+        FOR (p) IN database.people
         SORT (p.age.desc)
         RETURN (p)
       }
-      query should be(Query(
-        """FOR p IN people
-          |SORT p.age DESC
-          |RETURN p""".stripMargin, Map.empty))
+
+      query.string should be(
+      """FOR p IN people
+        |SORT p.age DESC
+        |RETURN p""".stripMargin)
     }
     "build a query with a filter" in {
       val p = Person.ref
 
       val query = aql {
-        FOR (p) IN Database.people
+        FOR (p) IN database.people
         FILTER((p.age is 21) && (p.name isNot "Adam"))
         RETURN (p)
       }
-      query should be(Query(
-        """FOR p IN people
-          |FILTER p.age == @arg1 && p.name != @arg2
-          |RETURN p""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam")
-      ))
+      val expected = Query(
+        "FOR p IN people ",
+        "FILTER ", aql"p.age == ${21}", " && ", aql"p.name != ${"Adam"} ",
+        "RETURN p"
+      )
+      query should be(expected)
     }
     "build a query with a remove" in {
       val p = Person.ref
 
       val query = aql {
-        FOR (p) IN Database.people
+        FOR (p) IN database.people
         FILTER((p.age is 21) && (p.name isNot "Adam"))
-        REMOVE (p) IN Database.people
+        REMOVE (p) IN database.people
       }
-      query should be(Query(
-        """FOR p IN people
-          |FILTER p.age == @arg1 && p.name != @arg2
-          |REMOVE p IN people""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam")
-      ))
+      val expected = Query(
+        "FOR p IN people ",
+        aql"FILTER p.age == ${21} && p.name != ${"Adam"} ",
+        "REMOVE p IN people")
+      query should be(expected)
     }
     "build an update query" in {
       val p = Person.ref
 
       val query = aql {
-        FOR(p) IN Database.people
+        FOR(p) IN database.people
         FILTER ((p.age is 21) && (p.name isNot "Adam"))
         UPDATE (p, p.age(22))
         RETURN (NEW)
       }
-      query should be(Query(
-        """FOR p IN people
-          |FILTER p.age == @arg1 && p.name != @arg2
-          |UPDATE p WITH {age: @arg3} IN people
-          |RETURN NEW""".stripMargin, Map("arg1" -> 21, "arg2" -> "Adam", "arg3" -> 22)))
+      val expected = Query(
+        "FOR p IN people ",
+        aql"FILTER p.age == ${21} && p.name != ${"Adam"} ",
+        aql"UPDATE p WITH {age: ${22}} IN people ",
+        "RETURN NEW")
+      query should be(expected)
     }
     "build a query to return result count" in {
       val p = Person.ref
       val count = ref("count")
       val query = aql {
-        FOR (p) IN Database.people
+        FOR (p) IN database.people
         FILTER (p.age >= 20)
         COLLECT WITH COUNT INTO count
         RETURN (count)
       }
-      query should be(Query(
-        """FOR p IN people
-          |FILTER p.age >= @arg1
-          |COLLECT WITH COUNT INTO count
-          |RETURN count""".stripMargin, Map("arg1" -> 20)))
+      val expected = Query(
+        "FOR p IN people ",
+        aql"FILTER p.age >= ${20} ",
+        "COLLECT WITH COUNT INTO count ",
+        "RETURN count"
+      )
+      query should be(expected)
     }
   }
 
-  object Database extends Graph(databaseName = "advanced") {
-    val people: Collection[Person] = vertex[Person]
+  object database extends Graph(name = "advanced") {
+    val people: DocumentCollection[Person] = vertex[Person](Person)
   }
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]

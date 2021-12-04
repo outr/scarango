@@ -1,209 +1,205 @@
 package com.outr.arango
 
-import java.util.concurrent.atomic.AtomicBoolean
-import com.outr.arango.api.model.ArangoLinkFieldProperties
-import com.outr.arango.model.ArangoCode
-import com.outr.arango.transaction.Transaction
+import cats.effect.IO
+import cats.implicits._
+import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression, View, ViewLink}
+import com.outr.arango.query.dsl._
+import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
-import fabric.rw.ReaderWriter
-import io.youi.client.HttpClient
-import io.youi.net.URL
+import fabric._
+import fabric.rw._
 
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.{ExecutionContext, Future}
-import scala.language.experimental.macros
+import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-/**
-  * Graph represents a graph database
-  *
-  * TODO: This is currently an anonymous graph without support for named graphs. Support should be added for named.
-  */
-class Graph(val databaseName: String = ArangoDB.config.db,
-            baseURL: URL = ArangoDB.config.url,
-            credentials: Option[Credentials] = ArangoDB.credentials,
-            httpClient: HttpClient = HttpClient,
-            val defaultCollectionOptions: CollectionOptions = CollectionOptions()) {
-  private var _collections: List[Collection[_]] = Nil
-  private var _views: List[View[_]] = Nil
-  private var _initializations: List[() => Future[Unit]] = Nil
+class Graph(private[arango] val db: ArangoDB) {
   private val _initialized = new AtomicBoolean(false)
-  private var versions = ListBuffer.empty[DatabaseUpgrade]
 
-  lazy val arangoDB: ArangoDB = new ArangoDB(databaseName, baseURL, credentials, httpClient)
-  lazy val arangoDatabase: ArangoDatabase = arangoDB.api.db(databaseName)
-  lazy val backingStore: DocumentCollection[BackingStore] = new DocumentCollection[BackingStore](this, BackingStore, CollectionType.Document, Nil, None, backingStoreCollectionOptions)
+  private var _collections: List[DocumentCollection[_]] = Nil
+  private var _views: List[View] = Nil
+  private var _stores: List[DatabaseStore] = Nil
+  protected def storeCollectionName: String = "backingStore"
 
-  protected def backingStoreCollectionOptions: CollectionOptions = defaultCollectionOptions
+  def collections: List[DocumentCollection[_]] = _collections
+  def views: List[View] = _views
+  def stores: List[DatabaseStore] = _stores
 
-  def wal: ArangoWriteAheadLog = arangoDatabase.wal
-
-  def transaction(write: List[Collection[_]] = Nil,
-                  read: List[Collection[_]] = Nil,
-                  exclusive: List[Collection[_]] = Nil,
-                  waitForSync: Boolean = false,
-                  allowImplicit: Boolean = false,
-                  maxTransactionSize: Long = -1L)
-                 (implicit ec: ExecutionContext): Future[Transaction] = arangoDatabase.transactionCreate(
-    writeCollections = write.map(_.name),
-    readCollections = read.map(_.name),
-    exclusiveCollections = exclusive.map(_.name),
-    waitForSync = waitForSync,
-    allowImplicit = allowImplicit,
-    maxTransactionSize = maxTransactionSize
-  ).map(_.withGraph(Some(this)))
-
-  private lazy val databaseVersion: DatabaseStore[DatabaseVersion] = DatabaseStore[DatabaseVersion](
-    key = "databaseVersion",
-    graph = Graph.this
-  )
-
-  register(CreateDatabase)
-
-  def query(query: Query, transaction: Option[Transaction] = None): QueryBuilder[fabric.Value] = {
-    arangoDatabase.query(query, transaction.map(_.id))
+  def this(name: String, server: ArangoDBServer) = {
+    this(server.db(name))
   }
 
-  def collections: List[Collection[_]] = _collections
-  def views: List[View[_]] = _views
+  def this(name: String, config: ArangoDBConfig) = {
+    this(name, ArangoDBServer(config))
+  }
+
+  def this(name: String) = {
+    this(name, ArangoDBConfig())
+  }
+
+  val store: DatabaseStore = keyStore(storeCollectionName)
+
   def initialized: Boolean = _initialized.get()
 
-  def store[T: ReaderWriter](key: String): DatabaseStore[T] = DatabaseStore[T](key, this)
-
-  def vertex[D <: Document[D]](): DocumentCollection[D] = macro GraphMacros.vertex[D]
-  def vertex[D <: Document[D]](options: CollectionOptions): DocumentCollection[D] = macro GraphMacros.vertexOptions[D]
-  def edge[D <: Document[D]](): DocumentCollection[D] = macro GraphMacros.edge[D]
-  def edge[D <: Document[D]](options: CollectionOptions): DocumentCollection[D] = macro GraphMacros.edgeOptions[D]
-  def cached[D <: Document[D]](collection: Collection[D]): CachedCollection[D] = new CachedCollection[D](collection)
-  def view[D <: Document[D]](name: String,
-                             collection: Collection[D],
-                             includeAllFields: Boolean,
-                             analyzers: List[Analyzer],
-                             fields: (Field[_], List[Analyzer])*): View[D] = {
-    val fieldsMap: Map[Field[_], ArangoLinkFieldProperties] = Map(fields.map {
-      case (f, a) => f -> ArangoLinkFieldProperties(a)
-    }: _*)
-    new View[D](name, includeAllFields, fieldsMap, collection, analyzers)
-  }
-
-  def register(upgrades: DatabaseUpgrade*): Unit = synchronized {
-    assert(!initialized, "Database is already initialized. Cannot register upgrades after initialization.")
-    upgrades.foreach { upgrade =>
-      if (!versions.contains(upgrade)) {
-        versions += upgrade
-      }
-    }
-    ()
-  }
-
-  def init()(implicit ec: ExecutionContext): Future[Unit] = {
-    if (_initialized.compareAndSet(false, true)) {
-      (for {
-        // Initialize the database
-        state <- arangoDB.init()
-        // Verify it initialized successfully
-        _ = assert(state.isInstanceOf[DatabaseState.Initialized], s"ArangoDB failed to initialize with $state")
-        // Execute upgrades
-        upgrades <- doUpgrades
-        // Load cached collections
-        _ <- Future.sequence(collections.map {
-          case cc: CachedCollection[_] => cc.refresh()
-          case _ => Future.successful(())
-        })
-        // Load initialize tasks
-        _ <- Future.sequence(_initializations.map(_()))
-        // Execute afterStartup for previously executed upgrades
-        _ = upgrades.foreach { upgrade =>
-          upgrade.afterStartup(this).failed.foreach { t =>
-            scribe.error(s"After Startup failed for ${upgrade.label}", t)
-          }
-        }
-      } yield {
-        ()
-      }).recover {
-        case t: Throwable => {
-          arangoDB._state := DatabaseState.Error(t)
-          throw t
-        }
-      }
-    } else {
-      Future.successful(())
-    }
-  }
-
-  def truncate()(implicit ec: ExecutionContext): Future[Unit] = {
+  def init(): IO[Unit] = if (_initialized.compareAndSet(false, true)) {
     for {
-      _ <- Future.sequence(collections.flatMap {
-        case c: WritableCollection[_] => Some(c.truncate())
-        case _ => None
-      })
+      _ <- CreateDatabase.upgrade(this)
+      appliedUpgrades <- store[AppliedUpgrades](AppliedUpgrades.key, _ => AppliedUpgrades.empty).map(_.labels)
+      upgrades = this.upgrades.filter(u => u.alwaysRun || !appliedUpgrades.contains(u.label))
+      _ = if (upgrades.nonEmpty) scribe.info(s"Applying ${upgrades.length} upgrades (${upgrades.map(_.label).mkString(", ")})...")
+      _ <- doUpgrades(upgrades, upgrades, stillBlocking = true, appliedUpgrades = Set.empty)
     } yield {
       ()
     }
+  } else {
+    IO.unit
   }
 
-  def drop()(implicit ec: ExecutionContext): Future[Unit] = {
-    arangoDatabase.drop().map(_ => ())
+  protected def initted[Return](f: => Return): Return = {
+    assert(initialized, "Database has not been initialized yet")
+    f
   }
 
-  private def version(implicit ec: ExecutionContext): Future[DatabaseVersion] = databaseVersion(DatabaseVersion())
-    .recover {
-      case exc: ArangoException if exc.error.errorCode == ArangoCode.ArangoDatabaseNotFound => DatabaseVersion()      // Database doesn't exist yet
-      case exc: ArangoException if exc.error.errorCode == ArangoCode.ArangoCollectionNotFound => DatabaseVersion()    // Collection doesn't exist yet
+  def queryAs[T: ReaderWriter](query: Query): fs2.Stream[IO, T] = db
+    .query(query)
+    .map(_.as[T])
+
+  def databaseName: String = db.name
+
+  lazy val transaction = new ArangoDBTransaction[Collection](db.db, _.name)
+
+  def upgrades: List[DatabaseUpgrade] = Nil
+
+  protected def doUpgrades(allUpgrades: List[DatabaseUpgrade],
+                           upgrades: List[DatabaseUpgrade],
+                           stillBlocking: Boolean,
+                           appliedUpgrades: Set[String]): IO[Unit] = if (upgrades.isEmpty) {
+    afterStartup(allUpgrades)
+  } else {
+    val continueBlocking = upgrades.exists(_.blockStartup)
+    val upgrade = upgrades.head
+
+    val io = for {
+      _ <- upgrade.upgrade(this)
+      applied = appliedUpgrades + upgrade.label
+      _ <- store(AppliedUpgrades.key) = AppliedUpgrades(applied)
+      _ <- doUpgrades(allUpgrades, upgrades.tail, continueBlocking, applied)
+    } yield {
+      ()
     }
 
-  private def doUpgrades(implicit ec: ExecutionContext): Future[List[DatabaseUpgrade]] = {
-    version.flatMap { version =>
-      val upgrades = versions.toList.filterNot(v => version.upgrades.contains(v.label) && !v.alwaysRun)
-      upgrade(version, upgrades, version.upgrades.isEmpty).map(_ => upgrades)
-    }
-  }
+    if (stillBlocking && !continueBlocking) {
+      // Break free
+      io.unsafeRunAndForget()(cats.effect.unsafe.IORuntime.global)
 
-  private def upgrade(version: DatabaseVersion,
-                      upgrades: List[DatabaseUpgrade],
-                      newDatabase: Boolean,
-                      currentlyBlocking: Boolean = true)
-                     (implicit ec: ExecutionContext): Future[Unit] = {
-    val blocking = upgrades.exists(_.blockStartup)
-    val future = upgrades.headOption match {
-      case Some(u) => if (!newDatabase || u.applyToNew) {
-        scribe.info(s"Upgrading with database upgrade: ${u.label} (${upgrades.length - 1} upgrades left)...")
-        u.upgrade(this).flatMap { _ =>
-          val versionUpdated = version.copy(upgrades = version.upgrades + u.label)
-          databaseVersion.set(versionUpdated).flatMap { _ =>
-            scribe.info(s"Completed database upgrade: ${u.label} successfully")
-            upgrade(versionUpdated, upgrades.tail, newDatabase, blocking)
-          }
-        }
-      } else {
-        scribe.info(s"Skipping database upgrade: ${u.label} as it doesn't apply to new database")
-        val versionUpdated = version.copy(upgrades = version.upgrades + u.label)
-        databaseVersion.set(versionUpdated).flatMap { _ =>
-          upgrade(versionUpdated, upgrades.tail, newDatabase, blocking)
-        }
-      }
-      case None => Future.successful(())
-    }
-
-    if (currentlyBlocking && !blocking && upgrades.nonEmpty) {
-      scribe.info("Additional upgrades do not require blocking. Allowing application to start...")
-      future.failed.map { throwable =>
-        scribe.error("Database upgrade failure", throwable)
-      }
-      Future.successful(())
+      IO.unit
     } else {
-      future
+      io
     }
   }
 
-  private[arango] def add[D <: Document[D]](collection: Collection[D]): Unit = synchronized {
-    _collections = _collections.filterNot(_.name == collection.name) ::: List(collection)
+  protected def afterStartup(upgrades: List[DatabaseUpgrade]): IO[Unit] = if (upgrades.isEmpty) {
+    scribe.info("Upgrades completed successfully")
+    IO.unit
+  } else {
+    val upgrade = upgrades.head
+    upgrade.afterStartup(this).flatMap { _ =>
+      afterStartup(upgrades.tail)
+    }
   }
 
-  private[arango] def add[D <: Document[D]](view: View[D]): Unit = synchronized {
+  def truncate(): IO[Unit] = collections.map(_.truncate()).sequence.map(_ => ())
+
+  def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
+    collection(model, CollectionType.Vertex)
+  def edge[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
+    collection(model, CollectionType.Edge)
+
+  def collection[D <: Document[D]](model: DocumentModel[D], `type`: CollectionType): DocumentCollection[D] = synchronized {
+    val c = new DocumentCollection[D](this, db.collection(model.collectionName), model, `type`)
+    _collections = _collections ::: List(c)
+    c
+  }
+
+  def view(name: String,
+           links: List[ViewLink],
+           primarySort: List[Sort] = Nil,
+           primarySortCompression: SortCompression = SortCompression.LZ4,
+           consolidationInterval: FiniteDuration = 1.second,
+           commitInterval: FiniteDuration = 1.second,
+           cleanupIntervalStep: Int = 2,
+           consolidationPolicy: ConsolidationPolicy = ConsolidationPolicy.BytesAccum()): View = synchronized {
+    val view = db.view(name, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep, consolidationPolicy)
     _views = _views ::: List(view)
+    view
   }
 
-  private[arango] def add(initialization: () => Future[Unit]): Unit = synchronized {
-    _initializations = _initializations ::: List(initialization)
+  def keyStore(collectionName: String): DatabaseStore = synchronized {
+    val s = DatabaseStore(db.collection(collectionName))
+    _stores = _stores ::: List(s)
+    s
   }
+
+  def drop(): IO[Boolean] = db.drop()
+}
+
+class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
+                                           protected[arango] val collection: ArangoDBCollection,
+                                           val model: DocumentModel[D],
+                                           val `type`: CollectionType) extends WritableCollection[D] {
+  override def dbName: String = graph.databaseName
+  override def name: String = collection.name
+
+  override def query(query: Query): fs2.Stream[IO, D] = graph.queryAs[D](query)(model.rw)
+}
+
+trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
+  protected def collection: ArangoDBCollection
+
+  def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
+  def exists(): IO[Boolean] = collection.exists()
+  def truncate(): IO[CollectionInfo] = collection.truncate()
+  def drop(): IO[Unit] = collection.drop()
+  def info(): IO[CollectionInfo] = collection.info()
+
+  private implicit def rw: ReaderWriter[D] = model.rw
+
+  private def string2Doc(json: String): D = fabric.parse.Json.parse(json).as[D]
+  private def doc2String(doc: D): String = {
+    val keys = doc match {
+      case edge: Edge[_, _, _] => obj(
+        "_key" -> edge._id.value,
+        "_from" -> edge._from._id,
+        "_to" -> edge._to._id
+      )
+      case _ => obj("_key" -> doc._id.value)
+    }
+    val value = doc.toValue.merge(keys)
+    fabric.parse.Json.format(value)
+  }
+
+  lazy val document = new ArangoDBDocuments[D](collection.collection, string2Doc, doc2String)
+}
+
+trait ReadableCollection[D <: Document[D]] extends Collection {
+  def model: DocumentModel[D]
+
+  def query(query: Query): fs2.Stream[IO, D]
+}
+
+trait Collection extends QueryPart.Support {
+  def `type`: CollectionType
+  def dbName: String
+  def name: String
+
+  override def toQueryPart: QueryPart = QueryPart.Static(name)
+}
+
+case class AppliedUpgrades(labels: Set[String])
+
+object AppliedUpgrades {
+  implicit val rw: ReaderWriter[AppliedUpgrades] = ccRW
+
+  val key: String = "appliedUpgrades"
+
+  val empty: AppliedUpgrades = AppliedUpgrades(Set.empty)
 }

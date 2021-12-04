@@ -1,28 +1,77 @@
 package com.outr.arango.upgrade
-import com.outr.arango.Graph
 
-import scala.concurrent.Future
-import scribe.Execution.global
+import cats.effect.IO
+import cats.implicits._
+import com.outr.arango.core.{CreateCollectionOptions, View}
+import com.outr.arango.{Collection, DatabaseStore, Document, DocumentCollection, Graph}
 
 object CreateDatabase extends DatabaseUpgrade {
   override def applyToNew: Boolean = true
   override def blockStartup: Boolean = true
   override def alwaysRun: Boolean = true
 
-  override def upgrade(graph: Graph): Future[Unit] = {
-    for {
-      databases <- graph.arangoDB.api.system.list()
-      _ <- if (databases.contains(graph.databaseName)) {
-        Future.successful(())             // Database already exists
-      } else {
-        graph.arangoDatabase.create()     // Database needs to be created
-      }
-      cidMap <- graph.arangoDatabase.collections().map(_.map(cd => cd.name -> cd.id).toMap)
-      views <- graph.arangoDatabase.views().map(_.map(_.name).toSet)
-      _ <- Future.sequence(graph.collections.map(c => c.create(cidMap.get(c.name)))) // Create collections
-      _ <- Future.sequence(graph.views.map(v => v.create(!views.contains(v.name))))
-    } yield {
-      ()
+  override def upgrade(graph: Graph): IO[Unit] = for {
+    databaseExists <- graph.db.exists()
+    databaseCreated <- if (databaseExists) {
+      // Database already exists
+      IO(true)
+    } else {
+      scribe.info(s"${graph.databaseName} doesn't exist. Creating...")
+      graph.db.create()
     }
+    _ = assert(databaseCreated, s"${graph.databaseName} database was not created successfully")
+    _ = scribe.info(s"Verifying ${graph.collections.length} collections (${graph.collections.map(_.name).mkString(", ")})...")
+    _ <- graph.collections.map(verifyCollection).sequence
+    _ <- graph.views.map(verifyView).sequence
+    _ <- graph.stores.map(verifyStore).sequence
+  } yield {
+    ()
+  }
+
+  private def verifyCollection(collection: DocumentCollection[_]): IO[Unit] = for {
+    exists <- collection.collection.exists()
+    created <- if (exists) {
+      // Nothing to do
+      IO(true)
+    } else {
+      scribe.info(s"${collection.dbName}.${collection.name} collection doesn't exist. Creating...")
+      val options = CreateCollectionOptions(
+        `type` = Some(collection.`type`)
+      )
+      collection.collection.create(options).map(_ => true)    // TODO: supply options
+    }
+    _ = assert(created, s"${collection.dbName}.${collection.name} collection was not created successfully")
+    indexes = collection.model.indexes
+    _ <- collection.collection.index.ensure(indexes)
+  } yield {
+    ()
+  }
+
+  private def verifyView(view: View): IO[Unit] = for {
+    exists <- view.exists()
+    created <- if (exists) {
+      // Nothing to do
+      IO(true)
+    } else {
+      scribe.info(s"${view.dbName}.${view.name} view doesn't exist. Creating...")
+      view.create().map(_ => true)
+    }
+    _ = assert(created, s"${view.name} view was not created successfully")
+  } yield {
+    ()
+  }
+
+  private def verifyStore(store: DatabaseStore): IO[Unit] = for {
+    exists <- store.collection.exists()
+    created <- if (exists) {
+      // Already exists, nothing to do
+      IO(true)
+    } else {
+      scribe.info(s"${store.collection.collection.name()} key-store doesn't exist. Creating...")
+      store.collection.create().map(_ => true)       // TODO: Supply options
+    }
+    _ = assert(created, s"${store.collection.collection.name()} key-store was not created successfully")
+  } yield {
+    ()
   }
 }
