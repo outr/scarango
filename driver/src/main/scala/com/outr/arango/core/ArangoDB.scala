@@ -1,37 +1,16 @@
 package com.outr.arango.core
 
 import cats.effect.IO
-import com.arangodb.async.{ArangoDatabaseAsync, ArangoViewAsync}
+import com.arangodb.async.ArangoDatabaseAsync
 import com.arangodb.entity.arangosearch.{ArangoSearchCompression, CollectionLink, FieldLink, PrimarySort, StoreValuesType}
-import com.arangodb.entity.{StreamTransactionStatus, ViewType}
-import com.arangodb.model.StreamTransactionOptions
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
-import com.outr.arango._
-import com.outr.arango.query.{Query, QueryPart, Sort, SortDirection}
+import com.outr.arango.query.{Query, Sort, SortDirection}
 import com.outr.arango.util.Helpers._
 import fabric._
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.Try
-
-case class StreamTransaction(id: String)
-
-sealed trait TransactionLock
-
-object TransactionLock {
-  case object Read extends TransactionLock
-  case object Write extends TransactionLock
-  case object Exclusive extends TransactionLock
-}
-
-sealed trait TransactionStatus
-
-object TransactionStatus {
-  case object Running extends TransactionStatus
-  case object Committed extends TransactionStatus
-  case object Aborted extends TransactionStatus
-}
 
 class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
   def name: String = db.name()
@@ -120,45 +99,3 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
     new View(this, name, o)
   }
 }
-
-sealed trait SortCompression
-
-object SortCompression {
-  case object LZ4 extends SortCompression
-  case object None extends SortCompression
-}
-
-case class ViewLink(collection: Collection,
-                    analyzers: List[Analyzer] = List(Analyzer.Identity),
-                    fields: List[(Field[_], List[Analyzer])] = Nil,
-                    includeAllFields: Boolean = false,
-                    trackListPositions: Boolean = false,
-                    storeValues: Boolean = false,
-                    inBackground: Boolean = false)
-
-sealed trait ConsolidationPolicy
-
-object ConsolidationPolicy {
-  case class BytesAccum(threshold: Double = 0.85) extends ConsolidationPolicy
-  case class Tier(segmentThreshold: Long = 300) extends ConsolidationPolicy
-}
-
-class View(db: ArangoDB, val name: String, options: ArangoSearchCreateOptions) extends QueryPart.Support {
-  def dbName: String = db.name
-
-  private val view = db.db.view(name)
-
-  def create(): IO[ViewInfo] = db.db.createArangoSearch(name, options)
-    .toIO
-    .map { entity =>
-      ViewInfo(entity.getId, entity.getName)
-    }
-
-  def exists(): IO[Boolean] = view.exists().toIO.map(_.booleanValue())
-
-  def drop(): IO[Unit] = view.drop().toIO.map(_ => ())
-
-  override def toQueryPart: QueryPart = QueryPart.Static(name)
-}
-
-case class ViewInfo(id: String, name: String)

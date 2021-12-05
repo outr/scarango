@@ -32,6 +32,8 @@ This needs to be updated with instructions for 2.0, but for now, take a look at 
 
 ## TODO for 3.0 release
 - Clean up code
+- Evaluate open TODO items
+- Better packaging
 - ScalaDocs
 
 ## TODO for 3.1 release

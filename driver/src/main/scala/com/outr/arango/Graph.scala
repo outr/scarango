@@ -3,7 +3,6 @@ package com.outr.arango
 import cats.effect.IO
 import cats.implicits._
 import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression, View, ViewLink}
-import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
 import fabric._
@@ -140,66 +139,14 @@ class Graph(private[arango] val db: ArangoDB) {
   }
 
   def drop(): IO[Boolean] = db.drop()
-}
 
-class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
-                                           protected[arango] val collection: ArangoDBCollection,
-                                           val model: DocumentModel[D],
-                                           val `type`: CollectionType) extends WritableCollection[D] {
-  override def dbName: String = graph.databaseName
-  override def name: String = collection.name
+  case class AppliedUpgrades(labels: Set[String])
 
-  override def query(query: Query): fs2.Stream[IO, D] = graph.queryAs[D](query)(model.rw)
-}
+  object AppliedUpgrades {
+    implicit val rw: ReaderWriter[AppliedUpgrades] = ccRW
 
-trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
-  protected def collection: ArangoDBCollection
+    val key: String = "appliedUpgrades"
 
-  def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
-  def exists(): IO[Boolean] = collection.exists()
-  def truncate(): IO[CollectionInfo] = collection.truncate()
-  def drop(): IO[Unit] = collection.drop()
-  def info(): IO[CollectionInfo] = collection.info()
-
-  private implicit def rw: ReaderWriter[D] = model.rw
-
-  private def string2Doc(json: String): D = fabric.parse.Json.parse(json).as[D]
-  private def doc2String(doc: D): String = {
-    val keys = doc match {
-      case edge: Edge[_, _, _] => obj(
-        "_key" -> str(edge._id.value),
-        "_from" -> str(edge._from._id),
-        "_to" -> str(edge._to._id)
-      )
-      case _ => obj("_key" -> str(doc._id.value))
-    }
-    val value = doc.toValue.merge(keys)
-    fabric.parse.Json.format(value)
+    val empty: AppliedUpgrades = AppliedUpgrades(Set.empty)
   }
-
-  lazy val document = new ArangoDBDocuments[D](collection.collection, string2Doc, doc2String)
-}
-
-trait ReadableCollection[D <: Document[D]] extends Collection {
-  def model: DocumentModel[D]
-
-  def query(query: Query): fs2.Stream[IO, D]
-}
-
-trait Collection extends QueryPart.Support {
-  def `type`: CollectionType
-  def dbName: String
-  def name: String
-
-  override def toQueryPart: QueryPart = QueryPart.Static(name)
-}
-
-case class AppliedUpgrades(labels: Set[String])
-
-object AppliedUpgrades {
-  implicit val rw: ReaderWriter[AppliedUpgrades] = ccRW
-
-  val key: String = "appliedUpgrades"
-
-  val empty: AppliedUpgrades = AppliedUpgrades(Set.empty)
 }
