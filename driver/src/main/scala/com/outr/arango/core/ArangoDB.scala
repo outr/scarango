@@ -35,11 +35,8 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
       }.asJava
 
       fs2.Stream.force(db.query(query.string, bindVars, classOf[String]).toIO.map { c =>
-        // TODO: Consider c.stream() instead
-        val cursor: java.util.Iterator[String] = c
-        val iterator: Iterator[String] = cursor.asScala
-        fs2.Stream.fromBlockingIterator[IO](iterator, 512)
-      }).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))    // TODO: re-evaluate basic strings
+        fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
+      }).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))    // TODO: re-evaluate parse fail
     }
   }
 
@@ -83,7 +80,7 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
         .includeAllFields(l.includeAllFields)
         .trackListPositions(l.trackListPositions)
         .storeValues(if (l.storeValues) StoreValuesType.ID else StoreValuesType.NONE)
-        // TODO: Support inBackground
+        // TODO: Support inBackground - currently not supported in Java driver
 
     }
     o.link(cls: _*)

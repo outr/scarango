@@ -39,8 +39,9 @@ object CreateDatabase extends DatabaseUpgrade {
       scribe.info(s"${collection.dbName}.${collection.name} collection doesn't exist. Creating...")
       val options = CreateCollectionOptions(
         `type` = Some(collection.`type`)
+        // TODO: Support other collection options
       )
-      collection.collection.create(options).map(_ => true)    // TODO: supply options
+      collection.collection.create(options).map(_ => true)
     }
     _ = assert(created, s"${collection.dbName}.${collection.name} collection was not created successfully")
     indexes = collection.model.indexes
@@ -70,7 +71,7 @@ object CreateDatabase extends DatabaseUpgrade {
       IO(true)
     } else {
       scribe.info(s"${store.collection.collection.name()} key-store doesn't exist. Creating...")
-      store.collection.create().map(_ => true)       // TODO: Supply options
+      store.collection.create().map(_ => true)       // TODO: Supply options for creating DatabaseStore
     }
     _ = assert(created, s"${store.collection.collection.name()} key-store was not created successfully")
   } yield {
