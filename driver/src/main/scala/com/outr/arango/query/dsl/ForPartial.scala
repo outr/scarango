@@ -1,7 +1,8 @@
 package com.outr.arango.query.dsl
 
+import com.outr.arango.collection.ReadableCollection
 import com.outr.arango.query.Query
-import com.outr.arango.{Document, DocumentModel, DocumentRef, ReadableCollection}
+import com.outr.arango.{Document, DocumentModel, DocumentRef}
 
 case class ForPartial[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]) {
   def IN(collection: ReadableCollection[D]): Unit = {

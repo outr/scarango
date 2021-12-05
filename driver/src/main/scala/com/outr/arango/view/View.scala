@@ -1,7 +1,8 @@
-package com.outr.arango.core
+package com.outr.arango.view
 
 import cats.effect.IO
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
+import com.outr.arango.core.ArangoDB
 import com.outr.arango.query.QueryPart
 import com.outr.arango.util.Helpers._
 

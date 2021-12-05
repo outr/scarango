@@ -1,8 +1,9 @@
-package com.outr.arango
+package com.outr.arango.collection
 
 import cats.effect.IO
 import com.outr.arango.core.ArangoDBCollection
 import com.outr.arango.query.Query
+import com.outr.arango.{CollectionType, Document, DocumentModel, Graph}
 
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            protected[arango] val collection: ArangoDBCollection,

@@ -2,9 +2,11 @@ package com.outr.arango
 
 import cats.effect.IO
 import cats.implicits._
-import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression, View, ViewLink}
+import com.outr.arango.collection.{Collection, DocumentCollection}
+import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression}
 import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
+import com.outr.arango.view.{View, ViewLink}
 import fabric._
 import fabric.rw._
 

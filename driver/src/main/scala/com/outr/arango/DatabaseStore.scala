@@ -21,4 +21,10 @@ case class DatabaseStore(collection: ArangoDBCollection) {
     .map(_.convert(_.as[T]))
 
   def delete(key: String): IO[DeleteResult[Value]] = collection.document.delete(key)
+
+  case class StoreValue(_key: String, value: Value)
+
+  object StoreValue {
+    implicit val rw: ReaderWriter[StoreValue] = ccRW
+  }
 }

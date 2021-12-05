@@ -31,9 +31,7 @@ for examples of the first layer take a look at the tests for simple and straight
 This needs to be updated with instructions for 2.0, but for now, take a look at https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
 
 ## TODO for 3.0 release
-- Clean up code
 - Evaluate open TODO items
-- Better packaging
 - ScalaDocs
 
 ## TODO for 3.1 release

@@ -1,6 +1,7 @@
-package com.outr.arango.core
+package com.outr.arango.view
 
-import com.outr.arango.{Analyzer, Collection, Field}
+import com.outr.arango.collection.Collection
+import com.outr.arango.{Analyzer, Field}
 
 case class ViewLink(collection: Collection,
                     analyzers: List[Analyzer] = List(Analyzer.Identity),

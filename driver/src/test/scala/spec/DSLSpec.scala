@@ -1,6 +1,7 @@
 package spec
 
 import com.outr.arango._
+import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import fabric.rw._

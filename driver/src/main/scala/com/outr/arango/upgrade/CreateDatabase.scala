@@ -2,8 +2,10 @@ package com.outr.arango.upgrade
 
 import cats.effect.IO
 import cats.implicits._
-import com.outr.arango.core.{CreateCollectionOptions, View}
-import com.outr.arango.{Collection, DatabaseStore, Document, DocumentCollection, Graph}
+import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.core.CreateCollectionOptions
+import com.outr.arango.view.View
+import com.outr.arango.{DatabaseStore, Document, Graph}
 
 object CreateDatabase extends DatabaseUpgrade {
   override def applyToNew: Boolean = true

@@ -1,7 +1,8 @@
 package com.outr.arango.query
 
 import cats.effect.IO
-import com.outr.arango.{Document, DocumentCollection, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
+import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
 import fabric._
 
 import scala.language.implicitConversions

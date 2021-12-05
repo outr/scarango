@@ -6,6 +6,7 @@ import com.arangodb.entity.arangosearch.{ArangoSearchCompression, CollectionLink
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
 import com.outr.arango.query.{Query, Sort, SortDirection}
 import com.outr.arango.util.Helpers._
+import com.outr.arango.view.{View, ViewLink}
 import fabric._
 
 import scala.concurrent.duration._

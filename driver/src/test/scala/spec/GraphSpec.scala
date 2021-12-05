@@ -3,9 +3,11 @@ package spec
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
+import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core._
 import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
+import com.outr.arango.view.{View, ViewLink}
 import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

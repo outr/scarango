@@ -2,6 +2,7 @@ package spec
 
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
+import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.{StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._

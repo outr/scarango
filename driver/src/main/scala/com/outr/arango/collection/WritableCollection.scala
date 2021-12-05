@@ -1,7 +1,8 @@
-package com.outr.arango
+package com.outr.arango.collection
 
 import cats.effect.IO
 import com.outr.arango.core.{ArangoDBCollection, ArangoDBDocuments, CollectionInfo}
+import com.outr.arango.{Document, Edge}
 import fabric.rw._
 import fabric.{obj, str}
 
@@ -9,9 +10,13 @@ trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
   protected def collection: ArangoDBCollection
 
   def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
+
   def exists(): IO[Boolean] = collection.exists()
+
   def truncate(): IO[CollectionInfo] = collection.truncate()
+
   def drop(): IO[Unit] = collection.drop()
+
   def info(): IO[CollectionInfo] = collection.info()
 
   private implicit def rw: ReaderWriter[D] = model.rw
