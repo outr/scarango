@@ -1,6 +1,5 @@
 package spec
 
-import com.outr.arango.core._
 import com.outr.arango.query._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
