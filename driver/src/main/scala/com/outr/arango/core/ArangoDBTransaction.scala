@@ -10,6 +10,21 @@ import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
 
 class ArangoDBTransaction[Collection](db: ArangoDatabaseAsync, c2Name: Collection => String) {
+  def apply[Return](allowImplicit: Boolean = true,
+                    lockTimeout: Option[FiniteDuration] = None,
+                    waitForSync: Boolean = false,
+                    maxTransactionSize: Option[Long] = None,
+                    locks: List[(Collection, TransactionLock)] = Nil)
+                   (f: StreamTransaction => IO[Return]): IO[Return] = {
+    begin(allowImplicit, lockTimeout, waitForSync, maxTransactionSize, locks)
+      .flatMap { transaction =>
+        f(transaction).attempt.flatMap {
+          case Left(throwable) => abort(transaction).map(_ => throw throwable)
+          case Right(r) => commit(transaction).map(_ => r)
+        }
+      }
+  }
+
   def begin(allowImplicit: Boolean = true,
             lockTimeout: Option[FiniteDuration] = None,
             waitForSync: Boolean = false,

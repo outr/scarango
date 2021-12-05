@@ -35,7 +35,6 @@ This needs to be updated with instructions for 2.0, but for now, take a look at 
 
 ## TODO for 3.0 release
 - Backup / Restore features
-- graph.withTransaction() { transaction => ... }
 - Clean up code
 - Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}
 - ScalaDocs
