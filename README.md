@@ -34,10 +34,12 @@ for examples of the first layer take a look at the tests for simple and straight
 This needs to be updated with instructions for 2.0, but for now, take a look at https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
 
 ## TODO for 3.0 release
-- Backup / Restore features
 - Clean up code
-- Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}
 - ScalaDocs
+- Add GitHub CI
+
+## TODO for 3.1 release
+- Backup / Restore features
+- Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}
 - Getting Started documentation
 - AQL validation support
-- Add GitHub CI
