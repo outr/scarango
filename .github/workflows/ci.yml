@@ -10,7 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Setup Scala
-        uses: olafurpg/setup-scala@v10
+        uses: olafurpg/setup-scala@v13
         with:
           java-version: "adopt@1.8"
       - uses: xinova/arangodb-action@v1

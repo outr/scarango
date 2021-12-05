@@ -167,11 +167,11 @@ trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
   private def doc2String(doc: D): String = {
     val keys = doc match {
       case edge: Edge[_, _, _] => obj(
-        "_key" -> edge._id.value,
-        "_from" -> edge._from._id,
-        "_to" -> edge._to._id
+        "_key" -> str(edge._id.value),
+        "_from" -> str(edge._from._id),
+        "_to" -> str(edge._to._id)
       )
-      case _ => obj("_key" -> doc._id.value)
+      case _ => obj("_key" -> str(doc._id.value))
     }
     val value = doc.toValue.merge(keys)
     fabric.parse.Json.format(value)
