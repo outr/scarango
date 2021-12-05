@@ -9,12 +9,12 @@ ArangoDB client written in Scala
 
 ## Setup
 
-Scarango is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js (core only) on 2.12 and 2.13.
+Scarango is published to Sonatype OSS and Maven Central currently supporting Scala and Scala.js (core only) on 2.13 and 3.
 
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "2.4.3"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.0.0"
 ```
 
 ## Introduction
@@ -28,12 +28,10 @@ for examples of the first layer take a look at the tests for simple and straight
 
 ## Getting Started
 
-This needs to be updated with instructions for 2.0, but for now, take a look at https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
-
-## TODO for 3.0 release
-- ScalaDocs
+This needs to be updated with instructions for 3.0, but for now, take a look at https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
 
 ## TODO for 3.1 release
+- Improved ScalaDocs
 - Backup / Restore features
 - Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}
 - Getting Started documentation
