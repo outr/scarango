@@ -1,9 +1,6 @@
 # Scarango
 
-[![Build Status](https://travis-ci.org/outr/scarango.svg?branch=master)](https://travis-ci.org/outr/scarango)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/be829fed3c134f8cbf14c60290651d63)](https://www.codacy.com/app/matthicks/scarango?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=outr/scarango&amp;utm_campaign=Badge_Grade)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/be829fed3c134f8cbf14c60290651d63)](https://www.codacy.com/app/matthicks/scarango?utm_source=github.com&utm_medium=referral&utm_content=outr/scarango&utm_campaign=Badge_Coverage)
-[![Stories in Ready](https://badge.waffle.io/outr/scarango.png?label=ready&title=Ready)](https://waffle.io/outr/scarango)
+[![CI](https://github.com/outr/scarango/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/outr/scarango/actions/workflows/ci.yml)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/outr/scarango)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.outr/scarango-driver_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.outr/scarango-driver_2.13)
 [![Latest version](https://index.scala-lang.org/outr/scarango/scarango-driver/latest.svg)](https://index.scala-lang.org/outr/scarango)
@@ -36,7 +33,6 @@ This needs to be updated with instructions for 2.0, but for now, take a look at 
 ## TODO for 3.0 release
 - Clean up code
 - ScalaDocs
-- Add GitHub CI
 
 ## TODO for 3.1 release
 - Backup / Restore features
