@@ -4,8 +4,8 @@ import Tests._
 name := "scarango"
 ThisBuild / organization := "com.outr"
 ThisBuild / version := "3.0.0"
-ThisBuild / scalaVersion := "2.13.7"
-ThisBuild / crossScalaVersions := List("3.1.0", "2.13.7")
+ThisBuild / scalaVersion := "2.13.8"
+ThisBuild / crossScalaVersions := List("3.1.0", "2.13.8")
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
 ThisBuild / resolvers += Resolver.sonatypeRepo("releases")
 ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
