@@ -5,7 +5,7 @@ object Dependencies {
     val profig: String = "3.2.8"
     val arangoDBJavaDriver: String = "6.14.0"
     val jackson: String = "3.0.0"
-    val catsEffect: String = "3.3.0"
+    val catsEffect: String = "3.3.4"
     val fs2: String = "3.2.2"
     val scribe: String = "3.6.10"
     val scalaTest: String = "3.2.10"
