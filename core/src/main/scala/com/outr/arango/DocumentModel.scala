@@ -8,6 +8,8 @@ trait DocumentModel[D <: Document[D]] {
 
   implicit val rw: ReaderWriter[D]
 
+  val _id: Field[Id[D]] = field("_id")
+
   protected def generateId(): String = Unique()
 
   protected def field[T](name: String): Field[T] = Field[T](name)

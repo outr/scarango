@@ -1,8 +1,6 @@
 package com.outr.arango.collection
 
-import cats.effect.IO
 import com.outr.arango.core.ArangoDBCollection
-import com.outr.arango.query.Query
 import com.outr.arango.{CollectionType, Document, DocumentModel, Graph}
 
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
@@ -11,5 +9,5 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            val `type`: CollectionType) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
   override def name: String = collection.name
-  override def query(query: Query): fs2.Stream[IO, D] = graph.queryAs[D](query)(model.rw)
+  override lazy val query: DocumentQuery[D] = new DocumentCollectionQuery[D](this)
 }

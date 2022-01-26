@@ -3,7 +3,7 @@ import Tests._
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.0.0"
+ThisBuild / version := "3.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / crossScalaVersions := List("3.1.1", "2.13.8")
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
