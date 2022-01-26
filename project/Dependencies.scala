@@ -8,7 +8,7 @@ object Dependencies {
     val catsEffect: String = "3.3.4"
     val fs2: String = "3.2.4"
     val scribe: String = "3.6.10"
-    val scalaTest: String = "3.2.10"
+    val scalaTest: String = "3.2.11"
     val catsEffectTesting: String = "1.4.0"
   }
 
