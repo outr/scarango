@@ -41,8 +41,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .compile
-        .toList
+        .all
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
         }
@@ -83,8 +82,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .compile
-        .toList
+        .all
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
         }
@@ -98,8 +96,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .compile
-        .toList
+        .all
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany", "Charles", "Donna"))
           people.map(_.age).toSet should be(Set(21, 19, 35, 41))

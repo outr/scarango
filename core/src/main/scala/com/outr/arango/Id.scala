@@ -3,6 +3,8 @@ package com.outr.arango
 import fabric._
 import fabric.rw.{Asable, ReaderWriter}
 
+import scala.language.implicitConversions
+
 /**
   * Id represents the _key, _id, and _rev for a document
   *
@@ -37,6 +39,7 @@ object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
 
   implicit def rw[D]: ReaderWriter[Id[D]] = ReaderWriter(_._id, v => parse[D](v.asStr.value))
+  implicit def toValue[D](id: Id[D]): Value = rw[D].read(id)
 
   def parse[D](id: String): Id[D] = id match {
     case ExtractorRegex(collection, value) => Id[D](value, collection)

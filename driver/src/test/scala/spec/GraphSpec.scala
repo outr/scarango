@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.core._
+import com.outr.arango.query.dsl._
 import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
 import com.outr.arango.view.{View, ViewLink}
@@ -39,16 +39,25 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER airport.vip
              RETURN airport
            """
-      database.airports.query(query).compile.toList.asserting { results =>
+      database.airports.query(query).all.asserting { results =>
         results.map(_._id.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
       }
     }
     "query JFK airport" in {
-      val query = aql"RETURN DOCUMENT(${Airport.id("JFK")})"
-      database.airports.query(query).compile.toList.map { airports =>
-        airports.length should be(1)
-        airports.head.name should be("John F Kennedy Intl")
+      database.airports.document.get("JFK").map { airportOption =>
+        airportOption.map(_.name) should contain("John F Kennedy Intl")
       }
+    }
+    "query the airports by id filter" in {
+      val keys = List("JFK", "LAX")
+      database.airports
+        .query
+        .byFilter(Airport._id IN keys.map(Airport.id))
+        .all
+        .map { airports =>
+          airports.length should be(2)
+          airports.map(_.name).toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
+        }
     }
     "query just the airport's full name" in {
       val keys = List("JFK", "LAX")
@@ -58,14 +67,14 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER a._key IN $keys
              RETURN {fullName: a.name}
            """
-      database.queryAs[AirportName](query).compile.toList.map { airportNames =>
+      database.query[AirportName](query).all.map { airportNames =>
         airportNames.length should be(2)
         airportNames.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
       }
     }
     "count all the airports" in {
       val query = aql"RETURN COUNT(${database.airports})"
-      database.queryAs[Int](query).compile.lastOrError.map { count =>
+      database.query[Int](query).one.map { count =>
         count should be(3375)
       }
     }
@@ -76,7 +85,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FOR airport IN 1..1 OUTBOUND $lax ${database.flights}
              RETURN DISTINCT airport.name
            """
-      database.queryAs[String](query).compile.toList.map { response =>
+      database.query[String](query).all.map { response =>
         response.length should be(82)
       }
     }
@@ -88,7 +97,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              OPTIONS { bfs: true, uniqueVertices: 'global' }
              RETURN airport
            """
-      database.airports.query(query).compile.toList.map { response =>
+      database.airports.query(query).all.map { response =>
         response.length should be(82)
       }
     }
@@ -101,7 +110,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              SHORTEST_PATH $bis TO $jfk ${database.flights}
              RETURN v.${Airport.name}
            """
-      database.queryAs[String](query).compile.toList.map { response =>
+      database.query[String](query).all.map { response =>
         response should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
       }
     }
@@ -114,7 +123,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         aql"""
              FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, ${Analyzer.TextEnglish}) RETURN a
            """
-      database.airports.query(query).compile.toList.map { response =>
+      database.airports.query(query).all.map { response =>
         val names = response.map(_.name)
         names should be(List("Navajo State Park"))
       }

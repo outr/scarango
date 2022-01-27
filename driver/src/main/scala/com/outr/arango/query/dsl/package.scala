@@ -46,7 +46,7 @@ package object dsl {
         COLLECT WITH COUNT INTO count
         RETURN(count)
       }
-      collection.graph.queryAs[Int](query).compile.lastOrError
+      collection.graph.query[Int](query).one
     }
   }
 
@@ -70,7 +70,7 @@ package object dsl {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.fieldName}")
-      val right = Query(arr(values.map(conversion)))
+      val right = Query(arr(values.map(conversion): _*))
 
       new Filter(left, condition, right)
     }

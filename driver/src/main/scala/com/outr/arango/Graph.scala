@@ -2,7 +2,7 @@ package com.outr.arango
 
 import cats.effect.IO
 import cats.implicits._
-import com.outr.arango.collection.{Collection, DocumentCollection}
+import com.outr.arango.collection.{Collection, DocumentCollection, QueryBuilder}
 import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression}
 import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
@@ -60,9 +60,7 @@ class Graph(private[arango] val db: ArangoDB) {
     f
   }
 
-  def queryAs[T: ReaderWriter](query: Query): fs2.Stream[IO, T] = db
-    .query(query)
-    .map(_.as[T])
+  def query[T: ReaderWriter](query: Query): QueryBuilder[T] = QueryBuilder[T](this, query, implicitly[ReaderWriter[T]])
 
   def databaseName: String = db.name
 

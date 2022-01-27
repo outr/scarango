@@ -9,5 +9,5 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            val `type`: CollectionType) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
   override def name: String = collection.name
-  override lazy val query: DocumentQuery[D] = new DocumentCollectionQuery[D](this)
+  override lazy val query: DocumentCollectionQuery[D] = new DocumentCollectionQuery[D](this)
 }
