@@ -1,12 +1,13 @@
 package com.outr.arango.core
 
+import com.arangodb.DbName
 import com.arangodb.async.ArangoDBAsync
 import com.arangodb.entity.{LoadBalancingStrategy => LBS}
 
 class ArangoDBServer(connection: ArangoDBAsync) {
   lazy val db: ArangoDB = new ArangoDB(connection.db())
 
-  def db(name: String): ArangoDB = new ArangoDB(connection.db(name))
+  def db(name: String): ArangoDB = new ArangoDB(connection.db(DbName.of(name)))
 }
 
 object ArangoDBServer {
@@ -22,7 +23,7 @@ object ArangoDBServer {
       .user(config.username)
       .password(config.password)
       .useSsl(config.ssl)
-      .timeout(Option(config.timeout).map(_.toMillis.toInt).map(Integer.valueOf).orNull)
+      .timeout(Option(config.timeout).map(_.toMillis.toInt).map(Integer.valueOf).getOrElse(0))
       .acquireHostList(config.acquireHostList)
       .chunksize(config.chunkSize match {
         case -1 => null

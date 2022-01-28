@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
-  def name: String = db.name()
+  def name: String = db.dbName().get()
 
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())
 

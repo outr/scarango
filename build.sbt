@@ -7,9 +7,9 @@ ThisBuild / version := "3.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / crossScalaVersions := List("3.1.1", "2.13.8")
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
-ThisBuild / resolvers += Resolver.sonatypeRepo("releases")
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
 
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / sonatypeProfileName := "com.outr"
 ThisBuild / licenses := Seq("MIT" -> url("https://github.com/outr/scarango/blob/master/LICENSE"))

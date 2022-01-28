@@ -19,21 +19,6 @@ package object dsl {
 
   implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
 
-  implicit class ArrayFieldExtras[T](field: => Field[List[T]]) {
-    def thisField: Field[List[T]] = field
-
-    private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
-      val context = QueryBuilderContext()
-      val (refOption, f) = withReference(field)
-      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-      val leftName = context.name(ref)
-      val left = Query(s"$leftName.${f.fieldName}")
-      val right = Query(arr(values.map(conversion): _*))
-
-      new Filter(left, condition, right)
-    }
-  }
-
   implicit class DocumentCollectionExtras[D <: Document[D]](val collection: DocumentCollection[D]) extends AnyVal {
     def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
       val v = DocumentRef[D, DocumentModel[D]](collection.model, None)
@@ -64,6 +49,19 @@ package object dsl {
 
       new Filter(left, condition, right)
     }
+    private def cond(that: => Field[T], condition: String): Filter = {
+      val context = QueryBuilderContext()
+      val (leftRefOption, leftField) = withReference(field)
+      val leftRef = leftRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val leftName = context.name(leftRef)
+      val left = Query(s"$leftName.${leftField.fieldName}")
+      val (rightRefOption, rightField) = withReference(that)
+      val rightRef = rightRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
+      val rightName = context.name(rightRef)
+      val right = Query(s"$rightName.${rightField.fieldName}")
+
+      new Filter(left, condition, right)
+    }
     private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
       val context = QueryBuilderContext()
       val (refOption, f) = withReference(field)
@@ -87,6 +85,9 @@ package object dsl {
     def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
     def ===(value: T)(implicit conversion: T => Value): Filter = {
       cond(value, "==")
+    }
+    def ===(field: => Field[T]): Filter = {
+      cond(field, "==")
     }
     def isNot(value: T)(implicit conversion: T => Value): Filter = !==(value)
     def !=(value: T)(implicit conversion: T => Value): Filter = !==(value)
@@ -199,7 +200,17 @@ package object dsl {
 
   def LIMIT(offset: Int, limit: Int): Unit = addQuery(Query(s"LIMIT $offset, $limit"))
 
+  def LIMIT(limit: Int): Unit = LIMIT(0, limit)
+
   def RETURN(part: ReturnPart): Unit = addQuery(part.build())
+
+  def RETURN[T](field: Field[T]): Unit = {
+    val context = QueryBuilderContext()
+    val (refOption, f) = withReference(field)
+    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(ref)
+    addQuery(Query(s"$leftName.${f.fieldName}"))
+  }
 
   def addQuery(query: Query): Unit = {
     val context = QueryBuilderContext()
