@@ -44,7 +44,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "query JFK airport" in {
-      database.airports.document.get("JFK").map { airportOption =>
+      database.airports.get("JFK").map { airportOption =>
         airportOption.map(_.name) should contain("John F Kennedy Intl")
       }
     }
@@ -247,7 +247,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
             _id = Airport.id(d(0))
           )
         }
-        database.airports.document.stream.insert(airports)
+        database.airports.stream.insert(airports)
       }
       _ = insertedAirports should be(3375)
       insertedFlights <- {
@@ -269,7 +269,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
             distance = d(13).toInt
           )
         }
-        database.flights.document.stream.insert(flights)
+        database.flights.stream.insert(flights)
       }
       _ = insertedFlights should be(286463)
     } yield {

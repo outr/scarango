@@ -1,29 +1,18 @@
 package com.outr.arango.collection
 
 import cats.effect.IO
+import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.core.{ArangoDBCollection, ArangoDBDocuments, CollectionInfo}
 import com.outr.arango.{Document, Edge}
 import fabric.rw._
 import fabric.{obj, str}
 
-trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
-  protected def collection: ArangoDBCollection
+trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] with ArangoDBDocuments[D] {
+  protected def arangoCollection: ArangoDBCollection
+  override protected def _collection: ArangoCollectionAsync = arangoCollection._collection
+  override protected def toT(json: String): D = fabric.parse.Json.parse(json).as[D]
 
-  def create(): IO[CollectionInfo] = collection.create(model.collectionOptions)
-
-  def exists(): IO[Boolean] = collection.exists()
-
-  def truncate(): IO[CollectionInfo] = collection.truncate()
-
-  def drop(): IO[Unit] = collection.drop()
-
-  def info(): IO[CollectionInfo] = collection.info()
-
-  private implicit def rw: ReaderWriter[D] = model.rw
-
-  private def string2Doc(json: String): D = fabric.parse.Json.parse(json).as[D]
-
-  private def doc2String(doc: D): String = {
+  override protected def fromT(doc: D): String = {
     val keys = doc match {
       case edge: Edge[_, _, _] => obj(
         "_key" -> str(edge._id.value),
@@ -36,5 +25,13 @@ trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] {
     fabric.parse.Json.format(value)
   }
 
-  lazy val document = new ArangoDBDocuments[D](collection.collection, string2Doc, doc2String)
+  object collection {
+    def create(): IO[CollectionInfo] = arangoCollection.collection.create(model.collectionOptions)
+    def exists(): IO[Boolean] = arangoCollection.collection.exists()
+    def truncate(): IO[CollectionInfo] = arangoCollection.collection.truncate()
+    def drop(): IO[Unit] = arangoCollection.collection.drop()
+    def info(): IO[CollectionInfo] = arangoCollection.collection.info()
+  }
+
+  private implicit def rw: ReaderWriter[D] = model.rw
 }

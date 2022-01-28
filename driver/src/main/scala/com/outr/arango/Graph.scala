@@ -106,7 +106,7 @@ class Graph(private[arango] val db: ArangoDB) {
     }
   }
 
-  def truncate(): IO[Unit] = collections.map(_.truncate()).sequence.map(_ => ())
+  def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
 
   def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
     collection(model, CollectionType.Vertex)

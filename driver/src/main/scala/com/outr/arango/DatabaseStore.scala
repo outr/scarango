@@ -7,7 +7,6 @@ import fabric.rw._
 
 case class DatabaseStore(collection: ArangoDBCollection) {
   def get[T: ReaderWriter](key: String): IO[Option[T]] = collection
-    .document
     .get(key)
     .map(_.map(_.as[StoreValue].value.as[T]))
 
@@ -16,11 +15,10 @@ case class DatabaseStore(collection: ArangoDBCollection) {
     .map(_.getOrElse(default(key)))
 
   def update[T: ReaderWriter](key: String, value: T): IO[CreateResult[T]] = collection
-    .document
     .upsert(StoreValue(key, value.toValue).toValue)
     .map(_.convert(_.as[T]))
 
-  def delete(key: String): IO[DeleteResult[Value]] = collection.document.delete(key)
+  def delete(key: String): IO[DeleteResult[Value]] = collection.delete(key)
 
   case class StoreValue(_key: String, value: Value)
 

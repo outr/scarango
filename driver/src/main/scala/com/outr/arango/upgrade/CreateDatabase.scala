@@ -31,7 +31,7 @@ object CreateDatabase extends DatabaseUpgrade {
   }
 
   private def verifyCollection(collection: DocumentCollection[_]): IO[Unit] = for {
-    exists <- collection.collection.exists()
+    exists <- collection.arangoCollection.collection.exists()
     created <- if (exists) {
       // Nothing to do
       IO(true)
@@ -41,11 +41,11 @@ object CreateDatabase extends DatabaseUpgrade {
         `type` = Some(collection.`type`)
         // TODO: Support other collection options
       )
-      collection.collection.create(options).map(_ => true)
+      collection.arangoCollection.collection.create(options).map(_ => true)
     }
     _ = assert(created, s"${collection.dbName}.${collection.name} collection was not created successfully")
     indexes = collection.model.indexes
-    _ <- collection.collection.index.ensure(indexes)
+    _ <- collection.arangoCollection.index.ensure(indexes)
   } yield {
     ()
   }
@@ -65,15 +65,15 @@ object CreateDatabase extends DatabaseUpgrade {
   }
 
   private def verifyStore(store: DatabaseStore): IO[Unit] = for {
-    exists <- store.collection.exists()
+    exists <- store.collection.collection.exists()
     created <- if (exists) {
       // Already exists, nothing to do
       IO(true)
     } else {
-      scribe.info(s"${store.collection.collection.name()} key-store doesn't exist. Creating...")
-      store.collection.create().map(_ => true)       // TODO: Supply options for creating DatabaseStore
+      scribe.info(s"${store.collection._collection.name()} key-store doesn't exist. Creating...")
+      store.collection.collection.create().map(_ => true)       // TODO: Supply options for creating DatabaseStore
     }
-    _ = assert(created, s"${store.collection.collection.name()} key-store was not created successfully")
+    _ = assert(created, s"${store.collection._collection.name()} key-store was not created successfully")
   } yield {
     ()
   }

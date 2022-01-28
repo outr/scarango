@@ -20,7 +20,7 @@ package object dsl {
   implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
 
   implicit class DocumentCollectionExtras[D <: Document[D]](val collection: DocumentCollection[D]) extends AnyVal {
-    def update(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
+    def modify(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
       val v = DocumentRef[D, DocumentModel[D]](collection.model, None)
       val count = ref("count")
 

@@ -72,13 +72,13 @@ Database.people.insert(Person("User 1", 30))    // returns IO[CreateResult]
 ```
 We can also do batch record insertion:
 ```scala
-Database.people.document.batch.insert(List(
+Database.people.batch.insert(List(
     Person("Adam", 21),
     Person("Bethany", 19)
 ))    // returns IO[CreateResults]
 ```
 
-You can also use the `Database.people.document.stream` to cross-stream records into the database.
+You can also use the `Database.people.stream` to cross-stream records into the database.
 
 ### Querying
 In order to get the data out that we just inserted we can do a simple AQL query:
@@ -100,7 +100,7 @@ Database
 
 For more examples see the specs: https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
 
-## TODO for 3.1 release
+## TODO
 - Improved ScalaDocs
 - Backup / Restore features
 - Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}

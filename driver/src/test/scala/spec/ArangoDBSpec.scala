@@ -35,23 +35,23 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "verify the collection doesn't already exist" in {
-      coll.exists().asserting { exists =>
+      coll.collection.exists().asserting { exists =>
         exists should be(false)
       }
     }
     "create a collection" in {
-      coll.create().asserting { info =>
+      coll.collection.create().asserting { info =>
         info.`type` should be(CollectionType.Vertex)
         info.name should be("simple")
       }
     }
     "verify the collection exists" in {
-      coll.exists().asserting { exists =>
+      coll.collection.exists().asserting { exists =>
         exists should be(true)
       }
     }
     "get the collection info" in {
-      coll.info().asserting { info =>
+      coll.collection.info().asserting { info =>
         info.`type` should be(CollectionType.Vertex)
         info.name should be("simple")
       }
@@ -74,7 +74,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "insert a document" in {
-      coll.document.insert(obj(
+      coll.insert(obj(
         "name" -> "John Doe",
         "age" -> 21
       ), CreateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
@@ -89,7 +89,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "delete the document" in {
-      coll.document.delete(johnDoeKey, DeleteOptions(returnOld = true, silent = false)).asserting { result =>
+      coll.delete(johnDoeKey, DeleteOptions(returnOld = true, silent = false)).asserting { result =>
         result.key should be(Some(johnDoeKey))
         result.oldDocument.flatMap(_.get("name").map(_.asString)) should be(Some("John Doe"))
       }
@@ -100,7 +100,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "insert a batch of records" in {
-      coll.document.batch.insert(List(
+      coll.batch.insert(List(
         obj("name" -> "one"),
         obj("name" -> "two"),
         obj("name" -> "three"),
@@ -142,7 +142,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "update a document" in {
-      coll.document.update(fiveKey, obj("name" -> "cinco"), UpdateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
+      coll.update(fiveKey, obj("name" -> "cinco"), UpdateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
         result.newDocument.flatMap(_.get("name")).map(_.asString) should be(Some("cinco"))
       }
     }
@@ -165,10 +165,10 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "drop a collection" in {
-      coll.drop()
+      coll.collection.drop()
     }
     "verify the collection has been dropped" in {
-      coll.exists().asserting { exists =>
+      coll.collection.exists().asserting { exists =>
         exists should be(false)
       }
     }

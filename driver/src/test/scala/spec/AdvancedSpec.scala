@@ -30,7 +30,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "insert two records" in {
-      database.people.document.batch.insert(List(
+      database.people.batch.insert(List(
         Person("Adam", 21),
         Person("Bethany", 19)
       )).map { _ =>
@@ -71,7 +71,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "insert two records in a transaction" in {
-      database.people.document.batch.insert(List(
+      database.people.batch.insert(List(
         Person("Charles", 35),
         Person("Donna", 41)
       ), transaction = transaction).map { _ =>
@@ -105,7 +105,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "update the records using DSL" in {
       database
         .people
-        .update(Person.age is 21, Person.age(22))
+        .modify(Person.age is 21, Person.age(22))
         .map { modified =>
           modified should be(1L)
         }
