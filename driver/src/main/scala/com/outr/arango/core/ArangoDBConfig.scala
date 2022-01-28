@@ -1,15 +1,17 @@
 package com.outr.arango.core
 
-import scala.concurrent.duration.FiniteDuration
+import profig.Profig
 
-case class ArangoDBConfig(username: String = null,
-                          password: String = null,
-                          ssl: Boolean = false,
-                          timeout: FiniteDuration = null,
-                          acquireHostList: Boolean = false,
-                          chunkSize: Int = -1,
-                          connectionTtl: FiniteDuration = null,
-                          hosts: List[Host] = List(Host()),
-                          keepAliveInterval: FiniteDuration = null,
-                          loadBalancingStrategy: LoadBalancingStrategy = LoadBalancingStrategy.None,
-                          maxConnections: Int = 1)
+import scala.concurrent.duration._
+
+case class ArangoDBConfig(username: String = Profig("arangodb.username").opt[String].orNull,
+                          password: String = Profig("arangodb.password").opt[String].orNull,
+                          ssl: Boolean = Profig("arangodb.ssl").as[Boolean](false),
+                          timeout: FiniteDuration = Profig("arangodb.timeout").opt[Long].map(_.millis).orNull,
+                          acquireHostList: Boolean = Profig("arangodb.acquireHostList").as[Boolean](false),
+                          chunkSize: Int = Profig("arangodb.chunkSize").as[Int](-1),
+                          connectionTtl: FiniteDuration = Profig("arangodb.connectionTtl").opt[Long].map(_.millis).orNull,
+                          hosts: List[Host] = Profig("arangodb.hosts").as[List[Host]](List(Host())),
+                          keepAliveInterval: FiniteDuration = Profig("arangodb.keepAliveInterval").opt[Long].map(_.millis).orNull,
+                          loadBalancingStrategy: LoadBalancingStrategy = Profig("arangodb.loadBalancingStrategy").opt[LoadBalancingStrategy].getOrElse(LoadBalancingStrategy.None),
+                          maxConnections: Int = Profig("arangodb.maxConnections").as[Int](1))
