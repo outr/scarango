@@ -20,16 +20,7 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
 
   object collection {
     def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
-      val o = options
-      _collection.create(new CollectionCreateOptions {
-        this.name(_collection.name())
-        o.`type`.foreach(t => `type`(t))
-        o.journalSize.foreach(journalSize(_))
-        o.replicationFactor.foreach(replicationFactor(_))
-        o.satellite.foreach(satellite(_))
-        o.minReplicationFactor.foreach(minReplicationFactor(_))
-        o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment, k.offset))
-      }).toIO.map(collectionEntityConversion)
+      _collection.create(new ArangoDBCollectionCreateOptions(_collection.name(), options)).toIO.map(collectionEntityConversion)
     }
     def exists(): IO[Boolean] = _collection.exists().toIO.map(_.booleanValue())
     def drop(): IO[Unit] = _collection.drop().toIO.map(_ => ())
