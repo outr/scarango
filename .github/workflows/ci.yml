@@ -8,16 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Setup Scala
         uses: olafurpg/setup-scala@v13
         with:
-          java-version: "adopt@1.8"
+          java-version: "zulu@1.8"
       - uses: xinova/arangodb-action@v1
         with:
           arangodb version: 'latest'
       - name: Coursier cache
-        uses: coursier/cache-action@v5
+        uses: coursier/cache-action@v6
       - name: Build and test
         run: |
           sbt -v -Dfile.encoding=UTF-8 +test
