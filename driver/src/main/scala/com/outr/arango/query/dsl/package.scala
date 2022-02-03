@@ -204,12 +204,12 @@ package object dsl {
 
   def RETURN(part: ReturnPart): Unit = addQuery(part.build())
 
-  def RETURN[T](field: Field[T]): Unit = {
+  def RETURN[T](field: => Field[T]): Unit = {
     val context = QueryBuilderContext()
     val (refOption, f) = withReference(field)
     val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
     val leftName = context.name(ref)
-    addQuery(Query(s"$leftName.${f.fieldName}"))
+    addQuery(Query(s"RETURN $leftName.${f.fieldName}"))
   }
 
   def addQuery(query: Query): Unit = {
