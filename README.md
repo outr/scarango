@@ -38,7 +38,7 @@ approach is to utilize the Graph layer to set up our database structure and inte
 ```scala
 import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
 import com.outr.arango.collection.DocumentCollection
-import fabric.rw._
+import fabric.rw.{ReaderWriter, ccRW}
 
 // Case class to represent a person collection
 case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
