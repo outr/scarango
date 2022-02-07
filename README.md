@@ -14,7 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.1.0"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.1.1"
+```
+
+Or in Mill:
+
+```
+ivy"com.outr::scarango-driver:3.1.1"
 ```
 
 ## Introduction
@@ -30,7 +36,9 @@ approach is to utilize the Graph layer to set up our database structure and inte
 
 ### Database configuration
 ```scala
-import com.outr.arango._
+import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
+import com.outr.arango.collection.DocumentCollection
+import fabric.rw._
 
 // Case class to represent a person collection
 case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
