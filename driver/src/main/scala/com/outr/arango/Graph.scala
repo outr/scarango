@@ -60,7 +60,19 @@ class Graph(private[arango] val db: ArangoDB) {
     f
   }
 
+  /**
+    * Creates a QueryBuilder[T] to manage execution of the supplied query.
+    *
+    * @param query the query to create the builder for
+    * @tparam T the type of results
+    * @return QueryBuilder[T]
+    */
   def query[T: ReaderWriter](query: Query): QueryBuilder[T] = QueryBuilder[T](this, query, implicitly[ReaderWriter[T]])
+
+  /**
+    * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
+    */
+  def execute(query: Query): IO[Unit] = db.query.execute(query)
 
   def databaseName: String = db.name
 

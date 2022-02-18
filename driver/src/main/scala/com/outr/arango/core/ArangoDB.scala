@@ -38,6 +38,8 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
         fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
       }).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))    // TODO: re-evaluate parse fail
     }
+
+    def execute(query: Query): IO[Unit] = apply(query).compile.drain
   }
 
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))

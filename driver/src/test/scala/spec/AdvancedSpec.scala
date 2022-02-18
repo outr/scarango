@@ -102,6 +102,23 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           people.map(_.age).toSet should be(Set(21, 19, 35, 41))
         }
     }
+    "delete a single record via AQL" in {
+      database.execute(
+        aql"""
+            FOR p IN ${database.people}
+            FILTER p.${Person.age} == 35
+            REMOVE p IN ${database.people}
+           """).flatMap { _ =>
+        database
+          .people
+          .query(aql"FOR p IN ${database.people} RETURN p")
+          .all
+          .map { people =>
+            people.map(_.name).toSet should be(Set("Adam", "Bethany", "Donna"))
+            people.map(_.age).toSet should be(Set(21, 19, 41))
+          }
+      }
+    }
     "update the records using DSL" in {
       database
         .people
