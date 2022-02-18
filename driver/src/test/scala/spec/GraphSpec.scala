@@ -44,7 +44,8 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "query JFK airport" in {
-      database.airports.get("JFK").map { airportOption =>
+      val jfk = Airport.id("JFK")
+      database.airports.get(jfk).map { airportOption =>
         airportOption.map(_.name) should contain("John F Kennedy Intl")
       }
     }

@@ -2,6 +2,7 @@ package com.outr.arango.core
 
 import cats.effect.IO
 import com.arangodb.async.ArangoCollectionAsync
+import com.outr.arango.Id
 import com.outr.arango.util.Helpers._
 
 import scala.jdk.CollectionConverters._
@@ -11,11 +12,13 @@ trait ArangoDBDocuments[T] {
   protected def toT(s: String): T
   protected def fromT(t: T): String
 
-  def apply(key: String,
-            default: String => T = key => throw NotFoundException(key)): IO[T] = get(key).map(_.getOrElse(default(key)))
+  def id(key: String): Id[T] = Id[T](key, _collection.name())
 
-  def get(key: String): IO[Option[T]] = _collection
-    .getDocument(key, classOf[String])
+  def apply(id: Id[T],
+            default: Id[T] => T = id => throw NotFoundException(id._id)): IO[T] = get(id).map(_.getOrElse(default(id)))
+
+  def get(id: Id[T]): IO[Option[T]] = _collection
+    .getDocument(id._key, classOf[String])
     .toIO
     .map(s => Option(s).map(toT))
 
@@ -27,13 +30,13 @@ trait ArangoDBDocuments[T] {
   def upsert(doc: T, options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] =
     insert(doc, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
-  def update(key: String, doc: T, options: UpdateOptions = UpdateOptions.Default, transaction: StreamTransaction = None.orNull): IO[UpdateResult[T]] = _collection
-    .updateDocument(key, fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+  def update(id: Id[T], doc: T, options: UpdateOptions = UpdateOptions.Default, transaction: StreamTransaction = None.orNull): IO[UpdateResult[T]] = _collection
+    .updateDocument(id._key, fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
     .map(updateDocumentEntityConversion(_, toT))
 
-  def delete(key: String, options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResult[T]] = _collection
-    .deleteDocument(key, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+  def delete(id: Id[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResult[T]] = _collection
+    .deleteDocument(id._key, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
     .map(deleteDocumentEntityConversion(_, toT))
 

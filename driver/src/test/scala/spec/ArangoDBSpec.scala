@@ -89,7 +89,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "delete the document" in {
-      coll.delete(johnDoeKey, DeleteOptions(returnOld = true, silent = false)).asserting { result =>
+      coll.delete(coll.id(johnDoeKey), DeleteOptions(returnOld = true, silent = false)).asserting { result =>
         result.key should be(Some(johnDoeKey))
         result.oldDocument.flatMap(_.get("name").map(_.asString)) should be(Some("John Doe"))
       }
@@ -142,7 +142,7 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "update a document" in {
-      coll.update(fiveKey, obj("name" -> "cinco"), UpdateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
+      coll.update(coll.id(fiveKey), obj("name" -> "cinco"), UpdateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { result =>
         result.newDocument.flatMap(_.get("name")).map(_.asString) should be(Some("cinco"))
       }
     }
