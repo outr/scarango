@@ -2,7 +2,7 @@ package com.outr.arango
 
 import cats.effect.IO
 import cats.implicits._
-import com.outr.arango.collection.{Collection, DocumentCollection, QueryBuilder}
+import com.outr.arango.collection.{Collection, DocumentCollection, EdgeCollection, QueryBuilder}
 import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression}
 import com.outr.arango.query.{Query, QueryPart, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
@@ -120,13 +120,14 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
 
-  def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
-    collection(model, CollectionType.Vertex)
-  def edge[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] =
-    collection(model, CollectionType.Edge)
+  def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] = synchronized {
+    val c = new DocumentCollection[D](this, db.collection(model.collectionName), model, CollectionType.Vertex)
+    _collections = _collections ::: List(c)
+    c
+  }
 
-  def collection[D <: Document[D]](model: DocumentModel[D], `type`: CollectionType): DocumentCollection[D] = synchronized {
-    val c = new DocumentCollection[D](this, db.collection(model.collectionName), model, `type`)
+  def edge[E <: Edge[E, From, To], From, To](model: EdgeModel[E, From, To]): EdgeCollection[E, From, To] = synchronized {
+    val c = new EdgeCollection[E, From, To](this, db.collection(model.collectionName), model)
     _collections = _collections ::: List(c)
     c
   }

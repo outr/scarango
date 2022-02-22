@@ -3,7 +3,7 @@ package spec
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
-import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.collection.{DocumentCollection, EdgeCollection}
 import com.outr.arango.query.dsl._
 import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
@@ -166,8 +166,8 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   }
 
   object database extends Graph(name = "graphTest") {
-    val airports: DocumentCollection[Airport] = vertex[Airport](Airport)
-    val flights: DocumentCollection[Flight] = edge[Flight](Flight)
+    val airports: DocumentCollection[Airport] = vertex(Airport)
+    val flights: EdgeCollection[Flight, Airport, Airport] = edge(Flight)
 
     val airportSearch: View = view(
       name = "airportSearch",
@@ -216,7 +216,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     distance: Int,
                     _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
 
-  object Flight extends DocumentModel[Flight] {
+  object Flight extends EdgeModel[Flight, Airport, Airport] {
     override implicit val rw: ReaderWriter[Flight] = ccRW
 
     override def indexes: List[Index] = Nil
