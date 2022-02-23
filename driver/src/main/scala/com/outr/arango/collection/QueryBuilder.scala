@@ -3,9 +3,10 @@ package com.outr.arango.collection
 import cats.effect.IO
 import com.outr.arango.Graph
 import com.outr.arango.query.Query
+import fabric.Value
 import fabric.rw._
 
-case class QueryBuilder[R](graph: Graph, query: Query, rw: ReaderWriter[R]) {
+case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
   /**
     * Translates the results to a return type of T
     *
@@ -13,7 +14,7 @@ case class QueryBuilder[R](graph: Graph, query: Query, rw: ReaderWriter[R]) {
     * @tparam T return type
     * @return QueryBuilder[T]
     */
-  def as[T](implicit rw: ReaderWriter[T]): QueryBuilder[T] = copy[T](rw = rw)
+  def as[T](implicit rw: ReaderWriter[T]): QueryBuilder[T] = copy[T](converter = rw.write)
 
   /**
     * Creates a Stream to get all the results from the query
@@ -23,7 +24,7 @@ case class QueryBuilder[R](graph: Graph, query: Query, rw: ReaderWriter[R]) {
   def stream: fs2.Stream[IO, R] = graph
     .db
     .query(query)
-    .map(_.as[R](rw))
+    .map(converter)
 
   /**
     * Convenience method to get the results from the stream as a List

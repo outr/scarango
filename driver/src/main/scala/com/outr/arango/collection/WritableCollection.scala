@@ -3,26 +3,17 @@ package com.outr.arango.collection
 import cats.effect.IO
 import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.core.{ArangoDBCollection, ArangoDBDocuments, CollectionInfo}
-import com.outr.arango.{Document, Edge}
-import fabric.parse.{Json, JsonWriter}
+import com.outr.arango.Document
 import fabric.rw._
-import fabric.{Value, obj, str}
+import fabric.Value
 
 trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] with ArangoDBDocuments[D] {
   protected def arangoCollection: ArangoDBCollection
   override protected def _collection: ArangoCollectionAsync = arangoCollection._collection
 
-  override protected def toT(json: String): D = {
-    val obj = Json.parse(json)
-    val mutated = afterRetrieval(obj)
-    mutated.as[D]
-  }
+  override def toT(value: Value): D = afterRetrieval(value).as[D]
 
-  override protected def fromT(doc: D): String = {
-    val obj = doc.toValue
-    val mutated = beforeStorage(obj)
-    Json.format(mutated, JsonWriter.Compact)
-  }
+  override def fromT(t: D): Value = beforeStorage(t.toValue)
 
   protected def beforeStorage(value: Value): Value
 

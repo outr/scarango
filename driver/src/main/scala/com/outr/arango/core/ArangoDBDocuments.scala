@@ -4,13 +4,18 @@ import cats.effect.IO
 import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.Id
 import com.outr.arango.util.Helpers._
+import fabric.Value
+import fabric.parse.{Json, JsonWriter}
 
 import scala.jdk.CollectionConverters._
 
 trait ArangoDBDocuments[T] {
   protected def _collection: ArangoCollectionAsync
-  protected def toT(s: String): T
-  protected def fromT(t: T): String
+  final def stringToT(s: String): T = toT(Json.parse(s))
+  final def tToString(t: T): String = Json.format(fromT(t), JsonWriter.Compact)
+
+  def toT(value: Value): T
+  def fromT(t: T): Value
 
   def id(key: String): Id[T] = Id[T](key, _collection.name())
 
@@ -20,39 +25,39 @@ trait ArangoDBDocuments[T] {
   def get(id: Id[T]): IO[Option[T]] = _collection
     .getDocument(id._key, classOf[String])
     .toIO
-    .map(s => Option(s).map(toT))
+    .map(s => Option(s).map(stringToT))
 
   def insert(doc: T, options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] = _collection
-    .insertDocument(fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    .insertDocument(tToString(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(createDocumentEntityConversion(_, toT))
+    .map(createDocumentEntityConversion(_, stringToT))
 
   def upsert(doc: T, options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] =
     insert(doc, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
   def update(id: Id[T], doc: T, options: UpdateOptions = UpdateOptions.Default, transaction: StreamTransaction = None.orNull): IO[UpdateResult[T]] = _collection
-    .updateDocument(id._key, fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    .updateDocument(id._key, tToString(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(updateDocumentEntityConversion(_, toT))
+    .map(updateDocumentEntityConversion(_, stringToT))
 
   def delete(id: Id[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResult[T]] = _collection
     .deleteDocument(id._key, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(deleteDocumentEntityConversion(_, toT))
+    .map(deleteDocumentEntityConversion(_, stringToT))
 
   object batch {
     def insert(docs: List[T], options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] = _collection
-      .insertDocuments(docs.map(fromT).asJava, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+      .insertDocuments(docs.map(tToString).asJava, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
-      .map(multiDocumentCreateConversion(_, toT))
+      .map(multiDocumentCreateConversion(_, stringToT))
 
     def upsert(docs: List[T], options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] =
       insert(docs, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
     def delete(docs: List[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResults[T]] = _collection
-      .deleteDocuments(docs.map(fromT).asJava, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+      .deleteDocuments(docs.map(tToString).asJava, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
-      .map(multiDocumentDeleteConversion(_, toT))
+      .map(multiDocumentDeleteConversion(_, stringToT))
   }
 
   object stream {

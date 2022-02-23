@@ -1,6 +1,6 @@
-package com.outr.arango
+package com.outr.arango.mutation
 
-import fabric.{Value, obj}
+import fabric._
 
 object IdMutation extends DataMutation {
   override def store(value: Value): Value = value.get("_id") match {
@@ -11,6 +11,7 @@ object IdMutation extends DataMutation {
       value.merge(obj(
         "_key" -> _key
       ))
+    case None => value
   }
 
   override def retrieve(value: Value): Value = value

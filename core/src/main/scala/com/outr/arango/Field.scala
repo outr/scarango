@@ -1,12 +1,11 @@
 package com.outr.arango
 
+import com.outr.arango.mutation.DataMutation
 import com.outr.arango.query.{QueryPart, toValue}
 
 import scala.concurrent.duration.FiniteDuration
 
 class Field[F] private(val name: String, val mutation: Option[DataMutation]) extends QueryPart.Support {
-//  protected def field[T](name: String): Field[T] = Field(s"$name.$name")
-
   object index {
     def persistent(sparse: Boolean = false,
                   unique: Boolean = false): Index = {

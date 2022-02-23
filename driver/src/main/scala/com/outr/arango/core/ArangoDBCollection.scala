@@ -12,11 +12,11 @@ import cats.implicits._
 import fabric.Value
 
 class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Value] {
- def name: String = _collection.name()
+  def name: String = _collection.name()
 
-  override protected def toT(s: String): Value = fabric.parse.Json.parse(s)
+  override def toT(value: Value): Value = value
 
-  override protected def fromT(t: Value): String = fabric.parse.Json.format(t)
+  override def fromT(t: Value): Value = t
 
   object collection {
     def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {

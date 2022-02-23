@@ -32,7 +32,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "insert two records" in {
       database.people.batch.insert(List(
         Person("Adam", 21),
-        Person("Bethany", 19)
+        Person("Bethany", 19, "Hi, I'm Bethany")
       )).map { _ =>
         succeed
       }
@@ -44,6 +44,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .all
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
+          people.map(_.bio).toSet should be(Set("", "ynahteB m'I ,iH"))
         }
     }
     "create a transaction" in {
@@ -133,13 +134,17 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     val people: DocumentCollection[Person] = vertex[Person](Person)
   }
 
-  case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
+  case class Person(name: String,
+                    age: Int,
+                    bio: String = "",
+                    _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
     override implicit val rw: ReaderWriter[Person] = ccRW
 
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
+    val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
 
     override def indexes: List[Index] = Nil
 

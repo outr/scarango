@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.core.CreateCollectionOptions
+import com.outr.arango.mutation.{DataMutation, IdMutation, ModifyFieldValue}
 import fabric.rw.ReaderWriter
 
 trait DocumentModel[D <: Document[D]] { model =>
@@ -13,17 +14,26 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   implicit class FieldExtras[F](field: Field[F]) {
     def field[T](name: String): Field[T] = model.field[T](s"${field.name}.$name")
+
+    def withMutation(mutation: DataMutation): Field[F] = {
+      field.mutation.foreach(m => throw new RuntimeException(s"Field ${field.name} already has a mutation set: $m"))
+      setField(Field[F](field.name, mutation))
+    }
+
+    def modify(storage: F => F, retrieval: F => F)
+              (implicit rw: ReaderWriter[F]): Field[F] = withMutation(ModifyFieldValue(field, storage, retrieval))
   }
 
   val _id: Field[Id[D]] = field("_id", IdMutation)
 
   protected def generateId(): String = Unique()
 
-  protected def field[T](name: String, mutation: Option[DataMutation]): Field[T] = synchronized {
-    val field = Field[T](name, mutation)
-    _fields = _fields ::: List(field)
+  private def setField[T](field: Field[T]): Field[T] = synchronized {
+    _fields = _fields.filterNot(_.name == field.name) ::: List(field)
     field
   }
+
+  protected def field[T](name: String, mutation: Option[DataMutation]): Field[T] = setField(Field[T](name, mutation))
   protected def field[T](name: String): Field[T] = field[T](name, None)
   protected def field[T](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
 

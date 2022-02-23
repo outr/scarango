@@ -67,7 +67,9 @@ class Graph(private[arango] val db: ArangoDB) {
     * @tparam T the type of results
     * @return QueryBuilder[T]
     */
-  def query[T: ReaderWriter](query: Query): QueryBuilder[T] = QueryBuilder[T](this, query, implicitly[ReaderWriter[T]])
+  def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
+
+  def query[T](query: Query, converter: Value => T): QueryBuilder[T] = QueryBuilder[T](this, query, converter)
 
   /**
     * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
