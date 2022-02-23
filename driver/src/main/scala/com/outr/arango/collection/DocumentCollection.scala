@@ -2,6 +2,7 @@ package com.outr.arango.collection
 
 import com.outr.arango.core.ArangoDBCollection
 import com.outr.arango.{CollectionType, Document, DocumentModel, Graph}
+import fabric.Value
 
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            protected[arango] val arangoCollection: ArangoDBCollection,
@@ -10,4 +11,8 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
   override def dbName: String = graph.databaseName
   override def name: String = arangoCollection.name
   override lazy val query: DocumentCollectionQuery[D] = new DocumentCollectionQuery[D](this)
+
+  override protected def beforeStorage(value: Value): Value = model.allMutations.foldLeft(value)((v, m) => m.store(v))
+
+  override protected def afterRetrieval(value: Value): Value = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
 }

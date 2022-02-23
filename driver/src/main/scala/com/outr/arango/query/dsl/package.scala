@@ -44,7 +44,7 @@ package object dsl {
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
-      val left = Query(s"$leftName.${f.fieldName}")
+      val left = Query(s"$leftName.${f.name}")
       val right = Query(conversion(value))
 
       new Filter(left, condition, right)
@@ -54,11 +54,11 @@ package object dsl {
       val (leftRefOption, leftField) = withReference(field)
       val leftRef = leftRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(leftRef)
-      val left = Query(s"$leftName.${leftField.fieldName}")
+      val left = Query(s"$leftName.${leftField.name}")
       val (rightRefOption, rightField) = withReference(that)
       val rightRef = rightRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val rightName = context.name(rightRef)
-      val right = Query(s"$rightName.${rightField.fieldName}")
+      val right = Query(s"$rightName.${rightField.name}")
 
       new Filter(left, condition, right)
     }
@@ -67,7 +67,7 @@ package object dsl {
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
-      val left = Query(s"$leftName.${f.fieldName}")
+      val left = Query(s"$leftName.${f.name}")
       val right = Query(arr(values.map(conversion): _*))
 
       new Filter(left, condition, right)
@@ -77,7 +77,7 @@ package object dsl {
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
-      val left = Query(s"$leftName.${f.fieldName}")
+      val left = Query(s"$leftName.${f.name}")
       val right = Query(str(value))
 
       new Filter(left, condition, right)
@@ -174,7 +174,7 @@ package object dsl {
       case SortDirection.ASC => "ASC"
       case SortDirection.DESC => "DESC"
     }
-    context.addQuery(Query(s"SORT $name.${field.fieldName} $sortValue"))
+    context.addQuery(Query(s"SORT $name.${field.name} $sortValue"))
   }
 
   def FILTER(filter: Filter): Unit = {
@@ -193,7 +193,7 @@ package object dsl {
   def NEW: ReturnPart = ReturnPart.New
 
   def mapped(mappings: (String, Field[_])*): ReturnPart = json(mappings.map {
-    case (name, field) => s"$name: ${field.fieldName}"
+    case (name, field) => s"$name: ${field.name}"
   }.mkString("{", ", ", "}"))
 
   def json(json: String): ReturnPart = ReturnPart.Json(json)
@@ -209,7 +209,7 @@ package object dsl {
     val (refOption, f) = withReference(field)
     val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
     val leftName = context.name(ref)
-    addQuery(Query(s"RETURN $leftName.${f.fieldName}"))
+    addQuery(Query(s"RETURN $leftName.${f.name}"))
   }
 
   def addQuery(query: Query): Unit = {
