@@ -60,6 +60,15 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           airports.map(_.name).toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
         }
     }
+    "query by airport name" in {
+      database.airports
+        .query
+        .byFilter(Airport.name is "John F Kennedy Intl")
+        .one
+        .map { airport =>
+          airport._id should be(Airport.id("JFK"))
+        }
+    }
     "query just the airport's full name" in {
       val keys = List("JFK", "LAX")
       val query =
