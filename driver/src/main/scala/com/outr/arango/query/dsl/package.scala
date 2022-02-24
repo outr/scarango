@@ -8,7 +8,9 @@ import fabric._
 import scala.language.implicitConversions
 
 package object dsl {
-  private var forced = false
+  private val forced = new ThreadLocal[Boolean] {
+    override def initialValue(): Boolean = false
+  }
 
   implicit def int2Value(i: Int): Value = num(i)
   implicit def string2Value(s: String): Value = str(s)
@@ -134,19 +136,20 @@ package object dsl {
   def withReference[Return](ref: Ref)(f: => Return): Return = {
     val context = QueryBuilderContext()
     context.ref = Some(ref)
-    forced = true
+    val previous = forced.get()
+    forced.set(true)
     try {
       val r: Return = f
       r
     } finally {
       context.ref = None
-      forced = false
+      forced.set(previous)
     }
   }
 
   def withReference[Return](f: => Return): (Option[Ref], Return) = {
     val context = QueryBuilderContext()
-    if (!forced) context.ref = None
+    if (!forced.get()) context.ref = None
     try {
       val r = f
       (context.ref, r)
