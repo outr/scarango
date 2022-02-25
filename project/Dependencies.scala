@@ -10,6 +10,7 @@ object Dependencies {
     val catsEffect: String = "3.3.5"
     val fs2: String = "3.2.5"
     val scribe: String = "3.8.0"
+
     val scalaTest: String = "3.2.11"
     val catsEffectTesting: String = "1.4.0"
   }
