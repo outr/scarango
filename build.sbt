@@ -50,6 +50,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       dep.profig,
       dep.fabric,
+      dep.scalaPass,
       dep.scalaTest
     )
   )
