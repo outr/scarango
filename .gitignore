@@ -1,4 +1,8 @@
 target/
 .idea/
 .bsp/
+.bloop/
+.metals/
+.vscode/
+metals.sbt
 node_modules/
