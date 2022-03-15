@@ -5,6 +5,12 @@ import com.outr.arango.Document
 import com.outr.arango.collection.DocumentCollection
 import cats.syntax.all._
 
+/**
+  * Useful for batch operations where the batch may overflow. This will create multiple batches and flush as they fill
+  * up. Call finish() at the end to make sure all unflushed batches get processed.
+  *
+  * @param batchSize the maximum number of records per batch (defaults to 1000)
+  */
 case class DBQueue(batchSize: Int = 1000,
                    map: Map[DocumentCollection[_], CollectionQueue[_]] = Map.empty,
                    inserts: Int = 0,
@@ -42,43 +48,4 @@ case class DBQueue(batchSize: Int = 1000,
   }
 
   def finish(): IO[Unit] = map.values.toList.map(_.finish()).sequence.map(_ => ())
-}
-
-case class CollectionQueue[D <: Document[D]](batchSize: Int,
-                                             collection: DocumentCollection[D],
-                                             insert: Vector[D] = Vector.empty[D],
-                                             upsert: Vector[D] = Vector.empty[D],
-                                             delete: Vector[D] = Vector.empty[D]) {
-  def withInsert(doc: D): IO[CollectionQueue[D]] = {
-    val updated = insert :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.insert(updated.toList).map(_ => copy(insert = Vector.empty))
-    } else {
-      IO.pure(copy(insert = updated))
-    }
-  }
-  def withUpsert(doc: D): IO[CollectionQueue[D]] = {
-    val updated = upsert :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.upsert(updated.toList).map(_ => copy(upsert = Vector.empty))
-    } else {
-      IO.pure(copy(upsert = updated))
-    }
-  }
-  def withDelete(doc: D): IO[CollectionQueue[D]] = {
-    val updated = delete :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.delete(updated.toList).map(_ => copy(delete = Vector.empty))
-    } else {
-      IO.pure(copy(delete = updated))
-    }
-  }
-
-  def finish(): IO[Unit] = for {
-    _ <- if (insert.nonEmpty) collection.batch.insert(insert.toList) else IO.unit
-    _ <- if (upsert.nonEmpty) collection.batch.upsert(upsert.toList) else IO.unit
-    _ <- if (delete.nonEmpty) collection.batch.delete(delete.toList) else IO.unit
-  } yield {
-    ()
-  }
 }

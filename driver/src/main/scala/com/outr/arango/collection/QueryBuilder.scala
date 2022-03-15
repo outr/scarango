@@ -1,7 +1,7 @@
 package com.outr.arango.collection
 
 import cats.effect.IO
-import com.outr.arango.{Document, Graph}
+import com.outr.arango.Graph
 import com.outr.arango.query.Query
 import com.outr.arango.queue.DBQueue
 import fabric.Value
@@ -9,7 +9,7 @@ import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicInteger
 
-case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
+class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
   /**
     * Translates the results to a return type of T
     *
@@ -17,7 +17,7 @@ case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
     * @tparam T return type
     * @return QueryBuilder[T]
     */
-  def as[T](implicit rw: ReaderWriter[T]): QueryBuilder[T] = copy[T](converter = rw.write)
+  def as[T](implicit rw: ReaderWriter[T]): QueryBuilder[T] = new QueryBuilder[T](graph, query, rw.write)
 
   /**
     * Creates a Stream to get all the results from the query
@@ -79,5 +79,3 @@ case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
       }
   }
 }
-
-case class ProcessStats(records: Int, inserted: Int, upserted: Int, deleted: Int)

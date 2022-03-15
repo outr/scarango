@@ -1,15 +1,18 @@
 package spec
 
+import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.{StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
+import com.outr.arango.queue.DBQueue
 import fabric.rw.{ReaderWriter, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
+import cats.syntax.all._
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   private var transaction: StreamTransaction = _
@@ -127,6 +130,49 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .map { modified =>
           modified should be(1L)
         }
+    }
+    "verify the age was updated" in {
+      database
+        .people
+        .query
+        .byFilter(Person.age is 22)
+        .all
+        .map { people =>
+          people.map(_.name) should be(List("Adam"))
+        }
+    }
+    "use the DBQueue to insert multiple records" in {
+      val queue = DBQueue(3)
+      val people = List(
+        Person("One", 1),
+        Person("Two", 2),
+        Person("Three", 3),
+        Person("Four", 4),
+        Person("Five", 5),
+        Person("Six", 6),
+        Person("Seven", 7),
+        Person("Eight", 8),
+        Person("Nine", 9),
+        Person("Ten", 10),
+      )
+      fs2.Stream[IO, Person](people: _*)
+        .evalScan(queue)((queue, person) => queue.insert(person -> database.people))
+        .compile
+        .lastOrError
+        .flatMap { queue =>
+          queue.finish().map { _ =>
+            queue.inserts should be(10)
+            queue.upserts should be(0)
+            queue.deletes should be(0)
+          }
+        }
+    }
+    "verify the DBQueue properly inserted the records" in {
+      database.people.query.all.map(_.map(_.name).toSet).map { set =>
+        set should be(Set(
+          "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Bethany", "Donna", "Adam"
+        ))
+      }
     }
   }
 
