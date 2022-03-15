@@ -4,12 +4,12 @@ object Dependencies {
   object version {
     val fabric: String = "1.2.7"
     val profig: String = "3.3.0"
-    val scalaPass: String = "1.2.0"
+    val scalaPass: String = "1.2.1"
     val arangoDBJavaDriver: String = "6.16.1"
     val jackson: String = "3.0.0"
-    val catsEffect: String = "3.3.6"
+    val catsEffect: String = "3.3.7"
     val fs2: String = "3.2.5"
-    val scribe: String = "3.8.1"
+    val scribe: String = "3.8.2"
 
     val scalaTest: String = "3.2.11"
     val catsEffectTesting: String = "1.4.0"
