@@ -16,12 +16,12 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 class Graph(private[arango] val db: ArangoDB) {
   private val _initialized = new AtomicBoolean(false)
 
-  private var _collections: List[DocumentCollection[_]] = Nil
+  private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
   protected def storeCollectionName: String = "backingStore"
 
-  def collections: List[DocumentCollection[_]] = _collections
+  def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
   def views: List[View] = _views
   def stores: List[DatabaseStore] = _stores
 
@@ -69,7 +69,7 @@ class Graph(private[arango] val db: ArangoDB) {
     */
   def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
 
-  def query[T](query: Query, converter: Value => T): QueryBuilder[T] = QueryBuilder[T](this, query, converter)
+  def query[T](query: Query, converter: Value => T): QueryBuilder[T] = new QueryBuilder[T](this, query, converter)
 
   /**
     * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.

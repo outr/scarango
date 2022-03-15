@@ -110,6 +110,4 @@ For more examples see the specs: https://github.com/outr/scarango/blob/master/dr
 
 ## TODO
 - Improved ScalaDocs
-- Backup / Restore features
-- Add Streaming Update support: collection.stream.update(query) { value => UpdateResult.{Unchanged, Replace, Delete, Insert}}
-- AQL validation support
+- Add AQL compile-time validation support

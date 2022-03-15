@@ -10,6 +10,8 @@ import java.nio.file.{Files, Path}
 import scala.io.Source
 
 object DatabaseRestore {
+  trait AnyDoc extends Document[AnyDoc]
+
   def apply(graph: Graph,
             directory: Path,
             truncate: Boolean = false,
@@ -17,7 +19,7 @@ object DatabaseRestore {
     graph.collections.flatMap { collection =>
       val file = directory.resolve(s"${collection.name}.collection")
       if (Files.exists(file)) {
-        Some(restoreCollection(collection, file, truncate, upsert))
+        Some(restoreCollection(collection.asInstanceOf[DocumentCollection[AnyDoc]], file, truncate, upsert))
       } else {
         None
       }

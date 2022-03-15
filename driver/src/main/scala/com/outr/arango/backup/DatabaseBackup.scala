@@ -10,11 +10,13 @@ import java.io.{FileWriter, PrintWriter}
 import java.nio.file.{Files, Path}
 
 object DatabaseBackup {
+  trait AnyDoc extends Document[AnyDoc]
+
   def apply(graph: Graph, directory: Path): IO[Unit] = {
     Files.createDirectories(directory)
     graph.collections.map { collection =>
       val file = directory.resolve(s"${collection.name}.collection")
-      backupCollection(collection, file)
+      backupCollection(collection.asInstanceOf[DocumentCollection[AnyDoc]], file)
     }.sequence.map(_ => ())
   }
 
