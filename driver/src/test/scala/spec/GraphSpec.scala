@@ -82,6 +82,19 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         airportNames.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
       }
     }
+    "query just the airport's full name as a String" in {
+      val keys = List("JFK", "LAX")
+      val query =
+        aql"""
+             FOR a IN ${database.airports}
+             FILTER a._key IN $keys
+             RETURN a.name
+           """
+      database.query[String](query).all.map { airportNames =>
+        airportNames.length should be(2)
+        airportNames.toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
+      }
+    }
     "count all the airports" in {
       val query = aql"RETURN COUNT(${database.airports})"
       database.query[Int](query).one.map { count =>

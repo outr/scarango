@@ -1,10 +1,13 @@
 package com.outr.arango.collection
 
 import cats.effect.IO
-import com.outr.arango.Graph
+import com.outr.arango.{Document, Graph}
 import com.outr.arango.query.Query
+import com.outr.arango.queue.DBQueue
 import fabric.Value
 import fabric.rw._
+
+import java.util.concurrent.atomic.AtomicInteger
 
 case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
   /**
@@ -51,4 +54,30 @@ case class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
     * The last result from the stream if there are any results.
     */
   def last: IO[Option[R]] = stream.compile.last
+
+  /**
+    * Process through the stream with the ability to batch queue db inserts, upserts, and deletes.
+    *
+    * @param processor the function to handle processing the items in the stream
+    * @param batchSize the maximum records to hold in memory for a specific collection and operation
+    * @return IO[ProcessStats]
+    */
+  def process(processor: (DBQueue, R) => IO[DBQueue],
+              batchSize: Int = 1000): IO[ProcessStats] = {
+    val counter = new AtomicInteger(0)
+    stream
+      .evalScan(DBQueue(batchSize))((queue, value) => {
+        counter.incrementAndGet()
+        processor(queue, value)
+      })
+      .compile
+      .lastOrError
+      .flatMap { queue =>
+        queue.finish().map { _ =>
+          ProcessStats(counter.get(), queue.inserts, queue.upserts, queue.deletes)
+        }
+      }
+  }
 }
+
+case class ProcessStats(records: Int, inserted: Int, upserted: Int, deleted: Int)
