@@ -13,6 +13,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 import cats.syntax.all._
+import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
+
+import java.nio.file.Paths
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   private var transaction: StreamTransaction = _
@@ -35,7 +38,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "insert two records" in {
       database.people.batch.insert(List(
         Person("Adam", 21),
-        Person("Bethany", 19, "Hi, I'm Bethany")
+        Person("Bethany", 19, "Hi,\nI'm Bethany")
       )).map { _ =>
         succeed
       }
@@ -47,7 +50,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .all
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
-          people.map(_.bio).toSet should be(Set("", "ynahteB m'I ,iH"))
+          people.map(_.bio).toSet should be(Set("", "ynahteB m'I\n,iH"))
         }
     }
     "create a transaction" in {
@@ -170,6 +173,33 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "verify the DBQueue properly inserted the records" in {
       database.people.query.all.map(_.map(_.name).toSet).map { set =>
         set should be(Set(
+          "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Bethany", "Donna", "Adam"
+        ))
+      }
+    }
+    "do a database backup" in {
+      DatabaseBackup(database, Paths.get("backup")).map { _ =>
+        succeed
+      }
+    }
+    "truncate the database before restoring" in {
+      database.people.collection.truncate().map { _ =>
+        succeed
+      }
+    }
+    "verify the collection is empty" in {
+      database.people.query.all.map { people =>
+        people should be(Nil)
+      }
+    }
+    "do a database restore" in {
+      DatabaseRestore(database, Paths.get("backup"), truncate = false, upsert = false).map { _ =>
+        succeed
+      }
+    }
+    "verify all the records are restored" in {
+      database.people.query.all.map(_.map(_.name).toSet).map { names =>
+        names should be(Set(
           "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Bethany", "Donna", "Adam"
         ))
       }
