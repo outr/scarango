@@ -7,11 +7,12 @@ case class UpdatePart[D <: Document[D], Model <: DocumentModel[D]](ref: Document
   def build(): Query = {
     val context = QueryBuilderContext()
     val name = context.name(ref)
+    val fields = values.flatMap { fv =>
+      List[QueryPart](", ", fv.field, ": ", fv.value)
+    }.tail
     val parts: List[QueryPart] = List[QueryPart](
       "UPDATE ", name, " WITH {"
-    ) ::: values.flatMap { fv =>
-      List[QueryPart](fv.field, ": ", fv.value)
-    } ::: List[QueryPart](
+    ) ::: fields ::: List[QueryPart](
       "} IN ", ref.collectionName
     )
 

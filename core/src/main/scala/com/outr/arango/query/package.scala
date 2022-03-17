@@ -5,23 +5,7 @@ import fabric._
 import scala.language.implicitConversions
 
 package object query {
-  implicit class AQLInterpolator(val sc: StringContext) extends AnyVal {
-    def aql(args: Any*): Query = {
-      val strings = sc.parts.iterator
-      val expressions = args.iterator
-      var parts = List.empty[QueryPart]
-      while (strings.hasNext || expressions.hasNext) {
-        if (strings.hasNext) {
-          parts = QueryPart.Static(strings.next()) :: parts
-        }
-        if (expressions.hasNext) {
-          val part = toQueryPart(expressions.next())
-          parts = part :: parts
-        }
-      }
-      Query(parts.reverse)
-    }
-  }
+  implicit def sc2AQL(sc: StringContext): AQLInterpolator = new AQLInterpolator(sc)
 
   implicit def string2QueryPart(s: String): QueryPart = QueryPart.Static(s)
   implicit def value2QueryPart(v: fabric.Value): QueryPart = QueryPart.Variable(v)

@@ -34,9 +34,20 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
         case (key, value) => key -> value2AnyRef(value)
       }.asJava
 
-      fs2.Stream.force(db.query(query.string, bindVars, classOf[String]).toIO.map { c =>
-        fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
-      }).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))    // TODO: re-evaluate parse fail
+      // TODO: re-evaluate parse fail
+      fs2.Stream
+        .force(
+          db
+            .query(query.string, bindVars, classOf[String])
+            .toIO
+            .attempt
+            .map {
+              case Left(throwable) =>
+                scribe.error(s"An error occurred executing a query: $query", throwable)
+                throw throwable
+              case Right(c) => fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
+            }
+        ).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))
     }
 
     def execute(query: Query): IO[Unit] = apply(query).compile.drain

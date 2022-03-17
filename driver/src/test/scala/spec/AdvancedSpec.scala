@@ -131,7 +131,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .people
         .modify(Person.age is 21, Person.age(22))
         .map { modified =>
-          modified should be(1L)
+          modified should be(1)
         }
     }
     "verify the age was updated" in {
@@ -142,6 +142,14 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .all
         .map { people =>
           people.map(_.name) should be(List("Adam"))
+        }
+    }
+    "update multiple fields in a record using DSL" in {
+      database
+        .people
+        .modify(Person.age is 22, Person.bio("I have a new bio!"), Person.age(23))
+        .map { modified =>
+          modified should be(1)
         }
     }
     "use the DBQueue to insert multiple records" in {
