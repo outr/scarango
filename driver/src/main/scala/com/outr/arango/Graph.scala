@@ -85,11 +85,10 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def upgrades: List[DatabaseUpgrade] = Nil
 
-  protected def doUpgrades(
-                            allUpgrades: List[DatabaseUpgrade],
-                            upgrades: List[DatabaseUpgrade],
-                            stillBlocking: Boolean,
-                            appliedUpgrades: Set[String]
+  protected def doUpgrades(allUpgrades: List[DatabaseUpgrade],
+                           upgrades: List[DatabaseUpgrade],
+                           stillBlocking: Boolean,
+                           appliedUpgrades: Set[String]
                           ): IO[Unit] = if (upgrades.isEmpty) {
     afterStartup(allUpgrades)
   } else {
