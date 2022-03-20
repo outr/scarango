@@ -13,12 +13,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   "Graph" should {
-    val doDrop: Boolean = false
+    val doDrop: Boolean = true
 
     "initialize configuration" in {
       Profig.initConfiguration()
@@ -26,11 +27,13 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "initialize database" in {
       database.init().map { _ =>
-        succeed
+        database.initialized should be(true)
       }
     }
     "have two collections" in {
-      database.collections.map(_.name).toSet should be(Set("airports", "flights"))
+      database.collections.map(_.name).toSet should be(
+        Set("airports", "flights")
+      )
     }
     "query VIP airports" in {
       val query =
@@ -40,7 +43,9 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              RETURN airport
            """
       database.airports.query(query).all.asserting { results =>
-        results.map(_._id.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
+        results.map(_._id.value).toSet should be(
+          Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW")
+        )
       }
     }
     "query JFK airport" in {
@@ -51,18 +56,18 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "query the airports by id filter" in {
       val keys = List("JFK", "LAX")
-      database.airports
-        .query
+      database.airports.query
         .byFilter(Airport._id IN keys.map(Airport.id))
         .all
         .map { airports =>
           airports.length should be(2)
-          airports.map(_.name).toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
+          airports.map(_.name).toSet should be(
+            Set("John F Kennedy Intl", "Los Angeles International")
+          )
         }
     }
     "query by airport name" in {
-      database.airports
-        .query
+      database.airports.query
         .byFilter(Airport.name is "John F Kennedy Intl")
         .one
         .map { airport =>
@@ -79,7 +84,12 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
            """
       database.query[AirportName](query).all.map { airportNames =>
         airportNames.length should be(2)
-        airportNames.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
+        airportNames.toSet should be(
+          Set(
+            AirportName("John F Kennedy Intl"),
+            AirportName("Los Angeles International")
+          )
+        )
       }
     }
     "query just the airport's full name as a String" in {
@@ -92,7 +102,9 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
            """
       database.query[String](query).all.map { airportNames =>
         airportNames.length should be(2)
-        airportNames.toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
+        airportNames.toSet should be(
+          Set("John F Kennedy Intl", "Los Angeles International")
+        )
       }
     }
     "count all the airports" in {
@@ -134,7 +146,9 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              RETURN v.${Airport.name}
            """
       database.query[String](query).all.map { response =>
-        response should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
+        response should be(
+          List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl")
+        )
       }
     }
     "query the views and verify one exists" in {
@@ -165,26 +179,29 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   def csv2Stream(fileName: String): fs2.Stream[IO, Vector[String]] = {
     val source = Source.fromURL(getClass.getClassLoader.getResource(fileName))
     val iterator = source.getLines()
-    iterator.next()     // Skip heading
-    fs2.Stream.fromIterator[IO](iterator.map { s =>
-      var open = false
-      val entries = ListBuffer.empty[String]
-      val b = new StringBuilder
-      s.foreach { c =>
-        if (c == '"') {
-          open = !open
-        } else if (c == ',' && !open) {
-          if (b.nonEmpty) {
-            entries += b.toString().trim
-            b.clear()
+    iterator.next() // Skip heading
+    fs2.Stream.fromIterator[IO](
+      iterator.map { s =>
+        var open = false
+        val entries = ListBuffer.empty[String]
+        val b = new mutable.StringBuilder
+        s.foreach { c =>
+          if (c == '"') {
+            open = !open
+          } else if (c == ',' && !open) {
+            if (b.nonEmpty) {
+              entries += b.toString().trim
+              b.clear()
+            }
+          } else {
+            b.append(c)
           }
-        } else {
-          b.append(c)
         }
-      }
-      if (b.nonEmpty) entries += b.toString().trim
-      entries.toVector
-    }, 1000)
+        if (b.nonEmpty) entries += b.toString().trim
+        entries.toVector
+      },
+      1000
+    )
   }
 
   object database extends Graph(name = "graphTest") {
@@ -193,9 +210,14 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
 
     val airportSearch: View = view(
       name = "airportSearch",
-      links = List(ViewLink(airports, fields = List(
-        Airport.name -> List(Analyzer.TextEnglish)
-      )))
+      links = List(
+        ViewLink(
+          airports,
+          fields = List(
+            Airport.name -> List(Analyzer.TextEnglish)
+          )
+        )
+      )
     )
 
     override def upgrades: List[DatabaseUpgrade] = List(
@@ -203,14 +225,16 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     )
   }
 
-  case class Airport(name: String,
-                     city: String,
-                     state: String,
-                     country: String,
-                     lat: Double,
-                     long: Double,
-                     vip: Boolean,
-                     _id: Id[Airport] = Airport.id()) extends Document[Airport]
+  case class Airport(
+      name: String,
+      city: String,
+      state: String,
+      country: String,
+      lat: Double,
+      long: Double,
+      vip: Boolean,
+      _id: Id[Airport] = Airport.id()
+  ) extends Document[Airport]
 
   object Airport extends DocumentModel[Airport] {
     override implicit val rw: ReaderWriter[Airport] = ccRW
@@ -222,21 +246,23 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     override val collectionName: String = "airports"
   }
 
-  case class Flight(_from: Id[Airport],
-                    _to: Id[Airport],
-                    year: Int,
-                    month: Int,
-                    day: Int,
-                    dayOfWeek: Int,
-                    depTime: Int,
-                    arrTime: Int,
-                    depTimeUTC: String,
-                    arrTimeUTC: String,
-                    uniqueCarrier: String,
-                    flightNum: Int,
-                    tailNum: String,
-                    distance: Int,
-                    _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
+  case class Flight(
+      _from: Id[Airport],
+      _to: Id[Airport],
+      year: Int,
+      month: Int,
+      day: Int,
+      dayOfWeek: Int,
+      depTime: Int,
+      arrTime: Int,
+      depTimeUTC: String,
+      arrTimeUTC: String,
+      uniqueCarrier: String,
+      flightNum: Int,
+      tailNum: String,
+      distance: Int,
+      _id: Id[Flight] = Flight.id()
+  ) extends Edge[Flight, Airport, Airport]
 
   object Flight extends EdgeModel[Flight, Airport, Airport] {
     override implicit val rw: ReaderWriter[Flight] = ccRW
