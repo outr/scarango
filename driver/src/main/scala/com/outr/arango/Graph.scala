@@ -3,8 +3,8 @@ package com.outr.arango
 import cats.effect.IO
 import cats.implicits._
 import com.outr.arango.collection.{Collection, DocumentCollection, EdgeCollection, QueryBuilder}
-import com.outr.arango.core.{ArangoDB, ArangoDBCollection, ArangoDBConfig, ArangoDBDocuments, ArangoDBServer, ArangoDBTransaction, CollectionInfo, ConsolidationPolicy, SortCompression}
-import com.outr.arango.query.{Query, QueryPart, Sort}
+import com.outr.arango.core._
+import com.outr.arango.query.{Query, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
 import com.outr.arango.view.{View, ViewLink}
 import fabric._
@@ -19,6 +19,7 @@ class Graph(private[arango] val db: ArangoDB) {
   private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
+
   protected def storeCollectionName: String = "backingStore"
 
   def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
@@ -41,9 +42,9 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def initialized: Boolean = _initialized.get()
 
-  def init(): IO[Unit] = if (_initialized.compareAndSet(false, true)) {
+  def init(createDatabase: Boolean = true): IO[Unit] = if (_initialized.compareAndSet(false, true)) {
     for {
-      _ <- CreateDatabase.upgrade(this)
+      _ <- CreateDatabase.upgrade(this).whenA(createDatabase)
       appliedUpgrades <- store[AppliedUpgrades](AppliedUpgrades.key, _ => AppliedUpgrades.empty).map(_.labels)
       upgrades = this.upgrades.filter(u => u.alwaysRun || !appliedUpgrades.contains(u.label))
       _ = if (upgrades.nonEmpty) scribe.info(s"Applying ${upgrades.length} upgrades (${upgrades.map(_.label).mkString(", ")})...")
@@ -61,19 +62,19 @@ class Graph(private[arango] val db: ArangoDB) {
   }
 
   /**
-    * Creates a QueryBuilder[T] to manage execution of the supplied query.
-    *
-    * @param query the query to create the builder for
-    * @tparam T the type of results
-    * @return QueryBuilder[T]
-    */
+   * Creates a QueryBuilder[T] to manage execution of the supplied query.
+   *
+   * @param query the query to create the builder for
+   * @tparam T the type of results
+   * @return QueryBuilder[T]
+   */
   def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
 
   def query[T](query: Query, converter: Value => T): QueryBuilder[T] = new QueryBuilder[T](this, query, converter)
 
   /**
-    * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
-    */
+   * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
+   */
   def execute(query: Query): IO[Unit] = db.query.execute(query)
 
   def databaseName: String = db.name

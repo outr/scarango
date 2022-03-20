@@ -13,12 +13,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   "Graph" should {
-    val doDrop: Boolean = false
+    val doDrop: Boolean = true
 
     "initialize configuration" in {
       Profig.initConfiguration()
@@ -26,7 +27,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "initialize database" in {
       database.init().map { _ =>
-        succeed
+        database.initialized should be(true)
       }
     }
     "have two collections" in {
@@ -169,7 +170,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     fs2.Stream.fromIterator[IO](iterator.map { s =>
       var open = false
       val entries = ListBuffer.empty[String]
-      val b = new StringBuilder
+      val b = new mutable.StringBuilder
       s.foreach { c =>
         if (c == '"') {
           open = !open
