@@ -19,10 +19,13 @@ class Graph(private[arango] val db: ArangoDB) {
   private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
+
   protected def storeCollectionName: String = "backingStore"
 
   def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
+
   def views: List[View] = _views
+
   def stores: List[DatabaseStore] = _stores
 
   def this(name: String, server: ArangoDBServer) = {
@@ -61,19 +64,19 @@ class Graph(private[arango] val db: ArangoDB) {
   }
 
   /**
-    * Creates a QueryBuilder[T] to manage execution of the supplied query.
-    *
-    * @param query the query to create the builder for
-    * @tparam T the type of results
-    * @return QueryBuilder[T]
-    */
-  def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write)
+   * Creates a QueryBuilder[T] to manage execution of the supplied query.
+   *
+   * @param query the query to create the builder for
+   * @tparam T the type of results
+   * @return QueryBuilder[T]
+   */
+  def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
 
   def query[T](query: Query, converter: Value => T): QueryBuilder[T] = new QueryBuilder[T](this, query, converter)
 
   /**
-    * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
-    */
+   * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
+   */
   def execute(query: Query): IO[Unit] = db.query.execute(query)
 
   def databaseName: String = db.name
@@ -83,11 +86,11 @@ class Graph(private[arango] val db: ArangoDB) {
   def upgrades: List[DatabaseUpgrade] = Nil
 
   protected def doUpgrades(
-      allUpgrades: List[DatabaseUpgrade],
-      upgrades: List[DatabaseUpgrade],
-      stillBlocking: Boolean,
-      appliedUpgrades: Set[String]
-  ): IO[Unit] = if (upgrades.isEmpty) {
+                            allUpgrades: List[DatabaseUpgrade],
+                            upgrades: List[DatabaseUpgrade],
+                            stillBlocking: Boolean,
+                            appliedUpgrades: Set[String]
+                          ): IO[Unit] = if (upgrades.isEmpty) {
     afterStartup(allUpgrades)
   } else {
     val continueBlocking = upgrades.exists(_.blockStartup)
