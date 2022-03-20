@@ -23,9 +23,7 @@ class Graph(private[arango] val db: ArangoDB) {
   protected def storeCollectionName: String = "backingStore"
 
   def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
-
   def views: List[View] = _views
-
   def stores: List[DatabaseStore] = _stores
 
   def this(name: String, server: ArangoDBServer) = {
@@ -88,8 +86,7 @@ class Graph(private[arango] val db: ArangoDB) {
   protected def doUpgrades(allUpgrades: List[DatabaseUpgrade],
                            upgrades: List[DatabaseUpgrade],
                            stillBlocking: Boolean,
-                           appliedUpgrades: Set[String]
-                          ): IO[Unit] = if (upgrades.isEmpty) {
+                           appliedUpgrades: Set[String]): IO[Unit] = if (upgrades.isEmpty) {
     afterStartup(allUpgrades)
   } else {
     val continueBlocking = upgrades.exists(_.blockStartup)
