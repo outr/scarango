@@ -1,7 +1,9 @@
 package com.outr.arango.maintenance
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 
+import java.util.{Calendar, TimeZone}
 import scala.concurrent.duration._
 
 object Maintenance {
@@ -52,5 +54,24 @@ object Maintenance {
     scheduleNext(None).unsafeRunAndForget()
 
     task
+  }
+
+  def fromTime(hour: Int,
+               minute: Int = 0,
+               second: Int = 0,
+               millisecond: Int = 0,
+               rollToNextDay: Boolean = true,
+               timeZone: TimeZone = TimeZone.getDefault): FiniteDuration = {
+    val c = Calendar.getInstance(timeZone)
+    c.set(Calendar.HOUR_OF_DAY, hour)
+    c.set(Calendar.MINUTE, minute)
+    c.set(Calendar.SECOND, second)
+    c.set(Calendar.MILLISECOND, millisecond)
+    val l = c.getTimeInMillis - System.currentTimeMillis()
+    if (l <= 0 && rollToNextDay) {
+      (l + 24.hours.toMillis).millis
+    } else {
+      l.millis
+    }
   }
 }
