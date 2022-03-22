@@ -1,7 +1,24 @@
 package com.outr.arango.maintenance
 
-trait MaintenanceTask {
-  def status: TaskStatus
+import cats.effect.IO
 
-  def cancel(): Unit
+import scala.concurrent.duration.FiniteDuration
+
+trait MaintenanceTask {
+  def name: String = getClass.getSimpleName.replace("$", "")
+
+  def nextRun: FiniteDuration
+
+  def initialDelay: FiniteDuration = nextRun
+
+  def onFail: TaskResult = TaskResult.Continue
+
+  def apply(status: TaskStatus): IO[TaskResult]
+
+  def schedule(): MaintenanceTaskInstance = Maintenance.schedule(
+    name = name,
+    schedule = nextRun,
+    initialDelay = Some(initialDelay),
+    onFail = onFail
+  )(apply)
 }

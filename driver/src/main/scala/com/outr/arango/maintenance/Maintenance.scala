@@ -7,13 +7,18 @@ import java.util.{Calendar, TimeZone}
 import scala.concurrent.duration._
 
 object Maintenance {
-  def schedule(schedule: FiniteDuration,
-               initialDelay: Option[FiniteDuration] = None)
-              (action: TaskStatus => IO[TaskResult]): MaintenanceTask = {
-    var normalSchedule = schedule
+  def schedule(name: String,
+               schedule: => FiniteDuration,
+               initialDelay: Option[FiniteDuration] = None,
+               onFail: TaskResult = TaskResult.Continue)
+              (action: TaskStatus => IO[TaskResult]): MaintenanceTaskInstance = {
+    var normalSchedule = () => schedule
     var stat = TaskStatus().schedule(initialDelay.getOrElse(schedule))
     var cancelled = false
-    val task = new MaintenanceTask {
+    val taskName = name
+    val task = new MaintenanceTaskInstance {
+      override def name: String = taskName
+
       override def status: TaskStatus = stat
 
       override def cancel(): Unit = cancelled = true
@@ -27,19 +32,22 @@ object Maintenance {
       } else {
         val nextRunOption = resultOption match {
           case None => Some(initialDelay.getOrElse(schedule))
-          case Some(TaskResult.Continue) => Some(normalSchedule)
+          case Some(TaskResult.Continue) => Some(normalSchedule())
           case Some(TaskResult.Stop) => None
           case Some(TaskResult.RunAgain) => Some(0.seconds)
           case Some(TaskResult.ChangeSchedule(delay)) =>
             normalSchedule = delay
-            Some(delay)
+            Some(delay())
           case Some(TaskResult.NextSchedule(delay)) => Some(delay)
         }
         nextRunOption match {
           case Some(nextRun) =>
             stat = stat.schedule(nextRun)
             IO.sleep(nextRun).flatMap { _ =>
-              val io = action(stat)
+              val io = action(stat).handleError { throwable =>
+                scribe.error(s"$name maintenance task failed, will $onFail", throwable)
+                onFail
+              }
               io.flatMap { result =>
                 scheduleNext(Some(result))
               }
