@@ -10,6 +10,7 @@ import com.outr.arango.{Field, Index, IndexInfo, IndexType}
 import scala.jdk.CollectionConverters._
 import cats.implicits._
 import fabric.Value
+import fabric.rw.ReaderWriter
 
 class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Value] {
   def name: String = _collection.name()
@@ -29,7 +30,7 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
   }
 
   object field {
-    def apply[F](name: String): Field[F] = Field[F](name)
+    def apply[F: ReaderWriter](name: String): Field[F] = Field[F](name)
   }
 
   object index {

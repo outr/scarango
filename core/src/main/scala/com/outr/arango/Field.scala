@@ -1,11 +1,12 @@
 package com.outr.arango
 
 import com.outr.arango.mutation.DataMutation
-import com.outr.arango.query.{QueryPart, toValue}
+import com.outr.arango.query.QueryPart
+import fabric.rw._
 
 import scala.concurrent.duration.FiniteDuration
 
-class Field[F] private(val name: String, val mutation: Option[DataMutation]) extends QueryPart.Support {
+class Field[F: ReaderWriter] private(val name: String, val mutation: Option[DataMutation]) extends QueryPart.Support {
   object index {
     def persistent(sparse: Boolean = false,
                   unique: Boolean = false): Index = {
@@ -23,7 +24,7 @@ class Field[F] private(val name: String, val mutation: Option[DataMutation]) ext
     }
   }
 
-  def apply(value: F): FieldAndValue[F] = FieldAndValue(this, toValue(value))
+  def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.toValue)
 
   lazy val opt: Field[Option[F]] = Field[Option[F]](name)
 
@@ -31,7 +32,7 @@ class Field[F] private(val name: String, val mutation: Option[DataMutation]) ext
 }
 
 object Field {
-  def apply[F](name: String): Field[F] = new Field[F](name, None)
-  def apply[F](name: String, mutation: DataMutation): Field[F] = new Field[F](name, Some(mutation))
-  def apply[F](name: String, mutation: Option[DataMutation]): Field[F] = new Field[F](name, mutation)
+  def apply[F: ReaderWriter](name: String): Field[F] = new Field[F](name, None)
+  def apply[F: ReaderWriter](name: String, mutation: DataMutation): Field[F] = new Field[F](name, Some(mutation))
+  def apply[F: ReaderWriter](name: String, mutation: Option[DataMutation]): Field[F] = new Field[F](name, mutation)
 }

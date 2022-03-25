@@ -12,16 +12,15 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   implicit val rw: ReaderWriter[D]
 
-  implicit class FieldExtras[F](field: Field[F]) {
-    def field[T](name: String): Field[T] = model.field[T](s"${field.name}.$name")
+  implicit class FieldExtras[F: ReaderWriter](field: Field[F]) {
+    def field[T: ReaderWriter](name: String): Field[T] = model.field[T](s"${field.name}.$name")
 
     def withMutation(mutation: DataMutation): Field[F] = {
       field.mutation.foreach(m => throw new RuntimeException(s"Field ${field.name} already has a mutation set: $m"))
       setField(Field[F](field.name, mutation))
     }
 
-    def modify(storage: F => F, retrieval: F => F)
-              (implicit rw: ReaderWriter[F]): Field[F] = withMutation(ModifyFieldValue(field, storage, retrieval))
+    def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(field, storage, retrieval))
   }
 
   val _id: Field[Id[D]] = field("_id", IdMutation)
@@ -33,9 +32,9 @@ trait DocumentModel[D <: Document[D]] { model =>
     field
   }
 
-  protected def field[T](name: String, mutation: Option[DataMutation]): Field[T] = setField(Field[T](name, mutation))
-  protected def field[T](name: String): Field[T] = field[T](name, None)
-  protected def field[T](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
+  protected def field[T: ReaderWriter](name: String, mutation: Option[DataMutation]): Field[T] = setField(Field[T](name, mutation))
+  protected def field[T: ReaderWriter](name: String): Field[T] = field[T](name, None)
+  protected def field[T: ReaderWriter](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList

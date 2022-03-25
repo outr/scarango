@@ -1,7 +1,7 @@
 package com.outr.arango.query
 
 class AQLInterpolator(val sc: StringContext) extends AnyVal {
-  def aql(args: Any*): Query = {
+  def aql(args: QueryPart*): Query = {
     val strings = sc.parts.iterator
     val expressions = args.iterator
     var parts = List.empty[QueryPart]
@@ -10,7 +10,7 @@ class AQLInterpolator(val sc: StringContext) extends AnyVal {
         parts = QueryPart.Static(strings.next()) :: parts
       }
       if (expressions.hasNext) {
-        val part = toQueryPart(expressions.next())
+        val part = expressions.next()
         parts = part :: parts
       }
     }

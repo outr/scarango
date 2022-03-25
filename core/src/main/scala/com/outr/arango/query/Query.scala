@@ -1,5 +1,7 @@
 package com.outr.arango.query
 
+import fabric.Value
+
 case class Query(parts: List[QueryPart]) extends QueryPart.Support {
   lazy val (variables: Map[String, fabric.Value], reverseLookup: Map[fabric.Value, String]) = {
     var counter = 0
@@ -48,6 +50,13 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   def +(that: Query): Query = Query.merge(List(this, that))
 
+  def withQuery(that: Query): Query = this + that
+
+  def withParts(parts: QueryPart*): Query = copy(this.parts ::: parts.toList)
+  def static(value: String): Query = withParts(QueryPart.Static(value))
+  def variable(value: Value): Query = withParts(QueryPart.Variable(value))
+  def namedVariable(name: String, value: Value): Query = withParts(QueryPart.NamedVariable(name, value))
+
   override def toQueryPart: QueryPart = QueryPart.Container(parts)
 
   override def toString: String = s"$string (${variables.map(t => s"${t._1}: ${t._2}")})"
@@ -58,10 +67,10 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
   }
 }
 
-object Query {
+object Query extends Query(Nil) {
   def apply(query: String): Query = Query(List(QueryPart.Static(query)))
 
-  def apply(parts: QueryPart*): Query = Query(parts.toList)
+//  def apply(parts: QueryPart*): Query = Query(parts.toList)
 
   /**
     * Merges queries and renames overlapping argument names

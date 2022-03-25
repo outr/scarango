@@ -10,7 +10,9 @@ class Filter(left: Query, condition: String, right: Query) {
     new Filter(build(), "||", filter.build())
   }
 
-  def build(): Query = Query(
-    left, s" $condition ", right
-  )
+  def build(): Query = Query.merge(List(
+    left,
+    Query(List(QueryPart.Static(condition))),
+    right
+  ), separator = " ")
 }

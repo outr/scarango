@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
 import fabric._
+import fabric.rw._
 
 import scala.language.implicitConversions
 
@@ -37,17 +38,17 @@ package object dsl {
     }
   }
 
-  implicit class FieldExtras[T](field: => Field[T]) {
+  implicit class FieldExtras[T: ReaderWriter](field: => Field[T]) {
     def thisField: Field[T] = field
 
 //    def apply(value: T): FieldAndValue[T] = macro AQLMacros.fieldAndValue
-    private def cond(value: T, condition: String)(implicit conversion: T => Value): Filter = {
+    private def cond(value: T, condition: String): Filter = {
       val context = QueryBuilderContext()
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.name}")
-      val right = Query(conversion(value))
+      val right = Query.variable(value.toValue)
 
       new Filter(left, condition, right)
     }
@@ -64,13 +65,13 @@ package object dsl {
 
       new Filter(left, condition, right)
     }
-    private def cond(values: Seq[T], condition: String)(implicit conversion: T => Value): Filter = {
+    private def cond(values: Seq[T], condition: String): Filter = {
       val context = QueryBuilderContext()
       val (refOption, f) = withReference(field)
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.name}")
-      val right = Query(arr(values.map(conversion): _*))
+      val right = Query.variable(arr(values.map(_.toValue): _*))
 
       new Filter(left, condition, right)
     }
@@ -80,38 +81,38 @@ package object dsl {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.name}")
-      val right = Query(str(value))
+      val right = Query.variable(str(value))
 
       new Filter(left, condition, right)
     }
-    def is(value: T)(implicit conversion: T => Value): Filter = ===(value)
-    def ===(value: T)(implicit conversion: T => Value): Filter = {
+    def is(value: T): Filter = ===(value)
+    def ===(value: T): Filter = {
       cond(value, "==")
     }
     def ===(field: => Field[T]): Filter = {
       cond(field, "==")
     }
-    def isNot(value: T)(implicit conversion: T => Value): Filter = !==(value)
-    def !=(value: T)(implicit conversion: T => Value): Filter = !==(value)
-    def !==(value: T)(implicit conversion: T => Value): Filter = {
+    def isNot(value: T): Filter = !==(value)
+    def !=(value: T): Filter = !==(value)
+    def !==(value: T): Filter = {
       cond(value, "!=")
     }
-    def >(value: T)(implicit conversion: T => Value): Filter = {
+    def >(value: T): Filter = {
       cond(value, ">")
     }
-    def >=(value: T)(implicit conversion: T => Value): Filter = {
+    def >=(value: T): Filter = {
       cond(value, ">=")
     }
-    def <(value: T)(implicit conversion: T => Value): Filter = {
+    def <(value: T): Filter = {
       cond(value, "<")
     }
-    def <=(value: T)(implicit conversion: T => Value): Filter = {
+    def <=(value: T): Filter = {
       cond(value, "<=")
     }
-    def IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+    def IN(values: Seq[T]): Filter = {
       cond(values, "IN")
     }
-    def NOT_IN(values: Seq[T])(implicit conversion: T => Value): Filter = {
+    def NOT_IN(values: Seq[T]): Filter = {
       cond(values, "NOT IN")
     }
     def LIKE(value: String): Filter = {
@@ -182,7 +183,7 @@ package object dsl {
 
   def FILTER(filter: Filter): Unit = {
     val query = filter.build()
-    addQuery(Query("FILTER ") + query)
+    addQuery(Query.merge(List(Query("FILTER"), query), " "))
   }
 
   def COLLECT: CollectStart.type = CollectStart

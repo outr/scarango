@@ -37,11 +37,13 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         FILTER((p.age is 21) && (p.name isNot "Adam"))
         RETURN (p)
       }
-      val expected = Query(
-        "FOR p IN people ",
-        "FILTER ", aql"p.age == ${21}", " && ", aql"p.name != ${"Adam"} ",
-        "RETURN p"
-      )
+      val expected = Query
+        .static("FOR p IN people ")
+        .static("FILTER ")
+        .withQuery(aql"p.age == ${21}")
+        .static(" && ")
+        .withQuery(aql"p.name != ${"Adam"} ")
+        .static("RETURN p")
       query should be(expected)
     }
     "build a query with a remove" in {
@@ -52,10 +54,10 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         FILTER((p.age is 21) && (p.name isNot "Adam"))
         REMOVE (p) IN database.people
       }
-      val expected = Query(
-        "FOR p IN people ",
-        aql"FILTER p.age == ${21} && p.name != ${"Adam"} ",
-        "REMOVE p IN people")
+      val expected = Query
+        .static("FOR p IN people ")
+        .withQuery(aql"FILTER p.age == ${21} && p.name != ${"Adam"} ")
+        .static("REMOVE p IN people")
       query should be(expected)
     }
     "build an update query" in {
@@ -67,12 +69,15 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         UPDATE (p, p.age(22))
         RETURN (NEW)
       }
-      val expected = Query(
-        "FOR p IN people ",
-        aql"FILTER p.age == ${21} && p.name != ${"Adam"} ",
-        aql"UPDATE p WITH {age: ${22}} IN people ",
-        "RETURN NEW")
-      query should be(expected)
+      val expectedQuery =
+        """FOR p IN people
+          |FILTER p.age == @arg0 && p.name != @arg1
+          |UPDATE p WITH {
+          |  age: @arg2
+          |} IN people
+          |RETURN NEW""".stripMargin
+      query.string should be(expectedQuery)
+      query.variables should be(Map("arg0" -> fabric.num(21), "arg1" -> fabric.str("Adam"), "arg2" -> fabric.num(22)))
     }
     "build a query to return result count" in {
       val p = Person.ref
@@ -83,12 +88,11 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         COLLECT WITH COUNT INTO count
         RETURN (count)
       }
-      val expected = Query(
-        "FOR p IN people ",
-        aql"FILTER p.age >= ${20} ",
-        "COLLECT WITH COUNT INTO count ",
-        "RETURN count"
-      )
+      val expected = Query
+        .static("FOR p IN people ")
+        .withQuery(aql"FILTER p.age >= ${20} ")
+        .static("COLLECT WITH COUNT INTO count ")
+        .static("RETURN count")
       query should be(expected)
     }
   }

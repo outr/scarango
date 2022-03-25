@@ -1,5 +1,6 @@
 package spec
 
+import fabric._
 import com.outr.arango.query._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -46,13 +47,12 @@ class QuerySpec extends AnyWordSpec with Matchers {
       q.string should be("FOR t IN test FILTER t.name == @arg0 || t.firstName == @arg0 RETURN t")
     }
     "convert a reused variable properly with the DSL" in {
-      val q = Query(
-        "FOR t IN test FILTER t.name == ",
-        fabric.Str("Matt"),
-        " || t.firstName == ",
-        "arg0" -> fabric.Str("Matt"),
-        " RETURN t"
-      )
+      val q = Query
+        .static("FOR t IN test FILTER t.name == ")
+        .variable("Matt")
+        .static(" || t.firstName == ")
+        .namedVariable("arg0", "Matt")
+        .static(" RETURN t")
       q.variables should be(Map("arg0" -> fabric.Str("Matt")))
       q.string should be("FOR t IN test FILTER t.name == @arg0 || t.firstName == @arg0 RETURN t")
     }

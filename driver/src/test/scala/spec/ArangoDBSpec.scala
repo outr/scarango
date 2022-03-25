@@ -128,11 +128,10 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "verify querying for a single document" in {
-      val q = Query(
-        "FOR s IN simple FILTER s.name == ",
-        str("five"),
-        " RETURN s"
-      )
+      val q = Query
+        .static("FOR s IN simple FILTER s.name == ")
+        .variable(str("five"))
+        .static(" RETURN s")
       db.query(q).compile.toList.asserting { results =>
         results.flatMap(_.get("name")).map(_.asString).toSet should be(
           Set("five")
