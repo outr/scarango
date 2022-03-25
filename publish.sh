@@ -3,6 +3,6 @@
 set -e
 
 sbt +clean
-sbt test
+sbt +test
 sbt +coreJS/publishSigned +coreJVM/publishSigned +driver/publishSigned
 sbt sonatypeBundleRelease
