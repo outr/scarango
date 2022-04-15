@@ -22,7 +22,7 @@ object Dependencies {
   val jacksonDataformatVelocypack: ModuleID = "com.arangodb" % "jackson-dataformat-velocypack" % version.jackson
   val catsEffect: ModuleID = "org.typelevel" %% "cats-effect" % version.catsEffect
   val fs2: ModuleID = "co.fs2" %% "fs2-core" % version.fs2
-  val scribeSlf4j: ModuleID = "com.outr" %% "scribe-slf4j" % version.scribe
+  val scribe: ModuleID = "com.outr" %% "scribe" % version.scribe
 
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % version.scalaTest % "test"
   val catsEffectTesting: ModuleID = "org.typelevel" %% "cats-effect-testing-scalatest" % version.catsEffectTesting % "test"
