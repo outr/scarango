@@ -11,7 +11,7 @@ object Dependencies {
     val fs2: String = "3.2.7"
     val scribe: String = "3.8.2"
 
-    val scalaTest: String = "3.2.11"
+    val scalaTest: String = "3.2.12"
     val catsEffectTesting: String = "1.4.0"
   }
 
