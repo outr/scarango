@@ -5,7 +5,7 @@ name := "scarango"
 ThisBuild / organization := "com.outr"
 ThisBuild / version := "3.5.1-SNAPSHOT"
 ThisBuild / scalaVersion := "2.13.8"
-ThisBuild / crossScalaVersions := List("3.1.2", "2.13.8")
+ThisBuild / crossScalaVersions := List("3.1.3", "2.13.8")
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
 
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
