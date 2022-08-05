@@ -2,7 +2,7 @@ package com.outr.arango
 
 import cats.effect.IO
 import com.outr.arango.core.{ArangoDBCollection, CreateResult, DeleteResult, NotFoundException}
-import fabric.Value
+import fabric.Json
 import fabric.rw._
 
 case class DatabaseStore(collection: ArangoDBCollection) {
@@ -15,14 +15,14 @@ case class DatabaseStore(collection: ArangoDBCollection) {
     .map(_.getOrElse(default(key)))
 
   def update[T: ReaderWriter](key: String, value: T): IO[CreateResult[T]] = collection
-    .upsert(StoreValue(key, value.toValue).toValue)
+    .upsert(StoreValue(key, value.json).json)
     .map(_.convert(_.as[T]))
 
-  def delete(key: String): IO[DeleteResult[Value]] = collection.delete(id(key))
+  def delete(key: String): IO[DeleteResult[Json]] = collection.delete(id(key))
 
   def id[T](key: String): Id[T] = Id[T](key, collection.name)
 
-  case class StoreValue(_key: String, value: Value)
+  case class StoreValue(_key: String, value: Json)
 
   object StoreValue {
     implicit val rw: ReaderWriter[StoreValue] = ccRW

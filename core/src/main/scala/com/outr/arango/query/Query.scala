@@ -1,12 +1,12 @@
 package com.outr.arango.query
 
-import fabric.Value
+import fabric.Json
 
 case class Query(parts: List[QueryPart]) extends QueryPart.Support {
-  lazy val (variables: Map[String, fabric.Value], reverseLookup: Map[fabric.Value, String]) = {
+  lazy val (variables: Map[String, fabric.Json], reverseLookup: Map[fabric.Json, String]) = {
     var counter = 0
-    var map = Map.empty[String, fabric.Value]
-    var reverseMap = Map.empty[fabric.Value, String]
+    var map = Map.empty[String, fabric.Json]
+    var reverseMap = Map.empty[fabric.Json, String]
 
     def parsePart(part: QueryPart): Unit = part match {
       case QueryPart.Container(parts) => parts.foreach(parsePart)
@@ -54,8 +54,8 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   def withParts(parts: QueryPart*): Query = copy(this.parts ::: parts.toList)
   def static(value: String): Query = withParts(QueryPart.Static(value))
-  def variable(value: Value): Query = withParts(QueryPart.Variable(value))
-  def namedVariable(name: String, value: Value): Query = withParts(QueryPart.NamedVariable(name, value))
+  def variable(value: Json): Query = withParts(QueryPart.Variable(value))
+  def namedVariable(name: String, value: Json): Query = withParts(QueryPart.NamedVariable(name, value))
 
   override def toQueryPart: QueryPart = QueryPart.Container(parts)
 

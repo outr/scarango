@@ -24,7 +24,7 @@ class Field[F: ReaderWriter] private(val name: String, val mutation: Option[Data
     }
   }
 
-  def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.toValue)
+  def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 
   lazy val opt: Field[Option[F]] = Field[Option[F]](name)
 

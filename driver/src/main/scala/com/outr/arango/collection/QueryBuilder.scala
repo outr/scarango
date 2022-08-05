@@ -4,12 +4,12 @@ import cats.effect.IO
 import com.outr.arango.Graph
 import com.outr.arango.query.Query
 import com.outr.arango.queue.DBQueue
-import fabric.Value
+import fabric.Json
 import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicInteger
 
-class QueryBuilder[R](graph: Graph, query: Query, converter: Value => R) {
+class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
   /**
     * Translates the results to a return type of T
     *

@@ -2,8 +2,7 @@ package com.outr.arango.core
 
 import com.outr.arango.CollectionType
 
-case class CollectionInfo(id: String,
-                          name: String,
+case class CollectionInfo(name: String,
                           waitForSync: Boolean,
                           isVolatile: Boolean,
                           isSystem: Boolean,

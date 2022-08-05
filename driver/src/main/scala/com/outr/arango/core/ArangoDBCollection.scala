@@ -9,15 +9,15 @@ import com.outr.arango.{Field, Index, IndexInfo, IndexType}
 
 import scala.jdk.CollectionConverters._
 import cats.implicits._
-import fabric.Value
+import fabric.Json
 import fabric.rw.ReaderWriter
 
-class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Value] {
+class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Json] {
   def name: String = _collection.name()
 
-  override def toT(value: Value): Value = value
+  override def toT(value: Json): Json = value
 
-  override def fromT(t: Value): Value = t
+  override def fromT(t: Json): Json = t
 
   object collection {
     def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {

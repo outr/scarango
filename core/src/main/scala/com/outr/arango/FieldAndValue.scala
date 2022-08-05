@@ -1,3 +1,3 @@
 package com.outr.arango
 
-case class FieldAndValue[T](field: Field[T], value: fabric.Value)
+case class FieldAndValue[T](field: Field[T], value: fabric.Json)

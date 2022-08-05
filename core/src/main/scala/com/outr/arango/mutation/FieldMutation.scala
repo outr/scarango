@@ -1,22 +1,22 @@
 package com.outr.arango.mutation
 
 import com.outr.arango.Field
-import fabric.Value
+import fabric.Json
 
 trait FieldMutation[F] extends DataMutation {
   def field: Field[F]
 
-  override final def store(value: Value): Value = {
+  override final def store(value: Json): Json = {
     val v = value.get(field.name)
     store(value, v)
   }
 
-  override final def retrieve(value: Value): Value = {
+  override final def retrieve(value: Json): Json = {
     val v = value.get(field.name)
     retrieve(value, v)
   }
 
-  def store(value: Value, fieldValue: Option[Value]): Value
+  def store(value: Json, fieldValue: Option[Json]): Json
 
-  def retrieve(value: Value, fieldValue: Option[Value]): Value
+  def retrieve(value: Json, fieldValue: Option[Json]): Json
 }

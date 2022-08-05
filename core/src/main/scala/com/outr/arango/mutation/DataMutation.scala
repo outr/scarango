@@ -1,9 +1,9 @@
 package com.outr.arango.mutation
 
-import fabric.Value
+import fabric.Json
 
 trait DataMutation {
-  def store(value: Value): Value
+  def store(value: Json): Json
 
-  def retrieve(value: Value): Value
+  def retrieve(value: Json): Json
 }

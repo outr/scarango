@@ -13,8 +13,8 @@ package object dsl {
     override def initialValue(): Boolean = false
   }
 
-  implicit def int2Value(i: Int): Value = num(i)
-  implicit def string2Value(s: String): Value = str(s)
+  implicit def int2Value(i: Int): Json = num(i)
+  implicit def string2Json(s: String): Json = str(s)
 
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
@@ -48,7 +48,7 @@ package object dsl {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.name}")
-      val right = Query.variable(value.toValue)
+      val right = Query.variable(value.json)
 
       new Filter(left, condition, right)
     }
@@ -71,7 +71,7 @@ package object dsl {
       val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
       val leftName = context.name(ref)
       val left = Query(s"$leftName.${f.name}")
-      val right = Query.variable(arr(values.map(_.toValue): _*))
+      val right = Query.variable(arr(values.map(_.json): _*))
 
       new Filter(left, condition, right)
     }

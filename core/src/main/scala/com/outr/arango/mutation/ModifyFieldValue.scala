@@ -8,20 +8,20 @@ case class ModifyFieldValue[F](field: Field[F],
                                storage: F => F,
                                retrieval: F => F)
                               (implicit rw: ReaderWriter[F]) extends FieldMutation[F] {
-  override def store(value: Value, fieldValue: Option[Value]): Value = fieldValue match {
+  override def store(value: Json, fieldValue: Option[Json]): Json = fieldValue match {
     case Some(v) =>
       val f = storage(v.as[F])
       value.merge(obj(
-        field.name -> f.toValue
+        field.name -> f.json
       ))
     case None => value
   }
 
-  override def retrieve(value: Value, fieldValue: Option[Value]): Value = fieldValue match {
+  override def retrieve(value: Json, fieldValue: Option[Json]): Json = fieldValue match {
     case Some(v) =>
       val f = retrieval(v.as[F])
       value.merge(obj(
-        field.name -> f.toValue
+        field.name -> f.json
       ))
     case None => value
   }

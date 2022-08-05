@@ -29,7 +29,7 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
       db.parseQuery(query.string).toIO.map(aqlParseEntityConversion)
     }
 
-    def apply(query: Query): fs2.Stream[IO, Value] = {
+    def apply(query: Query): fs2.Stream[IO, Json] = {
       val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
         case (key, value) => key -> value2AnyRef(value)
       }.asJava
@@ -47,7 +47,7 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
                 throw throwable
               case Right(c) => fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
             }
-        ).map(s => Try(fabric.parse.Json.parse(s)).getOrElse(str(s)))
+        ).map(s => Try(fabric.parse.JsonParser.parse(s)).getOrElse(str(s)))
     }
 
     def execute(query: Query): IO[Unit] = apply(query).compile.drain

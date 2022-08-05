@@ -3,7 +3,7 @@ package com.outr.arango.audit
 import cats.effect.IO
 import com.outr.arango.{Document, Graph}
 import com.outr.arango.collection.DocumentCollection
-import fabric.Value
+import fabric.Json
 import fabric.rw._
 
 trait AuditSupport {
@@ -19,13 +19,13 @@ trait AuditSupport {
     def record[T <: Document[T]: ReaderWriter](action: String,
                                                value: T,
                                                origin: Option[String] = None,
-                                               metadata: Map[String, Value] = Map.empty): IO[AuditRecord] = {
+                                               metadata: Map[String, Json] = Map.empty): IO[AuditRecord] = {
       val record = AuditRecord(
         action = action,
         resource = name,
         origin = origin,
-        userRef = Some(value._id.toValue),
-        value = Some(value.toValue),
+        userRef = Some(value._id.json),
+        value = Some(value.json),
         metadata = metadata
       )
       auditLog.insert(record).map(_ => record)
