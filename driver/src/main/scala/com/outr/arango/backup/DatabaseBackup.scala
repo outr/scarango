@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import com.outr.arango.{Document, Graph}
 import com.outr.arango.collection.DocumentCollection
-import fabric.parse.{Json, JsonWriter}
+import fabric.parse.{JsonParser, JsonWriter}
 
 import java.io.{FileWriter, PrintWriter}
 import java.nio.file.{Files, Path}
@@ -28,7 +28,7 @@ object DatabaseBackup {
       .foreach { value =>
         IO {
           val json = collection.model.rw.read(value)
-          val jsonString = Json.format(json, JsonWriter.Compact)
+          val jsonString = JsonParser.format(json, JsonWriter.Compact)
           w.println(jsonString)
         }
       }

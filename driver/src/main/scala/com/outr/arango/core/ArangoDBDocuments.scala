@@ -4,18 +4,18 @@ import cats.effect.IO
 import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.Id
 import com.outr.arango.util.Helpers._
-import fabric.Value
-import fabric.parse.{Json, JsonWriter}
+import fabric.Json
+import fabric.parse.{JsonParser, JsonWriter}
 
 import scala.jdk.CollectionConverters._
 
 trait ArangoDBDocuments[T] {
   protected def _collection: ArangoCollectionAsync
-  final def stringToT(s: String): T = toT(Json.parse(s))
-  final def tToString(t: T): String = Json.format(fromT(t), JsonWriter.Compact)
+  final def stringToT(s: String): T = toT(JsonParser.parse(s))
+  final def tToString(t: T): String = JsonParser.format(fromT(t), JsonWriter.Compact)
 
-  def toT(value: Value): T
-  def fromT(t: T): Value
+  def toT(value: Json): T
+  def fromT(t: T): Json
 
   def id(key: String): Id[T] = Id[T](key, _collection.name())
 

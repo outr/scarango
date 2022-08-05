@@ -1,16 +1,16 @@
 package com.outr.arango.audit
 
 import com.outr.arango.{Document, DocumentModel, Field, Id, Index}
-import fabric.Value
+import fabric.Json
 import fabric.rw._
 
 case class AuditRecord(action: String,
                        resource: String = "base",
                        origin: Option[String] = None,
-                       sessionRef: Option[Value] = None,
-                       userRef: Option[Value] = None,
-                       value: Option[Value] = None,
-                       metadata: Map[String, Value] = Map.empty,
+                       sessionRef: Option[Json] = None,
+                       userRef: Option[Json] = None,
+                       value: Option[Json] = None,
+                       metadata: Map[String, Json] = Map.empty,
                        created: Long = System.currentTimeMillis(),
                        _id: Id[AuditRecord] = AuditRecord.id()) extends Document[AuditRecord]
 
@@ -18,10 +18,10 @@ object AuditRecord extends DocumentModel[AuditRecord] {
   val action: Field[String] = field("action")
   val resource: Field[String] = field("resource")
   val origin: Field[Option[String]] = field("origin")
-  val sessionRef: Field[Option[Value]] = field("sessionRef")
-  val userRef: Field[Option[Value]] = field("userRef")
-  val value: Field[Option[Value]] = field("value")
-  val metadata: Field[Map[String, Value]] = field("metadata")
+  val sessionRef: Field[Option[Json]] = field("sessionRef")
+  val userRef: Field[Option[Json]] = field("userRef")
+  val value: Field[Option[Json]] = field("value")
+  val metadata: Field[Map[String, Json]] = field("metadata")
   val created: Field[Long] = field("created")
 
   override val collectionName: String = "auditLog"

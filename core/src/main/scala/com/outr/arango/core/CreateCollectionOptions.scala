@@ -5,7 +5,7 @@ import com.outr.arango.CollectionType
 case class CreateCollectionOptions(journalSize: Option[Long] = None,
                                    replicationFactor: Option[Int] = None,
                                    satellite: Option[Boolean] = None,
-                                   minReplicationFactor: Option[Int] = None,
+                                   writeConcern: Option[Int] = None,
                                    keyOptions: Option[KeyOptions] = None,
                                    waitForSync: Option[Boolean] = None,
                                    doCompact: Option[Boolean] = None,

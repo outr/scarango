@@ -5,19 +5,19 @@ import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.core.{ArangoDBCollection, ArangoDBDocuments, CollectionInfo}
 import com.outr.arango.Document
 import fabric.rw._
-import fabric.Value
+import fabric.Json
 
 trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] with ArangoDBDocuments[D] {
   protected def arangoCollection: ArangoDBCollection
   override protected def _collection: ArangoCollectionAsync = arangoCollection._collection
 
-  override def toT(value: Value): D = afterRetrieval(value).as[D]
+  override def toT(value: Json): D = afterRetrieval(value).as[D]
 
-  override def fromT(t: D): Value = beforeStorage(t.toValue)
+  override def fromT(t: D): Json = beforeStorage(t.json)
 
-  protected def beforeStorage(value: Value): Value
+  protected def beforeStorage(value: Json): Json
 
-  protected def afterRetrieval(value: Value): Value
+  protected def afterRetrieval(value: Json): Json
 
   object collection {
     def create(): IO[CollectionInfo] = arangoCollection.collection.create(model.collectionOptions)

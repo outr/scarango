@@ -39,15 +39,15 @@ object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
 
   implicit def rw[D]: ReaderWriter[Id[D]] = ReaderWriter(_._id, v => parse[D](v.asStr.value))
-  implicit def toValue[D](id: Id[D]): Value = rw[D].read(id)
+  implicit def toJson[D](id: Id[D]): Json = rw[D].read(id)
 
   def parse[D](id: String): Id[D] = id match {
     case ExtractorRegex(collection, value) => Id[D](value, collection)
   }
 
-  def extract[D](json: fabric.Value): Id[D] = update(json)("_id").as[Id[D]]
+  def extract[D](json: fabric.Json): Id[D] = update(json)("_id").as[Id[D]]
 
-  def update(json: fabric.Value): fabric.Value = {
+  def update(json: fabric.Json): fabric.Json = {
     val _key = json.get("_key").map(_.asStr.value)
     val _id = json.get("_id").map(_.asStr.value)
     val _identity = _id.map(parse[Any])

@@ -19,7 +19,6 @@ object Helpers {
   }
 
   implicit def collectionEntityConversion(ce: entity.CollectionEntity): CollectionInfo = CollectionInfo(
-    id = ce.getId,
     name = ce.getName,
     waitForSync = ce.getWaitForSync,
     isVolatile = ce.getIsVolatile,
@@ -90,7 +89,7 @@ object Helpers {
     selectivityEstimate = Option(e.getSelectivityEstimate)
   )
 
-  implicit def value2AnyRef(v: fabric.Value): AnyRef = v match {
+  implicit def value2AnyRef(v: fabric.Json): AnyRef = v match {
     case fabric.Obj(map) => map.map {
       case (key, value) => key -> value2AnyRef(value)
     }
@@ -123,7 +122,6 @@ object Helpers {
     dco.waitForSync(o.waitForSync)
     dco.returnNew(o.returnNew)
     dco.returnOld(o.returnOld)
-    dco.overwrite(o.overwrite != OverwriteMode.None)
     o.overwrite match {
       case OverwriteMode.None => // Not set
       case OverwriteMode.Ignore => dco.overwriteMode(model.OverwriteMode.ignore)

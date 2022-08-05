@@ -9,6 +9,6 @@ class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectio
   o.journalSize.foreach(journalSize(_))
   o.replicationFactor.foreach(replicationFactor(_))
   o.satellite.foreach(satellite(_))
-  o.minReplicationFactor.foreach(minReplicationFactor(_))
+  o.writeConcern.foreach(writeConcern(_))
   o.keyOptions.foreach(k => keyOptions(k.allowUserKeys, k.`type`, k.increment, k.offset))
 }
