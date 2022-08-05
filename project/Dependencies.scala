@@ -19,7 +19,6 @@ object Dependencies {
   val profig: ModuleID = "com.outr" %% "profig" % version.profig
   val scalaPass: ModuleID = "com.outr" %% "scalapass" % version.scalaPass
   val arangoDBJavaDriver: ModuleID = "com.arangodb" % "arangodb-java-driver" % version.arangoDBJavaDriver
-  val jacksonDataformatVelocypack: ModuleID = "com.arangodb" % "jackson-dataformat-velocypack" % version.jackson
   val catsEffect: ModuleID = "org.typelevel" %% "cats-effect" % version.catsEffect
   val fs2: ModuleID = "co.fs2" %% "fs2-core" % version.fs2
   val scribe: ModuleID = "com.outr" %% "scribe" % version.scribe

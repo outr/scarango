@@ -70,7 +70,6 @@ lazy val driver = project.in(file("driver"))
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       dep.arangoDBJavaDriver,
-      dep.jacksonDataformatVelocypack,
       dep.catsEffect,
       dep.fs2,
       dep.scribe,
@@ -79,24 +78,3 @@ lazy val driver = project.in(file("driver"))
     )
   )
   .dependsOn(coreJVM)
-
-//lazy val monitored = project.in(file("monitored"))
-//  .settings(
-//    name := "scarango-monitored",
-//    fork := true,
-//    Test / testGrouping := groupByName((Test / definedTests).value),
-//    Test / testOptions += Tests.Argument("-oD"),
-//    Test / parallelExecution := false,
-//    libraryDependencies ++= Seq(
-//      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-//    )
-//  )
-//  .dependsOn(driver)
-//
-//lazy val plugin = project.in(file("plugin"))
-//  .settings(
-//    name := "scarango-plugin",
-//    sbtPlugin := true,
-//    scalaVersion := "2.12.13",
-//    crossSbtVersions := Vector("1.5.2")
-//  )
