@@ -6,7 +6,7 @@ val scala3 = "3.1.3"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.6.0"
+ThisBuild / version := "3.6.1-SNAPSHOT"
 ThisBuild / scalaVersion := scala3
 ThisBuild / crossScalaVersions := List(scala3, scala213)
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
@@ -70,6 +70,7 @@ lazy val driver = project.in(file("driver"))
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       dep.arangoDBJavaDriver,
+      dep.jacksonDataformatVelocypack,
       dep.catsEffect,
       dep.fs2,
       dep.scribe,

@@ -3,6 +3,7 @@ package com.outr.arango.core
 import com.arangodb.DbName
 import com.arangodb.async.ArangoDBAsync
 import com.arangodb.entity.{LoadBalancingStrategy => LBS}
+import com.arangodb.mapping.ArangoJack
 
 class ArangoDBServer(connection: ArangoDBAsync) {
   lazy val db: ArangoDB = new ArangoDB(connection.db())
@@ -11,6 +12,8 @@ class ArangoDBServer(connection: ArangoDBAsync) {
 }
 
 object ArangoDBServer {
+  private lazy val arangoJack = new ArangoJack
+
   def apply(connection: ArangoDBAsync): ArangoDBServer = new ArangoDBServer(connection)
 
   def apply(config: ArangoDBConfig): ArangoDBServer = {
@@ -20,6 +23,7 @@ object ArangoDBServer {
       case LoadBalancingStrategy.OneRandom => LBS.ONE_RANDOM
     }
     val builder = new ArangoDBAsync.Builder()
+      .serializer(arangoJack)
       .user(config.username)
       .password(config.password)
       .useSsl(config.ssl)
