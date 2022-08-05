@@ -5,14 +5,11 @@ import com.arangodb.async.ArangoCollectionAsync
 import com.outr.arango.Id
 import com.outr.arango.util.Helpers._
 import fabric.Json
-import fabric.parse.{JsonParser, JsonWriter}
 
 import scala.jdk.CollectionConverters._
 
 trait ArangoDBDocuments[T] {
   protected def _collection: ArangoCollectionAsync
-  final def stringToT(s: String): T = toT(JsonParser.parse(s))
-  final def tToString(t: T): String = JsonParser.format(fromT(t), JsonWriter.Compact)
 
   def toT(value: Json): T
   def fromT(t: T): Json
@@ -23,41 +20,41 @@ trait ArangoDBDocuments[T] {
             default: Id[T] => T = id => throw NotFoundException(id._id)): IO[T] = get(id).map(_.getOrElse(default(id)))
 
   def get(id: Id[T]): IO[Option[T]] = _collection
-    .getDocument(id._key, classOf[String])
+    .getDocument(id._key, classOf[Json])
     .toIO
-    .map(s => Option(s).map(stringToT))
+    .map(json => Option(json).map(toT))
 
   def insert(doc: T, options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] = _collection
-    .insertDocument(tToString(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    .insertDocument(fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(createDocumentEntityConversion(_, stringToT))
+    .map(createDocumentEntityConversion(_, toT))
 
   def upsert(doc: T, options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] =
     insert(doc, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
   def update(id: Id[T], doc: T, options: UpdateOptions = UpdateOptions.Default, transaction: StreamTransaction = None.orNull): IO[UpdateResult[T]] = _collection
-    .updateDocument(id._key, tToString(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    .updateDocument(id._key, fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(updateDocumentEntityConversion(_, stringToT))
+    .map(updateDocumentEntityConversion(_, toT))
 
   def delete(id: Id[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResult[T]] = _collection
-    .deleteDocument(id._key, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    .deleteDocument(id._key, classOf[Json], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
     .toIO
-    .map(deleteDocumentEntityConversion(_, stringToT))
+    .map(deleteDocumentEntityConversion(_, toT))
 
   object batch {
     def insert(docs: List[T], options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] = _collection
-      .insertDocuments(docs.map(tToString).asJava, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+      .insertDocuments(docs.map(fromT).asJava, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
-      .map(multiDocumentCreateConversion(_, stringToT))
+      .map(multiDocumentCreateConversion(_, toT))
 
     def upsert(docs: List[T], options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] =
       insert(docs, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
     def delete(docs: List[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResults[T]] = _collection
-      .deleteDocuments(docs.map(tToString).asJava, classOf[String], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+      .deleteDocuments(docs.map(fromT).asJava, classOf[Json], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
-      .map(multiDocumentDeleteConversion(_, stringToT))
+      .map(multiDocumentDeleteConversion(_, toT))
   }
 
   object stream {
