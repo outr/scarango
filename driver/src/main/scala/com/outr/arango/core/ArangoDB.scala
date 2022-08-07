@@ -11,7 +11,6 @@ import fabric._
 
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-import scala.util.Try
 
 class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
   def name: String = db.dbName().get()
@@ -29,26 +28,28 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
       db.parseQuery(query.string).toIO.map(aqlParseEntityConversion)
     }
 
-    def apply(query: Query): fs2.Stream[IO, Json] = {
+    def iterator(query: Query): IO[Iterator[Json]] = {
       val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
         case (key, value) => key -> value2AnyRef(value)
       }.asJava
 
-      // TODO: re-evaluate parse fail
-      fs2.Stream
-        .force(
-          db
-            .query(query.string, bindVars, classOf[String])
-            .toIO
-            .attempt
-            .map {
-              case Left(throwable) =>
-                scribe.error(s"An error occurred executing a query: $query", throwable)
-                throw throwable
-              case Right(c) => fs2.Stream.fromIterator[IO](c.stream().iterator().asScala, 512)
-            }
-        ).map(s => Try(fabric.parse.JsonParser.parse(s)).getOrElse(str(s)))
+      db
+        .query(query.string, bindVars, classOf[Json])
+        .toIO
+        .attempt
+        .map {
+          case Left(throwable) =>
+            scribe.error(s"An error occurred executing a query: $query", throwable)
+            throw throwable
+          case Right(c) =>
+            val cursor: java.util.Iterator[Json] = c
+            cursor.asScala
+        }
     }
+
+    def apply(query: Query): fs2.Stream[IO, Json] = fs2.Stream.force(iterator(query).flatMap { iterator =>
+      IO(fs2.Stream.fromIterator[IO](iterator, 512))
+    })
 
     def execute(query: Query): IO[Unit] = apply(query).compile.drain
   }

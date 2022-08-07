@@ -29,10 +29,12 @@ class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
     .query(query)
     .map(converter)
 
+  def iterator: IO[Iterator[R]] = graph.db.query.iterator(query).map(_.map(converter))
+
   /**
     * Convenience method to get the results from the stream as a List
     */
-  def all: IO[List[R]] = stream.compile.toList
+  def all: IO[List[R]] = iterator.map(_.toList)
 
   /**
     * Retrieves exactly one result from the query. If there is zero or more than one an exception will be thrown.
