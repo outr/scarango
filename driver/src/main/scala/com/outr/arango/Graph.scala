@@ -156,6 +156,8 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def drop(): IO[Boolean] = db.drop()
 
+  def shutdown(): IO[Unit] = IO(db.shutdown())
+
   case class AppliedUpgrades(labels: Set[String])
 
   object AppliedUpgrades {

@@ -110,4 +110,6 @@ class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
 //    o.storedValues()
     new View(this, name, o)
   }
+
+  def shutdown(): Unit = db.arango().shutdown()
 }
