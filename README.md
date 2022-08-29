@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.6.2"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.6.3"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.6.2"
+ivy"com.outr::scarango-driver:3.6.3"
 ```
 
 ## Introduction
@@ -110,4 +110,4 @@ For more examples see the specs: https://github.com/outr/scarango/blob/master/dr
 
 ## TODO
 - Improved ScalaDocs
-- Add AQL compile-time validation support
+- Add AQL compile-time validation support (revive from 2.x)
