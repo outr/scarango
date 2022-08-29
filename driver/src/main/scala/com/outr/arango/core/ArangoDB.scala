@@ -12,7 +12,7 @@ import fabric._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 
-class ArangoDB(private[arango] val db: ArangoDatabaseAsync) {
+class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabaseAsync) {
   def name: String = db.dbName().get()
 
   def create(): IO[Boolean] = db.create().toIO.map(_.booleanValue())

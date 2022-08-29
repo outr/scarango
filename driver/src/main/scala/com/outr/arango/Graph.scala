@@ -22,6 +22,7 @@ class Graph(private[arango] val db: ArangoDB) {
 
   protected def storeCollectionName: String = "backingStore"
 
+  def server: ArangoDBServer = db.server
   def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
   def views: List[View] = _views
   def stores: List[DatabaseStore] = _stores
