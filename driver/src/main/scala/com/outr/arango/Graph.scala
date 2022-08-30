@@ -13,7 +13,7 @@ import fabric.rw._
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class Graph(private[arango] val db: ArangoDB) {
+class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   private val _initialized = new AtomicBoolean(false)
 
   private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
@@ -27,17 +27,23 @@ class Graph(private[arango] val db: ArangoDB) {
   def views: List[View] = _views
   def stores: List[DatabaseStore] = _stores
 
-  def this(name: String, server: ArangoDBServer) = {
-    this(server.db(name))
+  def this(name: String, server: ArangoDBServer, managed: Boolean) = {
+    this(server.db(name), managed)
   }
 
-  def this(name: String, config: ArangoDBConfig) = {
-    this(name, ArangoDBServer(config))
+  def this(name: String, config: ArangoDBConfig, managed: Boolean) = {
+    this(name, ArangoDBServer(config), managed)
   }
 
-  def this(name: String) = {
-    this(name, ArangoDBConfig())
+  def this(name: String, managed: Boolean) = {
+    this(name, ArangoDBConfig(), managed)
   }
+
+  def this(name: String, server: ArangoDBServer) = this(name, server, managed = true)
+
+  def this(name: String, config: ArangoDBConfig) = this(name, config, managed = true)
+
+  def this(name: String) = this(name, managed = true)
 
   val store: DatabaseStore = keyStore(storeCollectionName)
 
@@ -124,33 +130,42 @@ class Graph(private[arango] val db: ArangoDB) {
 
   def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
 
-  def vertex[D <: Document[D]](model: DocumentModel[D]): DocumentCollection[D] = synchronized {
-    val c = new DocumentCollection[D](this, db.collection(model.collectionName), model, CollectionType.Vertex)
+  def vertex[D <: Document[D]](model: DocumentModel[D],
+                               managed: Boolean = this.managed): DocumentCollection[D] = synchronized {
+    val c = new DocumentCollection[D](
+      graph = this,
+      arangoCollection = db.collection(model.collectionName),
+      model = model,
+      `type` = CollectionType.Vertex,
+      managed = managed
+    )
     _collections = _collections ::: List(c)
     c
   }
 
-  def edge[E <: Edge[E, From, To], From, To](model: EdgeModel[E, From, To]): EdgeCollection[E, From, To] = synchronized {
-    val c = new EdgeCollection[E, From, To](this, db.collection(model.collectionName), model)
+  def edge[E <: Edge[E, From, To], From, To](model: EdgeModel[E, From, To],
+                                             managed: Boolean = this.managed): EdgeCollection[E, From, To] = synchronized {
+    val c = new EdgeCollection[E, From, To](this, db.collection(model.collectionName), model, managed)
     _collections = _collections ::: List(c)
     c
   }
 
   def view(name: String,
            links: List[ViewLink],
+           managed: Boolean = this.managed,
            primarySort: List[Sort] = Nil,
            primarySortCompression: SortCompression = SortCompression.LZ4,
            consolidationInterval: FiniteDuration = 1.second,
            commitInterval: FiniteDuration = 1.second,
            cleanupIntervalStep: Int = 2,
            consolidationPolicy: ConsolidationPolicy = ConsolidationPolicy.BytesAccum()): View = synchronized {
-    val view = db.view(name, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep, consolidationPolicy)
+    val view = db.view(name, managed, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep, consolidationPolicy)
     _views = _views ::: List(view)
     view
   }
 
-  def keyStore(collectionName: String): DatabaseStore = synchronized {
-    val s = DatabaseStore(db.collection(collectionName))
+  def keyStore(collectionName: String, managed: Boolean = this.managed): DatabaseStore = synchronized {
+    val s = DatabaseStore(db.collection(collectionName), managed)
     _stores = _stores ::: List(s)
     s
   }

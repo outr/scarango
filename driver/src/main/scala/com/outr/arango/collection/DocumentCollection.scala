@@ -7,7 +7,8 @@ import fabric.Json
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                            protected[arango] val arangoCollection: ArangoDBCollection,
                                            val model: DocumentModel[D],
-                                           val `type`: CollectionType) extends WritableCollection[D] {
+                                           val `type`: CollectionType,
+                                           val managed: Boolean) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
   override def name: String = arangoCollection.name
   override lazy val query: DocumentCollectionQuery[D] = new DocumentCollectionQuery[D](this)

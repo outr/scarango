@@ -5,7 +5,7 @@ import com.outr.arango.core.{ArangoDBCollection, CreateResult, DeleteResult, Not
 import fabric.Json
 import fabric.rw._
 
-case class DatabaseStore(collection: ArangoDBCollection) {
+case class DatabaseStore(collection: ArangoDBCollection, val managed: Boolean) {
   def get[T: ReaderWriter](key: String): IO[Option[T]] = collection
     .get(id(key))
     .map(_.map(_.as[StoreValue].value.as[T]))

@@ -6,7 +6,10 @@ import com.outr.arango.core.ArangoDB
 import com.outr.arango.query.QueryPart
 import com.outr.arango.util.Helpers._
 
-class View(db: ArangoDB, val name: String, options: ArangoSearchCreateOptions) extends QueryPart.Support {
+class View(db: ArangoDB,
+           val name: String,
+           val managed: Boolean,
+           options: ArangoSearchCreateOptions) extends QueryPart.Support {
   def dbName: String = db.name
 
   private val view = db.db.view(name)

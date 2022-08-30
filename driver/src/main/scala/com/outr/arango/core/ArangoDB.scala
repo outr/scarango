@@ -56,6 +56,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
 
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
   def view(name: String,
+           managed: Boolean,
            links: List[ViewLink],
            primarySort: List[Sort] = Nil,
            primarySortCompression: SortCompression = SortCompression.LZ4,
@@ -108,7 +109,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
     })
     // TODO: Support storedvalues
 //    o.storedValues()
-    new View(this, name, o)
+    new View(this, name, managed, o)
   }
 
   def shutdown(): Unit = db.arango().shutdown()
