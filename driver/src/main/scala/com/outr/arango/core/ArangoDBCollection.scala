@@ -30,7 +30,8 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
   }
 
   object field {
-    def apply[F: ReaderWriter](name: String): Field[F] = Field[F](name)
+    def apply[F: ReaderWriter](name: String): Field[F] =
+      new Field[F](name, mutation = None)(implicitly[ReaderWriter[F]], None)
   }
 
   object index {

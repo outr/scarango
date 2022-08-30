@@ -216,7 +216,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   object Airport extends DocumentModel[Airport] {
     override implicit val rw: ReaderWriter[Airport] = ccRW
 
-    val name: Field[String] = Field[String]("name")
+    val name: Field[String] = field[String]("name")
 
     override def indexes: List[Index] = Nil
 

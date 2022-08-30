@@ -8,28 +8,28 @@ import fabric.rw._
 
 case class EncryptedFieldMutation(crypto: Field[_] => CryptoInstance, fields: Field[_]*) extends DataMutation {
   override def store(value: Json): Json = fields.foldLeft(value)((v, f) =>
-    value.get(f.name) match {
+    value.get(f.fieldName) match {
       case Some(fieldValue) =>
         val instance = crypto(f)
         val jsonString = JsonParser.format(fieldValue, JsonWriter.Compact)
         val encrypted = instance.encrypt(jsonString)
         val json = encrypted.json
         value.merge(obj(
-          f.name -> json
+          f.fieldName -> json
         ))
       case None => v
     }
   )
 
   override def retrieve(value: Json): Json = fields.foldLeft(value)((v, f) =>
-    value.get(f.name) match {
+    value.get(f.fieldName) match {
       case Some(fieldValue) =>
         val instance = crypto(f)
         val encrypted = fieldValue.as[Encrypted]
         val jsonString = instance.decrypt(encrypted)
         val json = JsonParser.parse(jsonString)
         value.merge(obj(
-          f.name -> json
+          f.fieldName -> json
         ))
       case None => v
     }

@@ -5,6 +5,8 @@ import com.outr.arango.mutation.{DataMutation, IdMutation, ModifyFieldValue}
 import fabric.rw.ReaderWriter
 
 trait DocumentModel[D <: Document[D]] { model =>
+  protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
+
   val collectionName: String
 
   private var _fields = List.empty[Field[_]]
@@ -12,29 +14,19 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   implicit val rw: ReaderWriter[D]
 
-  implicit class FieldExtras[F: ReaderWriter](field: Field[F]) {
-    def field[T: ReaderWriter](name: String): Field[T] = model.field[T](s"${field.name}.$name")
-
-    def withMutation(mutation: DataMutation): Field[F] = {
-      field.mutation.foreach(m => throw new RuntimeException(s"Field ${field.name} already has a mutation set: $m"))
-      setField(Field[F](field.name, mutation))
-    }
-
-    def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(field, storage, retrieval))
-  }
-
   val _id: Field[Id[D]] = field("_id", IdMutation)
 
   protected def generateId(): String = Unique()
 
-  private def setField[T](field: Field[T]): Field[T] = synchronized {
-    _fields = _fields.filterNot(_.name == field.name) ::: List(field)
+  private[arango] def defineField[T](field: Field[T]): Field[T] = synchronized {
+    _fields = _fields.filterNot(_.fieldName == field.fieldName) ::: List(field)
     field
   }
 
-  protected def field[T: ReaderWriter](name: String, mutation: Option[DataMutation]): Field[T] = setField(Field[T](name, mutation))
-  protected def field[T: ReaderWriter](name: String): Field[T] = field[T](name, None)
-  protected def field[T: ReaderWriter](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
+  protected[arango] def field[T: ReaderWriter](name: String, mutation: Option[DataMutation]): Field[T] =
+    new Field[T](name, mutation)
+  protected[arango] def field[T: ReaderWriter](name: String): Field[T] = field[T](name, None)
+  protected[arango] def field[T: ReaderWriter](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList

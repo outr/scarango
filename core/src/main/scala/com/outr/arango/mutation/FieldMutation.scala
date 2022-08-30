@@ -7,12 +7,12 @@ trait FieldMutation[F] extends DataMutation {
   def field: Field[F]
 
   override final def store(value: Json): Json = {
-    val v = value.get(field.name)
+    val v = value.get(field.fieldName)
     store(value, v)
   }
 
   override final def retrieve(value: Json): Json = {
-    val v = value.get(field.name)
+    val v = value.get(field.fieldName)
     retrieve(value, v)
   }
 

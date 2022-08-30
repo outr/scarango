@@ -12,7 +12,7 @@ case class ModifyFieldValue[F](field: Field[F],
     case Some(v) =>
       val f = storage(v.as[F])
       value.merge(obj(
-        field.name -> f.json
+        field.fieldName -> f.json
       ))
     case None => value
   }
@@ -21,7 +21,7 @@ case class ModifyFieldValue[F](field: Field[F],
     case Some(v) =>
       val f = retrieval(v.as[F])
       value.merge(obj(
-        field.name -> f.json
+        field.fieldName -> f.json
       ))
     case None => value
   }

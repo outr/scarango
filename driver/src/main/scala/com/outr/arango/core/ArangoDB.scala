@@ -82,7 +82,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
     val cls = links.map { l =>
       val fields = l.fields map {
         case (field, analyzers) =>
-          val fl = FieldLink.on(field.name)
+          val fl = FieldLink.on(field.fieldName)
           fl.analyzers(analyzers.map(_.name): _*)
           // TODO: Support other FieldLink options
           fl
@@ -99,7 +99,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
     }
     o.link(cls: _*)
     val ps = primarySort.map { sort =>
-      PrimarySort.on(sort.field.name).ascending(sort.direction == SortDirection.ASC)
+      PrimarySort.on(sort.field.fieldName).ascending(sort.direction == SortDirection.ASC)
     }
     o.primarySort(ps: _*)
     o.primarySortCompression(primarySortCompression match {

@@ -10,7 +10,7 @@ case class UpdatePart[D <: Document[D], Model <: DocumentModel[D]](ref: Document
     val fields = Query.merge(values.map { fv =>
       Query
         .static(", ")
-        .static(s"  ${fv.field.name}: ")
+        .static(s"  ${fv.field.fieldName}: ")
         .variable(fv.value)
     }) match {
       case q => q.copy(q.parts.tail)
