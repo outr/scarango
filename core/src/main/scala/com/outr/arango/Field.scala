@@ -6,22 +6,33 @@ import fabric.rw._
 
 import scala.concurrent.duration.FiniteDuration
 
-class Field[F: ReaderWriter](val fieldName: String,
-                             val mutation: Option[DataMutation] = None)
-                            (implicit model: Option[DocumentModel[_]]) extends QueryPart.Support {
+class Field[F](val fieldName: String,
+               val mutation: Option[DataMutation])
+              (implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
+  def this(fieldName: String, isArray: Boolean)(implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) = {
+    this(if (isArray) s"$fieldName[*]" else fieldName, None)(rw, model)
+  }
+
+  def this(fieldName: String)(implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) = {
+    this(fieldName, isArray = false)(rw, model)
+  }
+
   model.foreach(_.defineField(this))
 
   object index {
     def persistent(sparse: Boolean = false,
-                  unique: Boolean = false): Index = {
+                   unique: Boolean = false): Index = {
       Index(IndexType.Persistent, List(fieldName), sparse, unique)
     }
+
     def geo(geoJson: Boolean = true): Index = {
       Index(IndexType.Geo, List(fieldName), geoJson = geoJson)
     }
+
     def fullText(minLength: Long = 3L): Index = {
       Index(IndexType.FullText, List(fieldName), minLength = minLength)
     }
+
     def ttl(expireAfter: FiniteDuration): Index = {
       val seconds = expireAfter.toSeconds.toInt
       Index(IndexType.TTL, List(fieldName), expireAfterSeconds = seconds)
