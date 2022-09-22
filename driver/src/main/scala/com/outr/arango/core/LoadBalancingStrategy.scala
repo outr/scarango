@@ -7,7 +7,7 @@ sealed trait LoadBalancingStrategy
 object LoadBalancingStrategy {
   implicit val rw: RW[LoadBalancingStrategy] = RW.enumeration(
     list = List(None, RoundRobin, OneRandom),
-    asString = _.getClass.getSimpleName.toLowerCase.replace("$", "")
+    asString = (v: LoadBalancingStrategy) => v.getClass.getSimpleName.toLowerCase.replace("$", "")
   )
 
   case object None extends LoadBalancingStrategy
