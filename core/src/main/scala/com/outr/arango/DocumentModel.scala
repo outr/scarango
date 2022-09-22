@@ -1,8 +1,8 @@
 package com.outr.arango
 
 import com.outr.arango.core.CreateCollectionOptions
-import com.outr.arango.mutation.{DataMutation, IdMutation, ModifyFieldValue}
-import fabric.rw.ReaderWriter
+import com.outr.arango.mutation.{DataMutation, IdMutation}
+import fabric.rw.RW
 
 trait DocumentModel[D <: Document[D]] { model =>
   protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
@@ -12,7 +12,7 @@ trait DocumentModel[D <: Document[D]] { model =>
   private var _fields = List.empty[Field[_]]
   def fields: List[Field[_]] = _fields
 
-  implicit val rw: ReaderWriter[D]
+  implicit val rw: RW[D]
 
   val _id: Field[Id[D]] = field("_id", IdMutation)
 
@@ -23,10 +23,10 @@ trait DocumentModel[D <: Document[D]] { model =>
     field
   }
 
-  protected[arango] def field[T: ReaderWriter](name: String, mutation: Option[DataMutation]): Field[T] =
+  protected[arango] def field[T: RW](name: String, mutation: Option[DataMutation]): Field[T] =
     new Field[T](name, mutation)
-  protected[arango] def field[T: ReaderWriter](name: String): Field[T] = field[T](name, None)
-  protected[arango] def field[T: ReaderWriter](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
+  protected[arango] def field[T: RW](name: String): Field[T] = field[T](name, None)
+  protected[arango] def field[T: RW](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList

@@ -104,7 +104,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
-    override implicit val rw: ReaderWriter[Person] = ccRW
+    override implicit val rw: RW[Person] = ccRW
 
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")

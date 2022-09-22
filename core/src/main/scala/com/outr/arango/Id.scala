@@ -1,7 +1,7 @@
 package com.outr.arango
 
 import fabric._
-import fabric.rw.{Asable, ReaderWriter}
+import fabric.rw.{Asable, RW}
 
 import scala.language.implicitConversions
 
@@ -38,7 +38,7 @@ case class Id[D](value: String,
 object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
 
-  implicit def rw[D]: ReaderWriter[Id[D]] = ReaderWriter(_._id, v => parse[D](v.asStr.value))
+  implicit def rw[D]: RW[Id[D]] = RW(_._id, v => parse[D](v.asStr.value))
   implicit def toJson[D](id: Id[D]): Json = rw[D].read(id)
 
   def parse[D](id: String): Id[D] = id match {

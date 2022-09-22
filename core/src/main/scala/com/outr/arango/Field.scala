@@ -8,12 +8,12 @@ import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
                val mutation: Option[DataMutation])
-              (implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
-  def this(fieldName: String, isArray: Boolean)(implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) = {
+              (implicit rw: RW[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
+  def this(fieldName: String, isArray: Boolean)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
     this(if (isArray) s"$fieldName[*]" else fieldName, None)(rw, model)
   }
 
-  def this(fieldName: String)(implicit rw: ReaderWriter[F], model: Option[DocumentModel[_]]) = {
+  def this(fieldName: String)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
     this(fieldName, isArray = false)(rw, model)
   }
 
@@ -39,7 +39,7 @@ class Field[F](val fieldName: String,
     }
   }
 
-  def field[T: ReaderWriter](name: String): Field[T] = model match {
+  def field[T: RW](name: String): Field[T] = model match {
     case Some(m) => m.field[T](s"$fieldName.$name")
     case None => throw new RuntimeException("No model defined!")
   }

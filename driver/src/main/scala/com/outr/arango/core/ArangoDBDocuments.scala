@@ -51,14 +51,14 @@ trait ArangoDBDocuments[T] {
     def upsert(docs: List[T], options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] =
       insert(docs, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
 
-    def delete(docs: List[T], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResults[T]] = _collection
-      .deleteDocuments(docs.map(fromT).asJava, classOf[Json], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
+    def delete(ids: List[Id[T]], options: DeleteOptions = DeleteOptions.Default, transaction: StreamTransaction = None.orNull): IO[DeleteResults[T]] = _collection
+      .deleteDocuments(ids.map(_._key).asJava, classOf[Json], options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
       .toIO
       .map(multiDocumentDeleteConversion(_, toT))
   }
 
   object stream {
-    def apply(docs: fs2.Stream[IO, T], chunkSize: Int, process: fs2.Chunk[T] => IO[Int]): IO[Int] = docs
+    def apply[V](docs: fs2.Stream[IO, V], chunkSize: Int, process: fs2.Chunk[V] => IO[Int]): IO[Int] = docs
       .chunkN(chunkSize)
       .evalMap(process)
       .compile
@@ -68,18 +68,18 @@ trait ArangoDBDocuments[T] {
                chunkSize: Int = 1000,
                options: CreateOptions = CreateOptions.Insert,
                transaction: StreamTransaction = None.orNull): IO[Int] =
-      apply(docs, chunkSize, chunk => batch.insert(chunk.toList, options, transaction).as(chunk.size))
+      apply[T](docs, chunkSize, chunk => batch.insert(chunk.toList, options, transaction).as(chunk.size))
 
     def upsert(docs: fs2.Stream[IO, T],
                chunkSize: Int = 1000,
                options: CreateOptions = CreateOptions.Upsert,
                transaction: StreamTransaction = None.orNull): IO[Int] =
-      apply(docs, chunkSize, chunk => batch.upsert(chunk.toList, options, transaction).as(chunk.size))
+      apply[T](docs, chunkSize, chunk => batch.upsert(chunk.toList, options, transaction).as(chunk.size))
 
-    def delete(docs: fs2.Stream[IO, T],
+    def delete(docs: fs2.Stream[IO, Id[T]],
                chunkSize: Int = 1000,
                options: DeleteOptions = DeleteOptions.Default,
                transaction: StreamTransaction = None.orNull): IO[Int] =
-      apply(docs, chunkSize, chunk => batch.delete(chunk.toList, options, transaction).as(chunk.size))
+      apply[Id[T]](docs, chunkSize, chunk => batch.delete(chunk.toList, options, transaction).as(chunk.size))
   }
 }

@@ -16,7 +16,7 @@ trait AuditSupport {
   }
 
   case class Resource(name: String) {
-    def record[T <: Document[T]: ReaderWriter](action: String,
+    def record[T <: Document[T]: RW](action: String,
                                                value: T,
                                                origin: Option[String] = None,
                                                metadata: Map[String, Json] = Map.empty): IO[AuditRecord] = {

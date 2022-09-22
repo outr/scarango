@@ -7,7 +7,7 @@ import fabric._
 case class ModifyFieldValue[F](field: Field[F],
                                storage: F => F,
                                retrieval: F => F)
-                              (implicit rw: ReaderWriter[F]) extends FieldMutation[F] {
+                              (implicit rw: RW[F]) extends FieldMutation[F] {
   override def store(value: Json, fieldValue: Option[Json]): Json = fieldValue match {
     case Some(v) =>
       val f = storage(v.as[F])

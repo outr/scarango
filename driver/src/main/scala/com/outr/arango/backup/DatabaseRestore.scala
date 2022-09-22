@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.{Document, Graph}
-import fabric.parse.JsonParser
+import fabric.io.{Format, JsonParser}
 
 import java.nio.file.{Files, Path}
 import scala.io.Source
@@ -34,7 +34,7 @@ object DatabaseRestore {
     val pre = if (truncate) collection.collection.truncate() else IO.unit
     pre.flatMap { _ =>
       fs2.Stream.fromIterator[IO](source.getLines(), 1000).chunkN(1000).evalMap { chunk =>
-        val batch = chunk.toList.map(_.trim).map(JsonParser.parse).map(collection.model.rw.write)
+        val batch = chunk.toList.map(_.trim).map(JsonParser.apply(_, Format.Json)).map(collection.model.rw.write)
         if (upsert) {
           collection.batch.upsert(batch)
         } else {

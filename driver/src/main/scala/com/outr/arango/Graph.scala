@@ -75,7 +75,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
    * @tparam T the type of results
    * @return QueryBuilder[T]
    */
-  def query[T](query: Query)(implicit rw: ReaderWriter[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
+  def query[T](query: Query)(implicit rw: RW[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
 
   def query[T](query: Query, converter: Json => T): QueryBuilder[T] = new QueryBuilder[T](this, query, converter)
 
@@ -177,7 +177,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   case class AppliedUpgrades(labels: Set[String])
 
   object AppliedUpgrades {
-    implicit val rw: ReaderWriter[AppliedUpgrades] = ccRW
+    implicit val rw: RW[AppliedUpgrades] = ccRW
 
     val key: String = "appliedUpgrades"
 

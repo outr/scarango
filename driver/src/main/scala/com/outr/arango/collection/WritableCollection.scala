@@ -27,5 +27,5 @@ trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] with Ar
     def info(): IO[CollectionInfo] = arangoCollection.collection.info()
   }
 
-  private implicit def rw: ReaderWriter[D] = model.rw
+  private implicit def rw: RW[D] = model.rw
 }

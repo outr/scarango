@@ -13,11 +13,11 @@ class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
   /**
     * Translates the results to a return type of T
     *
-    * @param rw the ReaderWriter for conversion
+    * @param rw the RW for conversion
     * @tparam T return type
     * @return QueryBuilder[T]
     */
-  def as[T](implicit rw: ReaderWriter[T]): QueryBuilder[T] = new QueryBuilder[T](graph, query, rw.write)
+  def as[T](implicit rw: RW[T]): QueryBuilder[T] = new QueryBuilder[T](graph, query, rw.write)
 
   /**
     * Creates a Stream to get all the results from the query

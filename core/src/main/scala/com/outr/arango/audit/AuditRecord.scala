@@ -25,7 +25,7 @@ object AuditRecord extends DocumentModel[AuditRecord] {
   val created: Field[Long] = field("created")
 
   override val collectionName: String = "auditLog"
-  override implicit val rw: ReaderWriter[AuditRecord] = ccRW
+  override implicit val rw: RW[AuditRecord] = ccRW
 
   override def indexes: List[Index] = List(
     action.index.persistent(),

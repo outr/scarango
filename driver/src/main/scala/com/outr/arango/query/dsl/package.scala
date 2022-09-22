@@ -38,7 +38,7 @@ package object dsl {
     }
   }
 
-  implicit class FieldExtras[T: ReaderWriter](field: => Field[T]) {
+  implicit class FieldExtras[T: RW](field: => Field[T]) {
     def thisField: Field[T] = field
 
 //    def apply(value: T): FieldAndValue[T] = macro AQLMacros.fieldAndValue

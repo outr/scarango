@@ -30,7 +30,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
   def withDelete(doc: D): IO[CollectionQueue[D]] = {
     val updated = delete :+ doc
     if (updated.length >= batchSize) {
-      collection.batch.delete(updated.toList).map(_ => copy(delete = Vector.empty))
+      collection.batch.delete(updated.map(_._id).toList).map(_ => copy(delete = Vector.empty))
     } else {
       IO.pure(copy(delete = updated))
     }
@@ -39,7 +39,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
   def finish(): IO[Unit] = for {
     _ <- if (insert.nonEmpty) collection.batch.insert(insert.toList) else IO.unit
     _ <- if (upsert.nonEmpty) collection.batch.upsert(upsert.toList) else IO.unit
-    _ <- if (delete.nonEmpty) collection.batch.delete(delete.toList) else IO.unit
+    _ <- if (delete.nonEmpty) collection.batch.delete(delete.map(_._id).toList) else IO.unit
   } yield {
     ()
   }

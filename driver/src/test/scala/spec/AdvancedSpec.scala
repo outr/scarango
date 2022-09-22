@@ -4,11 +4,11 @@ import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.core.{StreamTransaction, TransactionLock, TransactionStatus}
+import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.DBQueue
-import fabric.rw.{ReaderWriter, ccRW}
+import fabric.rw.{RW, ccRW}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -212,6 +212,14 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         ))
       }
     }
+    "batch delete" in {
+      database.people.query.byFilter(Person.age > 10).all.flatMap { list =>
+        list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))
+        database.people.batch.delete(list.map(_._id), DeleteOptions(waitForSync = true, silent = false)).map { results =>
+          results.documents.length should be(3)
+        }
+      }
+    }
   }
 
   object database extends Graph("advanced") {
@@ -224,7 +232,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
-    override implicit val rw: ReaderWriter[Person] = ccRW
+    override implicit val rw: RW[Person] = ccRW
 
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")

@@ -45,7 +45,7 @@ case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends
 
 // We use the companion object to represent additional information about the collection
 object Person extends DocumentModel[Person] {
-  override implicit val rw: ReaderWriter[Person] = ccRW
+  override implicit val rw: RW[Person] = ccRW
 
   val name: Field[String] = field("name")
   val age: Field[Int] = field("age")
@@ -62,7 +62,7 @@ object Database extends Graph("example") {
   val people: DocumentCollection[Person] = vertex[Person](Person)
 }
 ```
-This is the basic setup of a single-collection database. Notice the `ReaderWriter` in the companion object. That is defined
+This is the basic setup of a single-collection database. Notice the `RW` in the companion object. That is defined
 using [Fabric](https://github.com/outr/fabric) for conversion to/from JSON for storage in the database. All fields aren't
 required to be defined, but it will help us when we want to write simple queries in a type-safe way or when defining things
 like indexes.
