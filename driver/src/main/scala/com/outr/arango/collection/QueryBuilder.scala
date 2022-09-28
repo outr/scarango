@@ -58,6 +58,11 @@ class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
   def last: IO[Option[R]] = stream.compile.last
 
   /**
+    * Streams the result to return a count. A query that generates a count would be more efficient.
+    */
+  def count: IO[Int] = stream.compile.count.map(_.toInt)
+
+  /**
     * Process through the stream with the ability to batch queue db inserts, upserts, and deletes.
     *
     * @param processor the function to handle processing the items in the stream

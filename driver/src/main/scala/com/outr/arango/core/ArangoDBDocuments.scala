@@ -14,6 +14,8 @@ trait ArangoDBDocuments[T] {
   def toT(value: Json): T
   def fromT(t: T): Json
 
+  def count: IO[Int] = _collection.count().toIO.map(_.getCount.toInt)
+
   def id(key: String): Id[T] = Id[T](key, _collection.name())
 
   def apply(id: Id[T],
