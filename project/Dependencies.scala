@@ -5,7 +5,7 @@ object Dependencies {
     val fabric: String = "1.6.0"
     val profig: String = "3.4.3"
     val scalaPass: String = "1.2.2"
-    val arangoDBJavaDriver: String = "6.18.0"
+    val arangoDBJavaDriver: String = "6.19.0"
     val jackson: String = "3.0.1"
     val catsEffect: String = "3.3.14"
     val fs2: String = "3.3.0"
