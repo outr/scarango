@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   object version {
-    val fabric: String = "1.6.0"
+    val fabric: String = "1.6.1"
     val profig: String = "3.4.3"
     val scalaPass: String = "1.2.2"
     val arangoDBJavaDriver: String = "6.18.0"
