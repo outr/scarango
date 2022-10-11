@@ -25,6 +25,6 @@ case class DatabaseStore(collection: ArangoDBCollection, val managed: Boolean) {
   case class StoreValue(_key: String, value: Json)
 
   object StoreValue {
-    implicit val rw: RW[StoreValue] = ccRW
+    implicit val rw: RW[StoreValue] = RW.gen
   }
 }

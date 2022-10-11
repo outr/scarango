@@ -45,7 +45,7 @@ case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends
 
 // We use the companion object to represent additional information about the collection
 object Person extends DocumentModel[Person] {
-  override implicit val rw: RW[Person] = ccRW
+  override implicit val rw: RW[Person] = RW.gen
 
   val name: Field[String] = field("name")
   val age: Field[Int] = field("age")

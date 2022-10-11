@@ -8,7 +8,7 @@ import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, 
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.DBQueue
-import fabric.rw.{RW, ccRW}
+import fabric.rw.RW
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -232,7 +232,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
-    override implicit val rw: RW[Person] = ccRW
+    override implicit val rw: RW[Person] = RW.gen
 
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")

@@ -8,7 +8,7 @@ import com.outr.arango.query.dsl._
 import com.outr.arango.query._
 import com.outr.arango.upgrade.DatabaseUpgrade
 import com.outr.arango.view.{View, ViewLink}
-import fabric.rw.{RW, ccRW}
+import fabric.rw.RW
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -214,7 +214,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                      _id: Id[Airport] = Airport.id()) extends Document[Airport]
 
   object Airport extends DocumentModel[Airport] {
-    override implicit val rw: RW[Airport] = ccRW
+    override implicit val rw: RW[Airport] = RW.gen
 
     val name: Field[String] = field[String]("name")
 
@@ -240,7 +240,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     _id: Id[Flight] = Flight.id()) extends Edge[Flight, Airport, Airport]
 
   object Flight extends EdgeModel[Flight, Airport, Airport] {
-    override implicit val rw: RW[Flight] = ccRW
+    override implicit val rw: RW[Flight] = RW.gen
 
     override def indexes: List[Index] = Nil
 
@@ -250,7 +250,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   case class AirportName(fullName: String)
 
   object AirportName {
-    implicit val rw: RW[AirportName] = ccRW
+    implicit val rw: RW[AirportName] = RW.gen
   }
 
   object DataImportUpgrade extends DatabaseUpgrade {

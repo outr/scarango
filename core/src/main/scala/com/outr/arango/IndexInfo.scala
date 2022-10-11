@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import fabric.rw.{RW, ccRW}
+import fabric.rw.RW
 
 case class IndexInfo(`type`: String,
                      id: String,
@@ -11,5 +11,5 @@ case class IndexInfo(`type`: String,
                      selectivityEstimate: Option[Double] = None)
 
 object IndexInfo {
-  implicit val rw: RW[IndexInfo] = ccRW
+  implicit val rw: RW[IndexInfo] = RW.gen
 }

@@ -157,9 +157,8 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
            primarySortCompression: SortCompression = SortCompression.LZ4,
            consolidationInterval: FiniteDuration = 1.second,
            commitInterval: FiniteDuration = 1.second,
-           cleanupIntervalStep: Int = 2,
-           consolidationPolicy: ConsolidationPolicy = ConsolidationPolicy.BytesAccum()): View = synchronized {
-    val view = db.view(name, managed, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep, consolidationPolicy)
+           cleanupIntervalStep: Int = 2): View = synchronized {
+    val view = db.view(name, managed, links, primarySort, primarySortCompression, consolidationInterval, commitInterval, cleanupIntervalStep)
     _views = _views ::: List(view)
     view
   }
@@ -177,7 +176,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   case class AppliedUpgrades(labels: Set[String])
 
   object AppliedUpgrades {
-    implicit val rw: RW[AppliedUpgrades] = ccRW
+    implicit val rw: RW[AppliedUpgrades] = RW.gen
 
     val key: String = "appliedUpgrades"
 

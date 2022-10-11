@@ -62,24 +62,11 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
            primarySortCompression: SortCompression = SortCompression.LZ4,
            consolidationInterval: FiniteDuration = 1.second,
            commitInterval: FiniteDuration = 1.second,
-           cleanupIntervalStep: Int = 2,
-           consolidationPolicy: ConsolidationPolicy = ConsolidationPolicy.BytesAccum()): View = {
+           cleanupIntervalStep: Int = 2): View = {
     val o = new ArangoSearchCreateOptions
     o.consolidationIntervalMsec(consolidationInterval.toMillis)
     o.commitIntervalMsec(commitInterval.toMillis)
     o.cleanupIntervalStep(cleanupIntervalStep.toLong)
-    import com.arangodb.entity.{arangosearch => as}
-    val cp = consolidationPolicy match {
-      case ConsolidationPolicy.BytesAccum(threshold) => as
-        .ConsolidationPolicy
-        .of(as.ConsolidationType.BYTES_ACCUM)
-        .threshold(threshold)
-      case ConsolidationPolicy.Tier(segmentThreshold) => as
-        .ConsolidationPolicy
-        .of(as.ConsolidationType.TIER)
-        .segmentThreshold(segmentThreshold)
-    }
-    o.consolidationPolicy(cp)
     val cls = links.map { l =>
       val fields = l.fields map {
         case (field, analyzers) =>
