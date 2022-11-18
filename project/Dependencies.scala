@@ -12,7 +12,7 @@ object Dependencies {
     val scribe: String = "3.10.4"
 
     val scalaTest: String = "3.2.14"
-    val catsEffectTesting: String = "1.4.0"
+    val catsEffectTesting: String = "1.5.0"
   }
 
   val fabric: ModuleID = "com.outr" %% "fabric-io" % version.fabric
