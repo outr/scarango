@@ -2,9 +2,9 @@ import sbt._
 
 object Dependencies {
   object version {
-    val fabric: String = "1.7.0"
-    val profig: String = "3.4.4"
-    val scalaPass: String = "1.2.2"
+    val fabric: String = "1.7.3"
+    val profig: String = "3.4.5"
+    val scalaPass: String = "1.2.4"
     val arangoDBJavaDriver: String = "6.19.0"
     val jackson: String = "3.0.1"
     val catsEffect: String = "3.4.1"
@@ -15,7 +15,7 @@ object Dependencies {
     val catsEffectTesting: String = "1.5.0"
   }
 
-  val fabric: ModuleID = "com.outr" %% "fabric-io" % version.fabric
+  val fabric: ModuleID = "org.typelevel" %% "fabric-io" % version.fabric
   val profig: ModuleID = "com.outr" %% "profig" % version.profig
   val scalaPass: ModuleID = "com.outr" %% "scalapass" % version.scalaPass
   val arangoDBJavaDriver: ModuleID = "com.arangodb" % "arangodb-java-driver" % version.arangoDBJavaDriver
