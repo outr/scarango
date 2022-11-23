@@ -6,7 +6,7 @@ val scala3 = "3.2.1"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.7.6-SNAPSHOT"
+ThisBuild / version := "3.7.6"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := List(scala3, scala213)
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
