@@ -55,7 +55,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
       appliedUpgrades <- store[AppliedUpgrades](AppliedUpgrades.key, _ => AppliedUpgrades.empty).map(_.labels)
       upgrades = this.upgrades.filter(u => u.alwaysRun || !appliedUpgrades.contains(u.label))
       _ = if (upgrades.nonEmpty) scribe.info(s"Applying ${upgrades.length} upgrades (${upgrades.map(_.label).mkString(", ")})...")
-      _ <- doUpgrades(upgrades, upgrades, stillBlocking = true, appliedUpgrades = Set.empty)
+      _ <- doUpgrades(upgrades, upgrades, stillBlocking = true, appliedUpgrades = appliedUpgrades)
     } yield {
       ()
     }
