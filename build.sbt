@@ -79,3 +79,14 @@ lazy val driver = project.in(file("driver"))
     )
   )
   .dependsOn(coreJVM)
+
+lazy val docs = project
+  .in(file("documentation"))
+  .dependsOn(driver)
+  .enablePlugins(MdocPlugin)
+  .settings(
+    mdocVariables := Map(
+      "VERSION" -> version.value
+    ),
+    mdocOut := file(".")
+  )

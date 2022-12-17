@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.7.7"
+libraryDependencies += "com.outr" %% "scarango-driver" % "@VERSION@"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.7.7"
+ivy"com.outr::scarango-driver:@VERSION@"
 ```
 
 ## Introduction
@@ -35,7 +35,7 @@ Although there are a few different ways we can utilize Scarango to interact with
 approach is to utilize the Graph layer to set up our database structure and interact with it in a type-safe way. For example:
 
 ### Database configuration
-```scala
+```scala mdoc
 import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.query._
@@ -71,7 +71,7 @@ like indexes.
 
 ### Initialization
 The next thing we need to do is initialize the database:
-```scala
+```scala mdoc
 Database.init().unsafeRunSync()
 ```
 
@@ -80,71 +80,43 @@ normal circumstances this is not the ideal way to execute a cats-effect `IO`.
 
 ### Truncate the database
 We can easily clear out everything out of the database:
-```scala
+```scala mdoc
 Database.truncate().unsafeRunSync()
 ```
 
 ### Inserting into the database
 A simple insert of a record into the database:
-```scala
+```scala mdoc
 Database.people.insert(Person("User 1", 30)).unsafeRunSync()
-// res2: com.outr.arango.core.CreateResult[Person] = CreateResult(
-//   key = None,
-//   id = None,
-//   rev = None,
-//   newDocument = None,
-//   oldDocument = None
-// )
 ```
 We can also do batch record insertion:
-```scala
+```scala mdoc
 Database.people.batch.insert(List(
     Person("Adam", 21),
     Person("Bethany", 19)
 )).unsafeRunSync()
-// res3: com.outr.arango.core.CreateResults[Person] = CreateResults(
-//   results = List()
-// )
 ```
 
 You can also use the `Database.people.stream` to cross-stream records into the database.
 
 ### Querying
 In order to get the data out that we just inserted we can do a simple AQL query:
-```scala
+```scala mdoc
 Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p")
   .all
   .unsafeRunSync()
-// res4: List[Person] = List(
-//   Person(
-//     name = "User 1",
-//     age = 30,
-//     _id = Id(value = "psK3cD9csIqXrfczk0KYHiZ1Bz1aPCMO", collection = "people")
-//   ),
-//   Person(
-//     name = "Adam",
-//     age = 21,
-//     _id = Id(value = "58dC74B7OleZ2reNK9qVOD179SaE2Lzw", collection = "people")
-//   ),
-//   Person(
-//     name = "Bethany",
-//     age = 19,
-//     _id = Id(value = "OBsikNQAf55gkejZI6Z6JoP83mBkbWRT", collection = "people")
-//   )
-// )
 ```
 
 For an example of data conversion in the result, if we want to only get the person's name back:
-```scala
+```scala mdoc
 Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p.name")
   .as[String]
   .all
   .unsafeRunSync()
-// res5: List[String] = List("Adam", "Bethany", "User 1")
 ```
 
 For more examples see the specs: https://github.com/outr/scarango/blob/master/driver/src/test/scala/spec/GraphSpec.scala
