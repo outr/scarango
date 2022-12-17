@@ -2,8 +2,7 @@ package com.outr.arango.core
 
 import com.outr.arango.CollectionType
 
-case class CreateCollectionOptions(journalSize: Option[Long] = None,
-                                   replicationFactor: Option[Int] = None,
+case class CreateCollectionOptions(replicationFactor: Option[Int] = None,
                                    satellite: Option[Boolean] = None,
                                    writeConcern: Option[Int] = None,
                                    keyOptions: Option[KeyOptions] = None,

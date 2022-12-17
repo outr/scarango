@@ -53,10 +53,6 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
             val options = new GeoIndexOptions
             options.geoJson(i.geoJson)
             _collection.ensureGeoIndex(fields, options).toIO
-          case IndexType.FullText =>
-            val options = new FulltextIndexOptions
-            options.minLength(i.minLength.toInt)
-            _collection.ensureFulltextIndex(fields, options).toIO
           case IndexType.TTL =>
             val options = new TtlIndexOptions
             options.expireAfter(i.expireAfterSeconds)

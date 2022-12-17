@@ -22,7 +22,6 @@ object Helpers {
   implicit def collectionEntityConversion(ce: entity.CollectionEntity): CollectionInfo = CollectionInfo(
     name = ce.getName,
     waitForSync = ce.getWaitForSync,
-    isVolatile = ce.getIsVolatile,
     isSystem = ce.getIsSystem,
     status = ce.getStatus,
     `type` = ce.getType,
@@ -30,11 +29,9 @@ object Helpers {
   )
 
   implicit def statusConversion(status: entity.CollectionStatus): CollectionStatus = status match {
-    case entity.CollectionStatus.NEW_BORN_COLLECTION => CollectionStatus.New
-    case entity.CollectionStatus.UNLOADED => CollectionStatus.Unloaded
     case entity.CollectionStatus.LOADED => CollectionStatus.Loaded
-    case entity.CollectionStatus.IN_THE_PROCESS_OF_BEING_UNLOADED => CollectionStatus.Loading
     case entity.CollectionStatus.DELETED => CollectionStatus.Deleted
+    case _ => throw new RuntimeException(s"Use of deprecated collection status: $status")
   }
 
   implicit def keyTypeConversionFromJava(kt: entity.KeyType): KeyType = kt match {

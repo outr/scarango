@@ -6,7 +6,6 @@ import com.outr.arango.util.Helpers._
 class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectionOptions) extends CollectionCreateOptions {
   this.name(collectionName)
   o.`type`.foreach(t => `type`(t))
-  o.journalSize.foreach(journalSize(_))
   o.replicationFactor.foreach(replicationFactor(_))
   o.satellite.foreach(satellite(_))
   o.writeConcern.foreach(writeConcern(_))

@@ -29,10 +29,6 @@ class Field[F](val fieldName: String,
       Index(IndexType.Geo, List(fieldName), geoJson = geoJson)
     }
 
-    def fullText(minLength: Long = 3L): Index = {
-      Index(IndexType.FullText, List(fieldName), minLength = minLength)
-    }
-
     def ttl(expireAfter: FiniteDuration): Index = {
       val seconds = expireAfter.toSeconds.toInt
       Index(IndexType.TTL, List(fieldName), expireAfterSeconds = seconds)

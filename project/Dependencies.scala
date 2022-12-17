@@ -2,11 +2,11 @@ import sbt._
 
 object Dependencies {
   object version {
-    val fabric: String = "1.7.4"
+    val fabric: String = "1.8.3"
     val profig: String = "3.4.6"
     val scalaPass: String = "1.2.4"
     val arangoDBJavaDriver: String = "6.20.0"
-    val jackson: String = "3.1.0"
+    val jackson: String = "3.0.1"
     val catsEffect: String = "3.4.2"
     val fs2: String = "3.4.0"
     val scribe: String = "3.10.5"
