@@ -12,17 +12,17 @@ import com.outr.arango.collection.DocumentCollection
   * @param batchSize the maximum number of records per batch (defaults to 1000)
   */
 case class DBQueue(batchSize: Int = 1000,
-                   map: Map[DocumentCollection[_], CollectionQueue[_]] = Map.empty,
-                   inserts: Int = 0,
-                   upserts: Int = 0,
-                   deletes: Int = 0) {
+                   map: Map[DocumentCollection[_], CollectionQueue[_]] = Map.empty) {
+  def inserted: Int = map.map(_._2.inserted).sum
+  def upserted: Int = map.map(_._2.upserted).sum
+  def deleted: Int = map.map(_._2.deleted).sum
+
   private def collectionQueue[D <: Document[D]](collection: DocumentCollection[D]): IO[CollectionQueue[D]] = IO {
     map.getOrElse(collection, CollectionQueue(batchSize, collection)).asInstanceOf[CollectionQueue[D]]
   }
 
   private def stream[D <: Document[D]](collection: DocumentCollection[D],
                                        op: (CollectionQueue[D], D) => IO[CollectionQueue[D]],
-                                       inc: (DBQueue, Int) => DBQueue,
                                        stream: fs2.Stream[IO, D]): IO[DBQueue] = stream
     .chunkN(batchSize)
     .evalScan(this)((queue, chunk) => queue.collectionQueue(collection).flatMap { queue =>
@@ -30,7 +30,7 @@ case class DBQueue(batchSize: Int = 1000,
         .toList
         .foldLeft(IO.pure(queue))((queue, doc) => queue.flatMap(q => op(q, doc)))
         .map { queue =>
-          inc(copy(map = map + (queue.collection -> queue)), chunk.size)
+          copy(map = map + (queue.collection -> queue))
         }
     })
     .compile
@@ -40,7 +40,6 @@ case class DBQueue(batchSize: Int = 1000,
     this.stream[D](
       collection = collection,
       op = (q, d) => q.withInsert(d),
-      inc = (q, size) => q.copy(inserts = inserts + size),
       stream = stream
     )
   }
@@ -52,7 +51,6 @@ case class DBQueue(batchSize: Int = 1000,
     this.stream[D](
       collection = collection,
       op = (q, d) => q.withUpsert(d),
-      inc = (q, size) => q.copy(upserts = upserts + size),
       stream = stream
     )
 
@@ -63,12 +61,17 @@ case class DBQueue(batchSize: Int = 1000,
     this.stream[D](
       collection = collection,
       op = (q, d) => q.withDelete(d),
-      inc = (q, size) => q.copy(deletes = deletes + size),
       stream = stream
     )
 
   def delete[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
     delete[D](collection, fs2.Stream[IO, D](docs: _*))
 
-  def finish(): IO[Unit] = map.values.toList.map(_.finish()).sequence.map(_ => ())
+  def finish(): IO[DBQueue] = map.values.toList.map(_.finish()).sequence.map { cqs =>
+    var m = map
+    cqs.foreach { cq =>
+      m += cq.collection -> cq
+    }
+    copy(map = m)
+  }
 }

@@ -81,7 +81,7 @@ class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
       .lastOrError
       .flatMap { queue =>
         queue.finish().map { _ =>
-          ProcessStats(counter.get(), queue.inserts, queue.upserts, queue.deletes)
+          ProcessStats(counter.get(), queue.inserted, queue.upserted, queue.deleted)
         }
       }
   }

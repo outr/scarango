@@ -8,39 +8,66 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
                                              collection: DocumentCollection[D],
                                              insert: Vector[D] = Vector.empty[D],
                                              upsert: Vector[D] = Vector.empty[D],
-                                             delete: Vector[D] = Vector.empty[D]) {
+                                             delete: Vector[D] = Vector.empty[D],
+                                             inserted: Int = 0,
+                                             upserted: Int = 0,
+                                             deleted: Int = 0) {
   def withInsert(doc: D): IO[CollectionQueue[D]] = {
-    val updated = insert :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.insert(updated.toList).map(_ => copy(insert = Vector.empty))
+    val updated = copy(insert = insert :+ doc)
+    if (updated.insert.length >= batchSize) {
+      updated.flushInsert()
     } else {
-      IO.pure(copy(insert = updated))
+      IO.pure(updated)
     }
   }
 
   def withUpsert(doc: D): IO[CollectionQueue[D]] = {
-    val updated = upsert :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.upsert(updated.toList).map(_ => copy(upsert = Vector.empty))
+    val updated = copy(upsert = upsert :+ doc)
+    if (updated.upsert.length >= batchSize) {
+      updated.flushUpsert()
     } else {
-      IO.pure(copy(upsert = updated))
+      IO.pure(updated)
     }
   }
 
   def withDelete(doc: D): IO[CollectionQueue[D]] = {
-    val updated = delete :+ doc
-    if (updated.length >= batchSize) {
-      collection.batch.delete(updated.map(_._id).toList).map(_ => copy(delete = Vector.empty))
+    val updated = copy(delete = delete :+ doc)
+    if (updated.delete.length >= batchSize) {
+      updated.flushDelete()
     } else {
-      IO.pure(copy(delete = updated))
+      IO.pure(updated)
     }
   }
 
-  def finish(): IO[Unit] = for {
-    _ <- if (insert.nonEmpty) collection.batch.insert(insert.toList) else IO.unit
-    _ <- if (upsert.nonEmpty) collection.batch.upsert(upsert.toList) else IO.unit
-    _ <- if (delete.nonEmpty) collection.batch.delete(delete.map(_._id).toList) else IO.unit
+  def flushInsert(): IO[CollectionQueue[D]] = if (insert.nonEmpty) {
+    collection.batch
+      .insert(insert.toList)
+      .map(_ => copy(insert = Vector.empty, inserted = inserted + insert.length))
+  } else {
+    IO.pure(this)
+  }
+
+  def flushUpsert(): IO[CollectionQueue[D]] = if (upsert.nonEmpty) {
+    collection.batch
+      .upsert(upsert.toList)
+      .map(_ => copy(upsert = Vector.empty, upserted = upserted + upsert.length))
+  } else {
+    IO.pure(this)
+  }
+
+  def flushDelete(): IO[CollectionQueue[D]] = if (delete.nonEmpty) {
+    collection.batch
+      .delete(delete.toList.map(_._id))
+      .map(_ => copy(delete = Vector.empty, deleted = deleted + delete.length))
+  } else {
+    IO.pure(this)
+  }
+
+  def finish(): IO[CollectionQueue[D]] = for {
+    a <- flushInsert()
+    b <- a.flushUpsert()
+    c <- b.flushDelete()
   } yield {
-    ()
+    c
   }
 }
