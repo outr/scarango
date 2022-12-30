@@ -20,32 +20,27 @@ case class DBQueue(batchSize: Int = 1000,
     map.getOrElse(collection, CollectionQueue(batchSize, collection)).asInstanceOf[CollectionQueue[D]]
   }
 
-  def insert[D <: Document[D]](docAndCollection: (D, DocumentCollection[D])): IO[DBQueue] = {
-    val collection = docAndCollection._2
+  private def withQueue[D <: Document[D]](collection: DocumentCollection[D],
+                                          op: (CollectionQueue[D], D) => IO[CollectionQueue[D]],
+                                          inc: DBQueue => DBQueue,
+                                          docs: D*): IO[DBQueue] = {
     collectionQueue(collection).flatMap { queue =>
-      queue.withInsert(docAndCollection._1).map { cq =>
-        copy(map = map + (collection -> cq), inserts = inserts + 1)
-      }
+      docs
+        .foldLeft(IO.pure(queue))((queue, doc) => queue.flatMap(q => op(q, doc)))
+        .map { queue =>
+          inc(copy(map = map + (collection -> queue)))
+        }
     }
   }
 
-  def upsert[D <: Document[D]](docAndCollection: (D, DocumentCollection[D])): IO[DBQueue] = {
-    val collection = docAndCollection._2
-    collectionQueue(collection).flatMap { queue =>
-      queue.withUpsert(docAndCollection._1).map { cq =>
-        copy(map = map + (collection -> cq), upserts = upserts + 1)
-      }
-    }
-  }
+  def insert[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
+    withQueue[D](collection, (q, d) => q.withInsert(d), _.copy(inserts = inserts + docs.length), docs: _*)
 
-  def delete[D <: Document[D]](docAndCollection: (D, DocumentCollection[D])): IO[DBQueue] = {
-    val collection = docAndCollection._2
-    collectionQueue(collection).flatMap { queue =>
-      queue.withDelete(docAndCollection._1).map { cq =>
-        copy(map = map + (collection -> cq), deletes = deletes + 1)
-      }
-    }
-  }
+  def upsert[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
+    withQueue[D](collection, (q, d) => q.withUpsert(d), _.copy(upserts = upserts + docs.length), docs: _*)
+
+  def delete[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
+    withQueue[D](collection, (q, d) => q.withDelete(d), _.copy(deletes = deletes + docs.length), docs: _*)
 
   def finish(): IO[Unit] = map.values.toList.map(_.finish()).sequence.map(_ => ())
 }

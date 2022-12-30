@@ -167,7 +167,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         Person("Ten", 10),
       )
       fs2.Stream[IO, Person](people: _*)
-        .evalScan(queue)((queue, person) => queue.insert(person -> database.people))
+        .evalScan(queue)((queue, person) => queue.insert(database.people, person))
         .compile
         .lastOrError
         .flatMap { queue =>
