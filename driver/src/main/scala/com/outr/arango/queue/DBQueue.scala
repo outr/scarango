@@ -1,9 +1,9 @@
 package com.outr.arango.queue
 
 import cats.effect.IO
+import cats.syntax.all._
 import com.outr.arango.Document
 import com.outr.arango.collection.DocumentCollection
-import cats.syntax.all._
 
 /**
   * Useful for batch operations where the batch may overflow. This will create multiple batches and flush as they fill
@@ -20,27 +20,55 @@ case class DBQueue(batchSize: Int = 1000,
     map.getOrElse(collection, CollectionQueue(batchSize, collection)).asInstanceOf[CollectionQueue[D]]
   }
 
-  private def withQueue[D <: Document[D]](collection: DocumentCollection[D],
-                                          op: (CollectionQueue[D], D) => IO[CollectionQueue[D]],
-                                          inc: DBQueue => DBQueue,
-                                          docs: D*): IO[DBQueue] = {
-    collectionQueue(collection).flatMap { queue =>
-      docs
+  private def stream[D <: Document[D]](collection: DocumentCollection[D],
+                                       op: (CollectionQueue[D], D) => IO[CollectionQueue[D]],
+                                       inc: (DBQueue, Int) => DBQueue,
+                                       stream: fs2.Stream[IO, D]): IO[DBQueue] = stream
+    .chunkN(batchSize)
+    .evalScan(this)((queue, chunk) => queue.collectionQueue(collection).flatMap { queue =>
+      chunk
+        .toList
         .foldLeft(IO.pure(queue))((queue, doc) => queue.flatMap(q => op(q, doc)))
         .map { queue =>
-          inc(copy(map = map + (collection -> queue)))
+          inc(copy(map = map + (queue.collection -> queue)), chunk.size)
         }
-    }
+    })
+    .compile
+    .lastOrError
+
+  def insert[D <: Document[D]](collection: DocumentCollection[D], stream: fs2.Stream[IO, D]): IO[DBQueue] = {
+    this.stream[D](
+      collection = collection,
+      op = (q, d) => q.withInsert(d),
+      inc = (q, size) => q.copy(inserts = inserts + size),
+      stream = stream
+    )
   }
 
   def insert[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
-    withQueue[D](collection, (q, d) => q.withInsert(d), _.copy(inserts = inserts + docs.length), docs: _*)
+    insert[D](collection, fs2.Stream[IO, D](docs: _*))
+
+  def upsert[D <: Document[D]](collection: DocumentCollection[D], stream: fs2.Stream[IO, D]): IO[DBQueue] =
+    this.stream[D](
+      collection = collection,
+      op = (q, d) => q.withUpsert(d),
+      inc = (q, size) => q.copy(upserts = upserts + size),
+      stream = stream
+    )
 
   def upsert[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
-    withQueue[D](collection, (q, d) => q.withUpsert(d), _.copy(upserts = upserts + docs.length), docs: _*)
+    upsert[D](collection, fs2.Stream[IO, D](docs: _*))
+
+  def delete[D <: Document[D]](collection: DocumentCollection[D], stream: fs2.Stream[IO, D]): IO[DBQueue] =
+    this.stream[D](
+      collection = collection,
+      op = (q, d) => q.withDelete(d),
+      inc = (q, size) => q.copy(deletes = deletes + size),
+      stream = stream
+    )
 
   def delete[D <: Document[D]](collection: DocumentCollection[D], docs: D*): IO[DBQueue] =
-    withQueue[D](collection, (q, d) => q.withDelete(d), _.copy(deletes = deletes + docs.length), docs: _*)
+    delete[D](collection, fs2.Stream[IO, D](docs: _*))
 
   def finish(): IO[Unit] = map.values.toList.map(_.finish()).sequence.map(_ => ())
 }
