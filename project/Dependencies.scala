@@ -9,7 +9,7 @@ object Dependencies {
     val jackson: String = "3.0.1"
     val catsEffect: String = "3.4.3"
     val fs2: String = "3.4.0"
-    val scribe: String = "3.10.5"
+    val scribe: String = "3.10.6"
 
     val scalaTest: String = "3.2.14"
     val catsEffectTesting: String = "1.5.0"
