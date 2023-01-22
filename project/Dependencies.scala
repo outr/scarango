@@ -8,7 +8,7 @@ object Dependencies {
     val arangoDBJavaDriver: String = "6.20.0"
     val jackson: String = "3.0.1"
     val catsEffect: String = "3.4.4"
-    val fs2: String = "3.4.0"
+    val fs2: String = "3.5.0"
     val scribe: String = "3.10.6"
 
     val scalaTest: String = "3.2.15"
