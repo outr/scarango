@@ -144,6 +144,16 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           people.map(_.name) should be(List("Adam"))
         }
     }
+    "verify the age is between a range" in {
+      database
+        .people
+        .query
+        .byFilter((Person.age < 23) && (Person.age > 21))
+        .all
+        .map { people =>
+          people.map(_.name) should be(List("Adam"))
+        }
+    }
     "update multiple fields in a record using DSL" in {
       database
         .people

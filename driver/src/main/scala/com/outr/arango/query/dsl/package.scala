@@ -151,12 +151,8 @@ package object dsl {
   def withReference[Return](f: => Return): (Option[Ref], Return) = {
     val context = QueryBuilderContext()
     if (!forced.get()) context.ref = None
-    try {
-      val r = f
-      (context.ref, r)
-    } finally {
-      context.ref = None
-    }
+    val r: Return = f
+    (context.ref, r)
   }
 
   implicit def ref2Wrapped[T](ref: WrappedRef[T]): T = {
