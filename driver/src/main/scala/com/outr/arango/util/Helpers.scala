@@ -1,22 +1,26 @@
 package com.outr.arango.util
 
 import cats.effect.IO
-import com.arangodb.entity
+import com.arangodb.{ArangoDBException, entity, model}
 import com.arangodb.entity.ErrorEntity
-import com.arangodb.model
 import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
 import com.outr.arango._
 import com.outr.arango.core._
 import fabric.Json
 
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.{CompletableFuture, CompletionException}
 import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
 object Helpers {
   implicit class CompletableFutureExtras[T](cf: CompletableFuture[T]) {
-    def toIO: IO[T] = IO.fromFuture(IO(cf.asScala))
+    def toIO: IO[T] = IO.fromFuture(IO(cf.asScala)).recover {
+      case exc: CompletionException => exc.getCause match {
+        case t: ArangoDBException => throw ArangoException(t)
+        case t => throw t
+      }
+    }
   }
 
   implicit def collectionEntityConversion(ce: entity.CollectionEntity): CollectionInfo = CollectionInfo(

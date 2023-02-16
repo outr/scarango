@@ -16,6 +16,7 @@ import cats.syntax.all._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
 
 import java.nio.file.Paths
+import java.util.concurrent.CompletionException
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   private var transaction: StreamTransaction = _
@@ -52,6 +53,16 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
           people.map(_.bio).toSet should be(Set("", "ynahteB m'I\n,iH"))
         }
+    }
+    "fail to insert a duplicate record" in {
+      database.people.insert(Person("Bethany", 321)).attempt.map {
+        case Left(exc: ArangoException) =>
+          exc.contraintViolation should not be None
+          val c = exc.contraintViolation.get
+          c.field should be("name")
+          c.`type` should be("persistent")
+        case _ => fail()
+      }
     }
     "create a transaction" in {
       database.transaction.begin().map { transaction =>
@@ -245,7 +256,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     val age: Field[Int] = field("age")
     val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
 
-    override def indexes: List[Index] = Nil
+    override def indexes: List[Index] = List(name.index.persistent(unique = true))
 
     override val collectionName: String = "people"
   }
