@@ -16,16 +16,14 @@ class QueryBuilderContext private() {
 
   def name(ref: Ref): String = ref.refName match {
     case Some(name) => name
-    case _ => {
+    case _ =>
       refNames.get(ref) match {
         case Some(name) => name
-        case None => {
+        case None =>
           val name = createRef
           refNames += ref -> name
           name
-        }
       }
-    }
   }
 
   def createRef: String = s"ref${incrementer.incrementAndGet()}"
