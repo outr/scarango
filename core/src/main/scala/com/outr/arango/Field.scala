@@ -1,14 +1,16 @@
 package com.outr.arango
 
 import com.outr.arango.mutation.{DataMutation, ModifyFieldValue}
-import com.outr.arango.query.QueryPart
+import com.outr.arango.query.dsl._
+import com.outr.arango.query.{Query, QueryPart, SortDirection}
+import fabric.{Str, arr}
 import fabric.rw._
 
 import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
                val mutation: Option[DataMutation])
-              (implicit rw: RW[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
+              (implicit val rw: RW[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
   def this(fieldName: String, isArray: Boolean)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
     this(if (isArray) s"$fieldName[*]" else fieldName, None)(rw, model)
   }
@@ -52,4 +54,117 @@ class Field[F](val fieldName: String,
   lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, mutation)
 
   override def toQueryPart: QueryPart = QueryPart.Static(fieldName)
+
+  private def cond(value: F, condition: String): Filter = {
+    val context = QueryBuilderContext()
+    val (refOption, f) = withReference(this)
+    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(ref)
+    val left = Query(s"$leftName.${f.fieldName}")
+    val right = Query.variable(value.json)
+
+    new Filter(left, condition, right)
+  }
+
+  private def cond(that: => Field[F], condition: String): Filter = {
+    val context = QueryBuilderContext()
+    val (leftRefOption, leftField) = withReference(this)
+    val leftRef = leftRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(leftRef)
+    val left = Query(s"$leftName.${leftField.fieldName}")
+    val (rightRefOption, rightField) = withReference(that)
+    val rightRef = rightRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val rightName = context.name(rightRef)
+    val right = Query(s"$rightName.${rightField.fieldName}")
+
+    new Filter(left, condition, right)
+  }
+
+  private def cond(values: Seq[F], condition: String): Filter = {
+    val context = QueryBuilderContext()
+    val (refOption, f) = withReference(this)
+    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(ref)
+    val left = Query(s"$leftName.${fieldName}")
+    val right = Query.variable(arr(values.map(_.json): _*))
+
+    new Filter(left, condition, right)
+  }
+
+  private def stringCond(value: String, condition: String): Filter = {
+    val context = QueryBuilderContext()
+    val (refOption, f) = withReference(this)
+    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(ref)
+    val left = Query(s"$leftName.${f.fieldName}")
+    val right = Query.variable(Str(value))
+
+    new Filter(left, condition, right)
+  }
+
+  def is(value: F): Filter = ===(value)
+
+  def ===(value: F): Filter = {
+    cond(value, "==")
+  }
+
+  def ===(field: => Field[F]): Filter = {
+    cond(field, "==")
+  }
+
+  def isNot(value: F): Filter = !==(value)
+
+  def !=(value: F): Filter = !==(value)
+
+  def !==(value: F): Filter = {
+    cond(value, "!=")
+  }
+
+  def >(value: F): Filter = {
+    cond(value, ">")
+  }
+
+  def >=(value: F): Filter = {
+    cond(value, ">=")
+  }
+
+  def <(value: F): Filter = {
+    cond(value, "<")
+  }
+
+  def <=(value: F): Filter = {
+    cond(value, "<=")
+  }
+
+  def IN(values: Seq[F]): Filter = {
+    cond(values, "IN")
+  }
+
+  def NOT_IN(values: Seq[F]): Filter = {
+    cond(values, "NOT IN")
+  }
+
+  def LIKE(value: String): Filter = {
+    stringCond(value, "LIKE")
+  }
+
+  def NOT_LIKE(value: String): Filter = {
+    stringCond(value, "NOT LIKE")
+  }
+
+  def =~(value: String): Filter = {
+    stringCond(value, "=~")
+  }
+
+  def !~(value: String): Filter = {
+    stringCond(value, "!~")
+  }
+
+  def asc: (Field[F], SortDirection) = (this, SortDirection.ASC)
+
+  def ASC: (Field[F], SortDirection) = (this, SortDirection.ASC)
+
+  def desc: (Field[F], SortDirection) = (this, SortDirection.DESC)
+
+  def DESC: (Field[F], SortDirection) = (this, SortDirection.DESC)
 }

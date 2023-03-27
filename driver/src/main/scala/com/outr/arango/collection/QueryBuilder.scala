@@ -9,7 +9,7 @@ import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicInteger
 
-class QueryBuilder[R](graph: Graph, query: Query, converter: Json => R) {
+class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) {
   /**
     * Translates the results to a return type of T
     *

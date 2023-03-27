@@ -1,7 +1,9 @@
 package com.outr.arango.collection
 
+import cats.effect.IO
 import com.outr.arango.core.ArangoDBCollection
-import com.outr.arango.{CollectionType, Document, DocumentModel, Graph}
+import com.outr.arango.query.dsl._
+import com.outr.arango._
 import fabric.Json
 
 class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
@@ -16,4 +18,18 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
   override protected def beforeStorage(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.store(v))
 
   override protected def afterRetrieval(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
+
+  def modify(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
+    val v = DocumentRef[D, DocumentModel[D]](model, None)
+    val count = NamedRef("count")
+
+    val query = aql {
+      FOR(v) IN this
+      FILTER(withReference(v)(filter))
+      UPDATE(v, fieldAndValues: _*)
+      COLLECT WITH COUNT INTO count
+      RETURN(count)
+    }
+    graph.query[Int](query).one
+  }
 }
