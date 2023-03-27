@@ -19,7 +19,7 @@ import scala.io.Source
 
 class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   "Graph" should {
-    val doDrop: Boolean = true
+    val doDrop: Boolean = false
 
     "initialize configuration" in {
       Profig.initConfiguration()
