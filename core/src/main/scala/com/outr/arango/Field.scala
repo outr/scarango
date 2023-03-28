@@ -9,10 +9,11 @@ import fabric.rw._
 import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
+               val isArray: Boolean,
                val mutation: Option[DataMutation])
               (implicit val rw: RW[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
   def this(fieldName: String, isArray: Boolean)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
-    this(if (isArray) s"$fieldName[*]" else fieldName, None)(rw, model)
+    this(fieldName, isArray, None)(rw, model)
   }
 
   def this(fieldName: String)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
@@ -44,14 +45,14 @@ class Field[F](val fieldName: String,
 
   def withMutation(mutation: DataMutation): Field[F] = {
     this.mutation.foreach(m => throw new RuntimeException(s"Field $fieldName already has a mutation set: $m"))
-    new Field[F](fieldName, Some(mutation))
+    new Field[F](fieldName, isArray, Some(mutation))
   }
 
   def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(this, storage, retrieval))
 
   def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 
-  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, mutation)
+  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, isArray, mutation)
 
   override def toQueryPart: QueryPart = QueryPart.Static(fieldName)
 

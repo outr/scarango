@@ -14,7 +14,7 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   implicit val rw: RW[D]
 
-  val _id: Field[Id[D]] = field("_id", IdMutation)
+  val _id: Field[Id[D]] = field("_id", mutation = Some(IdMutation))
 
   protected def generateId(): String = Unique()
 
@@ -23,10 +23,10 @@ trait DocumentModel[D <: Document[D]] { model =>
     field
   }
 
-  protected[arango] def field[T: RW](name: String, mutation: Option[DataMutation]): Field[T] =
-    new Field[T](name, mutation)
-  protected[arango] def field[T: RW](name: String): Field[T] = field[T](name, None)
-  protected[arango] def field[T: RW](name: String, mutation: DataMutation): Field[T] = field[T](name, Some(mutation))
+  protected[arango] def field[T: RW](name: String,
+                                     isArray: Boolean = false,
+                                     mutation: Option[DataMutation] = None): Field[T] =
+    new Field[T](name, isArray, mutation)
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
