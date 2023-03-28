@@ -6,7 +6,7 @@ object Dependencies {
     val profig: String = "3.4.10"
     val scalaPass: String = "1.2.5"
     val arangoDBJavaDriver: String = "6.21.0"
-    val jackson: String = "3.0.1"
+    val jackson: String = "4.0.1"
     val catsEffect: String = "3.4.8"
     val fs2: String = "3.6.1"
     val scribe: String = "3.11.1"
@@ -23,6 +23,7 @@ object Dependencies {
   val catsEffect: ModuleID = "org.typelevel" %% "cats-effect" % version.catsEffect
   val fs2: ModuleID = "co.fs2" %% "fs2-core" % version.fs2
   val scribe: ModuleID = "com.outr" %% "scribe" % version.scribe
+  val scribeSlf4j: ModuleID = "com.outr" %% "scribe-slf4j2" % version.scribe
 
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % version.scalaTest % "test"
   val catsEffectTesting: ModuleID = "org.typelevel" %% "cats-effect-testing-scalatest" % version.catsEffectTesting % "test"

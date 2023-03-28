@@ -6,7 +6,7 @@ val scala3 = "3.2.2"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.9.0"
+ThisBuild / version := "3.9.1-SNAPSHOT"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := List(scala3, scala213)
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
@@ -73,7 +73,7 @@ lazy val driver = project.in(file("driver"))
       dep.jacksonDataformatVelocypack,
       dep.catsEffect,
       dep.fs2,
-      dep.scribe,
+      dep.scribeSlf4j,
       dep.scalaTest,
       dep.catsEffectTesting
     )

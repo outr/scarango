@@ -12,24 +12,27 @@ class DocumentCollectionQuery[D <: Document[D]](collection: DocumentCollection[D
   override def apply(query: Query): QueryBuilder[D] = new QueryBuilder[D](collection.graph, query, collection.toT)
 
   override def byFilter(filter: => Filter): QueryBuilder[D] = {
-    val d: DocumentRef[D, DocumentModel[D]] = DocumentRef(collection.model, Some("d"))
-    apply(aql {
-      withReference(d) {
-        FOR(d) IN collection
-        FILTER(filter)
-        RETURN(d)
-      }
-    })
+    withRef { d =>
+      FOR(d) IN collection
+      FILTER(filter)
+      RETURN(d)
+    }
   }
 
   override def byFilter(filter: => Filter, sort:  (Field[_], SortDirection)): QueryBuilder[D] = {
+    withRef { d =>
+      FOR(d) IN collection
+      FILTER(filter)
+      SORT(sort.asInstanceOf[(Field[Any], SortDirection)])
+      RETURN(d)
+    }
+  }
+
+  override def withRef(f: DocumentRef[D, DocumentModel[D]] => Unit): QueryBuilder[D] = {
     val d: DocumentRef[D, DocumentModel[D]] = DocumentRef(collection.model, Some("d"))
     apply(aql {
       withReference(d) {
-        FOR(d) IN collection
-        FILTER(filter)
-        SORT(sort.asInstanceOf[(Field[Any], SortDirection)])
-        RETURN(d)
+        f(d)
       }
     })
   }
