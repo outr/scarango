@@ -3,22 +3,53 @@ package com.outr.arango
 import com.outr.arango.mutation.{DataMutation, ModifyFieldValue}
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, SortDirection}
-import fabric.{Str, arr}
 import fabric.rw._
+import fabric.{Json, Str, arr}
 
 import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
-               val isArray: Boolean,
-               val mutation: Option[DataMutation])
-              (implicit val rw: RW[F], model: Option[DocumentModel[_]]) extends QueryPart.Support {
-  def this(fieldName: String, isArray: Boolean)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
-    this(fieldName, isArray, None)(rw, model)
+               val isArray: Boolean = false,
+               val mutation: Option[DataMutation] = None)
+              (implicit val rw: RW[F],
+               model: Option[DocumentModel[_]],
+               private val _parent: Option[Field[_]] = None) extends QueryPart.Support {
+  protected implicit def thisField: Option[Field[_]] = Some(this)
+
+  lazy val fullyQualifiedName: String = {
+    val name = if (isArray) s"$fieldName[*]" else fieldName
+    parent match {
+      case Some(p) => s"${p.fullyQualifiedName}.$name"
+      case None => name
+    }
   }
 
-  def this(fieldName: String)(implicit rw: RW[F], model: Option[DocumentModel[_]]) = {
-    this(fieldName, isArray = false)(rw, model)
+  lazy val depth: Int = parent match {
+    case Some(p) => p.depth + 1
+    case None => 0
   }
+
+  lazy val arrayDepth: Int = {
+    val v = if (isArray) 1 else 0
+    parent match {
+      case Some(p) => p.arrayDepth + v
+      case None => v
+    }
+  }
+
+  lazy val fullyQualifiedFilter: String = {
+    val filter = if (isArray) {
+      s"$fieldName[? FILTER CURRENT"
+    } else {
+      fieldName
+    }
+    parent match {
+      case Some(p) => s"${p.fullyQualifiedFilter}.$filter"
+      case None => filter
+    }
+  }
+
+  def parent: Option[Field[_]] = _parent
 
   model.foreach(_.defineField(this))
 
@@ -38,33 +69,34 @@ class Field[F](val fieldName: String,
     }
   }
 
-  def field[T: RW](name: String): Field[T] = model match {
-    case Some(m) => m.field[T](s"$fieldName.$name")
-    case None => throw new RuntimeException("No model defined!")
-  }
+//  def field[T: RW](name: String): Field[T] = model match {
+//    case Some(m) => m.field[T](s"$fieldName.$name")
+//    case None => throw new RuntimeException("No model defined!")
+//  }
 
   def withMutation(mutation: DataMutation): Field[F] = {
     this.mutation.foreach(m => throw new RuntimeException(s"Field $fieldName already has a mutation set: $m"))
-    new Field[F](fieldName, isArray, Some(mutation))
+    new Field[F](fieldName, isArray, Some(mutation))(rw, model, parent)
   }
 
   def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(this, storage, retrieval))
 
   def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 
-  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, isArray, mutation)
+  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, isArray, mutation)(implicitly[RW[Option[F]]], model, parent)
 
-  override def toQueryPart: QueryPart = QueryPart.Static(fieldName)
+  override def toQueryPart: QueryPart = QueryPart.Static(fullyQualifiedName)
 
-  private def cond(value: F, condition: String): Filter = {
+  private def cond[T: RW](value: T, condition: String): Filter = {
     val context = QueryBuilderContext()
     val (refOption, f) = withReference(this)
     val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
     val leftName = context.name(ref)
-    val left = Query(s"$leftName.${f.fieldName}")
+    val left = Query(s"$leftName.${f.fullyQualifiedFilter}")
     val right = Query.variable(value.json)
+    val arrayClosures = (0 until arrayDepth).toList.map(_ => QueryPart.Static("]"))
 
-    new Filter(left, condition, right)
+    new Filter(left, condition, right.withParts(arrayClosures: _*))
   }
 
   private def cond(that: => Field[F], condition: String): Filter = {
@@ -105,6 +137,8 @@ class Field[F](val fieldName: String,
 
   def is(value: F): Filter = ===(value)
 
+  def is[T: RW](value: T): Filter = cond(value, "==")
+
   def ===(value: F): Filter = {
     cond(value, "==")
   }
@@ -112,6 +146,8 @@ class Field[F](val fieldName: String,
   def ===(field: => Field[F]): Filter = {
     cond(field, "==")
   }
+
+  def ===[T: RW](value: T): Filter = cond(value, "==")
 
   def isNot(value: F): Filter = !==(value)
 

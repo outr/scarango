@@ -4,12 +4,14 @@ import com.outr.arango.core.CreateCollectionOptions
 import com.outr.arango.mutation.{DataMutation, IdMutation}
 import fabric.rw.RW
 
-trait DocumentModel[D <: Document[D]] { model =>
+trait DocumentModel[D <: Document[D]] {
+  model =>
   protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
 
   val collectionName: String
 
   private var _fields = List.empty[Field[_]]
+
   def fields: List[Field[_]] = _fields
 
   implicit val rw: RW[D]
@@ -23,13 +25,15 @@ trait DocumentModel[D <: Document[D]] { model =>
     field
   }
 
-  protected[arango] def field[T: RW](name: String,
-                                     isArray: Boolean = false,
-                                     mutation: Option[DataMutation] = None): Field[T] =
-    new Field[T](name, isArray, mutation)
+  protected[arango] def field[T](name: String,
+                                 isArray: Boolean = false,
+                                 mutation: Option[DataMutation] = None)
+                                (implicit rw: RW[T], parent: Option[Field[_]] = None): Field[T] =
+    new Field[T](name, isArray, mutation)(rw, Some(this), parent)
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
+
     def unique(fields: Field[_]*): List[Index] = fields.map(_.index.persistent(unique = true)).toList
   }
 

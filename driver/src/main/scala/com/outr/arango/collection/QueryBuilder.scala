@@ -85,4 +85,6 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
         }
       }
   }
+
+  override def toString: String = query.toString
 }
