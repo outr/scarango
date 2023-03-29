@@ -16,10 +16,13 @@ class Field[F](val fieldName: String,
                private val _parent: Option[Field[_]] = None) extends QueryPart.Support {
   protected implicit def thisField: Option[Field[_]] = Some(this)
 
-  lazy val fullyQualifiedName: String = {
-    val name = if (isArray) s"$fieldName[*]" else fieldName
+  lazy val fullyQualifiedName: String = fqn(true)
+
+  protected def fqn(top: Boolean): String = {
+    def asterisk = if (top) "**" else "*"
+    val name = if (isArray) s"$fieldName[$asterisk]" else fieldName
     parent match {
-      case Some(p) => s"${p.fullyQualifiedName}.$name"
+      case Some(p) => s"${p.fqn(false)}.$name"
       case None => name
     }
   }

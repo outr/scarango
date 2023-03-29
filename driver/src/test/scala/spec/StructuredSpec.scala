@@ -48,13 +48,13 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       val query =
         aql"""
             FOR u IN ${database.users}
-            FILTER ["One", "Two", "Three"] IN u.addresses[*].lines
+            FILTER "Two" IN u.${User.addresses.lines}
             RETURN u
            """
       database.users.query(query)
         .all
         .map { users =>
-          users.map(_.name) should be(List("Ann"))
+          users.map(_.name) should be(List("Ann", "Bob"))
         }
     }
     "dispose the database" in {
