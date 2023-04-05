@@ -41,7 +41,7 @@ class JsonCollectionSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   }
 
   object database extends Graph("json-collection") {
-    val users: DocumentCollection[JsonDocument] = vertex[JsonDocument](UserModel)
+    val users: DocumentCollection[JsonDocument, JsonDocumentModel] = vertex(UserModel)
   }
 
   object UserModel extends JsonDocumentModel {

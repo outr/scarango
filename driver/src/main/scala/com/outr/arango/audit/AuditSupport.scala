@@ -9,7 +9,7 @@ import fabric.rw._
 trait AuditSupport {
   this: Graph =>
 
-  val auditLog: DocumentCollection[AuditRecord] = vertex(AuditRecord)
+  val auditLog: DocumentCollection[AuditRecord, AuditRecord.type] = vertex(AuditRecord)
 
   object audit {
     def resource(name: String): Resource = Resource(name)

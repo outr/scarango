@@ -2,10 +2,10 @@ package com.outr.arango
 
 import com.outr.arango.core.CreateCollectionOptions
 import com.outr.arango.mutation.{DataMutation, IdMutation}
+import com.outr.arango.query.Query
 import fabric.rw.RW
 
-trait DocumentModel[D <: Document[D]] {
-  model =>
+trait DocumentModel[D <: Document[D]] { model =>
   protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
 
   val collectionName: String
@@ -15,6 +15,8 @@ trait DocumentModel[D <: Document[D]] {
   def fields: List[Field[_]] = _fields
 
   implicit val rw: RW[D]
+
+  def ref: DocumentRef[D, this.type] = DocumentRef(this, None)
 
   val _id: Field[Id[D]] = field("_id", mutation = Some(IdMutation))
 

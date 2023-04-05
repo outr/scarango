@@ -2,8 +2,9 @@ package com.outr.arango.backup
 
 import cats.effect.IO
 import cats.syntax.all._
+import com.outr.arango.backup.DatabaseBackup.AnyDocModel
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.{Document, Graph}
+import com.outr.arango.{Document, DocumentModel, Graph}
 import fabric.io.{Format, JsonParser}
 
 import java.nio.file.{Files, Path}
@@ -19,17 +20,17 @@ object DatabaseRestore {
     graph.collections.flatMap { collection =>
       val file = directory.resolve(s"${collection.name}.collection")
       if (Files.exists(file)) {
-        Some(restoreCollection(collection.asInstanceOf[DocumentCollection[AnyDoc]], file, truncate, upsert))
+        Some(restoreCollection(collection.asInstanceOf[DocumentCollection[AnyDoc, _ <: DocumentModel[AnyDoc]]], file, truncate, upsert))
       } else {
         None
       }
     }.sequence.map(_ => ())
   }
 
-  def restoreCollection[D <: Document[D]](collection: DocumentCollection[D],
-                                          path: Path,
-                                          truncate: Boolean,
-                                          upsert: Boolean): IO[Unit] = {
+  def restoreCollection[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
+                                                              path: Path,
+                                                              truncate: Boolean,
+                                                              upsert: Boolean): IO[Unit] = {
     val source = Source.fromFile(path.toFile)
     val pre = if (truncate) collection.collection.truncate() else IO.unit
     pre.flatMap { _ =>

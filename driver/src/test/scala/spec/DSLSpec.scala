@@ -25,9 +25,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       }
 
       query.string should be(
-      """FOR p IN people
-        |SORT p.age DESC
-        |RETURN p""".stripMargin)
+      """FOR ref1 IN people
+        |SORT ref1.age DESC
+        |RETURN ref1""".stripMargin)
     }
     "build a query with a filter" in {
       val p = Person.ref
@@ -38,12 +38,12 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (p)
       }
       val expected = Query
-        .static("FOR p IN people ")
+        .static("FOR ref1 IN people ")
         .static("FILTER ")
-        .withQuery(aql"p.age == ${21}")
+        .withQuery(aql"ref1.age == ${21}")
         .static(" && ")
-        .withQuery(aql"p.name != ${"Adam"} ")
-        .static("RETURN p")
+        .withQuery(aql"ref1.name != ${"Adam"} ")
+        .static("RETURN ref1")
       query should be(expected)
     }
     "build a query with a remove" in {
@@ -55,9 +55,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         REMOVE (p) IN database.people
       }
       val expected = Query
-        .static("FOR p IN people ")
-        .withQuery(aql"FILTER p.age == ${21} && p.name != ${"Adam"} ")
-        .static("REMOVE p IN people")
+        .static("FOR ref1 IN people ")
+        .withQuery(aql"FILTER ref1.age == ${21} && ref1.name != ${"Adam"} ")
+        .static("REMOVE ref1 IN people")
       query should be(expected)
     }
     "build an update query" in {
@@ -70,9 +70,9 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (NEW)
       }
       val expectedQuery =
-        """FOR p IN people
-          |FILTER p.age == @arg0 && p.name != @arg1
-          |UPDATE p WITH {
+        """FOR ref1 IN people
+          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |UPDATE ref1 WITH {
           |  age: @arg2
           |} IN people
           |RETURN NEW""".stripMargin
@@ -89,8 +89,8 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         RETURN (count)
       }
       val expected = Query
-        .static("FOR p IN people ")
-        .withQuery(aql"FILTER p.age >= ${20} ")
+        .static("FOR ref1 IN people ")
+        .withQuery(aql"FILTER ref1.age >= ${20} ")
         .static("COLLECT WITH COUNT INTO count ")
         .static("RETURN count")
       query should be(expected)
@@ -98,7 +98,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(name = "advanced") {
-    val people: DocumentCollection[Person] = vertex[Person](Person)
+    val people: DocumentCollection[Person, Person.type] = vertex(Person)
   }
 
   case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
@@ -110,8 +110,6 @@ class DSLSpec extends AsyncWordSpec with Matchers {
     val age: Field[Int] = field("age")
 
     override def indexes: List[Index] = Nil
-
-    def ref: DocumentRef[Person, Person.type] = DocumentRef(this, Some("p"))
 
     override val collectionName: String = "people"
   }

@@ -16,15 +16,18 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   private val _initialized = new AtomicBoolean(false)
 
-  private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
+  private var _collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
 
   protected def storeCollectionName: String = "backingStore"
 
   def server: ArangoDBServer = db.server
-  def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
+
+  def collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = _collections
+
   def views: List[View] = _views
+
   def stores: List[DatabaseStore] = _stores
 
   def this(name: String, server: ArangoDBServer, managed: Boolean) = {
@@ -69,19 +72,19 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   }
 
   /**
-   * Creates a QueryBuilder[T] to manage execution of the supplied query.
-   *
-   * @param query the query to create the builder for
-   * @tparam T the type of results
-   * @return QueryBuilder[T]
-   */
+    * Creates a QueryBuilder[T] to manage execution of the supplied query.
+    *
+    * @param query the query to create the builder for
+    * @tparam T the type of results
+    * @return QueryBuilder[T]
+    */
   def query[T](query: Query)(implicit rw: RW[T]): QueryBuilder[T] = this.query[T](query, rw.write _)
 
   def query[T](query: Query, converter: Json => T): QueryBuilder[T] = new QueryBuilder[T](this, query, converter)
 
   /**
-   * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
-   */
+    * Executes the query ignoring the result. Useful for queries that modify data but don't return anything useful.
+    */
   def execute(query: Query): IO[Unit] = db.query.execute(query)
 
   def databaseName: String = db.name
@@ -130,9 +133,9 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
 
   def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
 
-  def vertex[D <: Document[D]](model: DocumentModel[D],
-                               managed: Boolean = this.managed): DocumentCollection[D] = synchronized {
-    val c = new DocumentCollection[D](
+  def vertex[D <: Document[D], M <: DocumentModel[D]](model: M,
+                                                      managed: Boolean = this.managed): DocumentCollection[D, M] = synchronized {
+    val c = new DocumentCollection[D, M](
       graph = this,
       arangoCollection = db.collection(model.collectionName),
       model = model,
@@ -143,9 +146,9 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
     c
   }
 
-  def edge[E <: Edge[E, From, To], From, To](model: EdgeModel[E, From, To],
-                                             managed: Boolean = this.managed): EdgeCollection[E, From, To] = synchronized {
-    val c = new EdgeCollection[E, From, To](this, db.collection(model.collectionName), model, managed)
+  def edge[E <: Edge[E, From, To], M <: EdgeModel[E, From, To], From, To](model: M,
+                                             managed: Boolean = this.managed): EdgeCollection[E, M, From, To] = synchronized {
+    val c = new EdgeCollection[E, M, From, To](this, db.collection(model.collectionName), model, managed)
     _collections = _collections ::: List(c)
     c
   }

@@ -63,7 +63,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   }
 
   object database extends Graph("structured") {
-    val users: DocumentCollection[User] = vertex[User](User)
+    val users: DocumentCollection[User, User.type] = vertex(User)
   }
 
   case class User(name: String, addresses: List[Address], _id: Id[User] = User.id()) extends Document[User]

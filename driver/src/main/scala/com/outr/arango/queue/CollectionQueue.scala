@@ -1,18 +1,18 @@
 package com.outr.arango.queue
 
 import cats.effect.IO
-import com.outr.arango.Document
+import com.outr.arango.{Document, DocumentModel}
 import com.outr.arango.collection.DocumentCollection
 
-case class CollectionQueue[D <: Document[D]](batchSize: Int,
-                                             collection: DocumentCollection[D],
+case class CollectionQueue[D <: Document[D], M <: DocumentModel[D]](batchSize: Int,
+                                             collection: DocumentCollection[D, M],
                                              insert: Vector[D] = Vector.empty[D],
                                              upsert: Vector[D] = Vector.empty[D],
                                              delete: Vector[D] = Vector.empty[D],
                                              inserted: Int = 0,
                                              upserted: Int = 0,
                                              deleted: Int = 0) {
-  def withInsert(doc: D): IO[CollectionQueue[D]] = {
+  def withInsert(doc: D): IO[CollectionQueue[D, M]] = {
     val updated = copy(insert = insert :+ doc)
     if (updated.insert.length >= batchSize) {
       updated.flushInsert()
@@ -21,7 +21,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     }
   }
 
-  def withUpsert(doc: D): IO[CollectionQueue[D]] = {
+  def withUpsert(doc: D): IO[CollectionQueue[D, M]] = {
     val updated = copy(upsert = upsert :+ doc)
     if (updated.upsert.length >= batchSize) {
       updated.flushUpsert()
@@ -30,7 +30,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     }
   }
 
-  def withDelete(doc: D): IO[CollectionQueue[D]] = {
+  def withDelete(doc: D): IO[CollectionQueue[D, M]] = {
     val updated = copy(delete = delete :+ doc)
     if (updated.delete.length >= batchSize) {
       updated.flushDelete()
@@ -39,7 +39,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     }
   }
 
-  def flushInsert(): IO[CollectionQueue[D]] = if (insert.nonEmpty) {
+  def flushInsert(): IO[CollectionQueue[D, M]] = if (insert.nonEmpty) {
     collection.batch
       .insert(insert.toList)
       .map(_ => copy(insert = Vector.empty, inserted = inserted + insert.length))
@@ -47,7 +47,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     IO.pure(this)
   }
 
-  def flushUpsert(): IO[CollectionQueue[D]] = if (upsert.nonEmpty) {
+  def flushUpsert(): IO[CollectionQueue[D, M]] = if (upsert.nonEmpty) {
     collection.batch
       .upsert(upsert.toList)
       .map(_ => copy(upsert = Vector.empty, upserted = upserted + upsert.length))
@@ -55,7 +55,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     IO.pure(this)
   }
 
-  def flushDelete(): IO[CollectionQueue[D]] = if (delete.nonEmpty) {
+  def flushDelete(): IO[CollectionQueue[D, M]] = if (delete.nonEmpty) {
     collection.batch
       .delete(delete.toList.map(_._id))
       .map(_ => copy(delete = Vector.empty, deleted = deleted + delete.length))
@@ -63,7 +63,7 @@ case class CollectionQueue[D <: Document[D]](batchSize: Int,
     IO.pure(this)
   }
 
-  def finish(): IO[CollectionQueue[D]] = for {
+  def finish(): IO[CollectionQueue[D, M]] = for {
     a <- flushInsert()
     b <- a.flushUpsert()
     c <- b.flushDelete()

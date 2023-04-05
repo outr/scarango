@@ -241,7 +241,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   }
 
   object database extends Graph("advanced") {
-    val people: DocumentCollection[Person] = vertex[Person](Person)
+    val people: DocumentCollection[Person, Person.type] = vertex(Person)
   }
 
   case class Person(name: String,

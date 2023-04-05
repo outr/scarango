@@ -5,7 +5,7 @@ import cats.implicits._
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.CreateCollectionOptions
 import com.outr.arango.view.View
-import com.outr.arango.{DatabaseStore, Document, Graph}
+import com.outr.arango.{DatabaseStore, Document, DocumentModel, Graph}
 
 object CreateDatabase extends DatabaseUpgrade {
   override def applyToNew: Boolean = true
@@ -35,7 +35,7 @@ object CreateDatabase extends DatabaseUpgrade {
     IO.unit
   }
 
-  private def verifyCollection(collection: DocumentCollection[_]): IO[Unit] = if (collection.managed) {
+  private def verifyCollection(collection: DocumentCollection[_, _ <: DocumentModel[_]]): IO[Unit] = if (collection.managed) {
     for {
       exists <- collection.arangoCollection.collection.exists()
       created <- if (exists) {

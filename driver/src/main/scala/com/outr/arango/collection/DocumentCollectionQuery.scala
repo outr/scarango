@@ -4,7 +4,7 @@ import com.outr.arango.{Document, DocumentModel, DocumentRef, Field}
 import com.outr.arango.query.{Query, SortDirection}
 import com.outr.arango.query.dsl._
 
-class DocumentCollectionQuery[D <: Document[D]](collection: DocumentCollection[D]) extends QueryBuilder[D](
+class DocumentCollectionQuery[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M]) extends QueryBuilder[D](
   graph = collection.graph,
   query = DocumentCollectionQuery.forCollection(collection),
   converter = collection.toT
@@ -39,7 +39,7 @@ class DocumentCollectionQuery[D <: Document[D]](collection: DocumentCollection[D
 }
 
 object DocumentCollectionQuery {
-  def forCollection[D <: Document[D]](collection: DocumentCollection[D]): Query = {
+  def forCollection[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M]): Query = {
     val d: DocumentRef[D, DocumentModel[D]] = DocumentRef(collection.model, Some("d"))
     aql {
       withReference(d) {
