@@ -1,18 +1,20 @@
 package com.outr.arango.collection
 
 import cats.effect.IO
+import com.outr.arango._
 import com.outr.arango.core.ArangoDBCollection
 import com.outr.arango.query.dsl._
-import com.outr.arango._
 import fabric.Json
 
 class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[arango] val graph: Graph,
-                                           protected[arango] val arangoCollection: ArangoDBCollection,
-                                           val model: M,
-                                           val `type`: CollectionType,
-                                           val managed: Boolean) extends WritableCollection[D] {
+                                                                  protected[arango] val arangoCollection: ArangoDBCollection,
+                                                                  val model: M,
+                                                                  val `type`: CollectionType,
+                                                                  val managed: Boolean) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
+
   override def name: String = arangoCollection.name
+
   override lazy val query: DocumentCollectionQuery[D, M] = new DocumentCollectionQuery[D, M](this)
 
   override protected def beforeStorage(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.store(v))
