@@ -138,12 +138,12 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "update the records using DSL" in {
-      database
-        .people
-        .modify(Person.age is 21, Person.age(22))
-        .map { modified =>
-          modified should be(1)
-        }
+      database.people.update { p =>
+        (p.age is 21) -> List(
+          p.age + 1,
+          PUSH(p.favoriteNumbers, 21)
+        )
+      }.map(modified => modified should be(1))
     }
     "verify the age was updated" in {
       database
@@ -153,7 +153,15 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .all
         .map { people =>
           people.map(_.name) should be(List("Adam"))
+          people.map(_.favoriteNumbers) should be(List(List(21)))
         }
+    }
+    "append more favorite numbers" in {
+      database.people.update { p =>
+        (p.age is 22) -> List(
+          APPEND(p.favoriteNumbers, List(7, 42))
+        )
+      }.map(modified => modified should be(1))
     }
     "verify the age is between a range" in {
       database
@@ -163,12 +171,18 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .all
         .map { people =>
           people.map(_.name) should be(List("Adam"))
+          people.map(_.favoriteNumbers) should be(List(List(21, 7, 42)))
         }
     }
     "update multiple fields in a record using DSL" in {
       database
         .people
-        .modify(Person.age is 22, Person.bio("I have a new bio!"), Person.age(23))
+        .update { p =>
+          (p.age is 22) -> List(
+            Person.bio("I have a new bio!"),
+            Person.age(23)
+          )
+        }
         .map { modified =>
           modified should be(1)
         }
@@ -247,6 +261,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   case class Person(name: String,
                     age: Int,
                     bio: String = "",
+                    favoriteNumbers: List[Int] = Nil,
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
@@ -255,6 +270,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
     val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
+    val favoriteNumbers: Field[List[Int]] = field("favoriteNumbers")
 
     override def indexes: List[Index] = List(name.index.persistent(unique = true))
 

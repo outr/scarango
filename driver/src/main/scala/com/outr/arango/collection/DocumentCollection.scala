@@ -3,6 +3,7 @@ package com.outr.arango.collection
 import cats.effect.IO
 import com.outr.arango._
 import com.outr.arango.core.ArangoDBCollection
+import com.outr.arango.query.Query
 import com.outr.arango.query.dsl._
 import fabric.Json
 
@@ -21,14 +22,50 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
 
   override protected def afterRetrieval(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
 
+  @deprecated(message = "Use updateWith instead", since = "3.10")
   def modify(filter: => Filter, fieldAndValues: FieldAndValue[_]*): IO[Int] = {
-    val v = DocumentRef[D, DocumentModel[D]](model, None)
+    val v = ref
     val count = NamedRef("count")
 
     val query = aql {
       FOR(v) IN this
       FILTER(withReference(v)(filter))
       UPDATE(v, fieldAndValues: _*)
+      COLLECT WITH COUNT INTO count
+      RETURN(count)
+    }
+    graph.query[Int](query).one
+  }
+
+  def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
+
+  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = {
+    val v = ref
+    val count = NamedRef("count")
+
+    val query = aql {
+      FOR(v) IN this
+      val (filter, queries) = f(v)
+      FILTER(filter)
+      val context = QueryBuilderContext()
+      val refName = context.name(v)
+      val modifiers = Query.merge(queries.map {
+        case (field, query) => Query.merge(List(
+          Query.static("'"),
+          Query.static(field.fullyQualifiedName),
+          Query.static("': "),
+          query
+        ), "")
+      }, ", ")
+      val updateQueries = List(
+        Query("UPDATE "),
+        Query.static(refName),
+        Query.static(" WITH {"),
+        modifiers,
+        Query.static("} IN "),
+        Query.static(name)
+      )
+      addQuery(Query.merge(updateQueries, ""))
       COLLECT WITH COUNT INTO count
       RETURN(count)
     }

@@ -31,6 +31,53 @@ package object dsl {
     }
   }
 
+  implicit class NumericFieldExtras[N: Numeric](field: Field[N]) {
+    private def toJson(value: N): Json = value match {
+      case i: Int => num(i)
+      case l: Long => num(l)
+      case f: Float => num(f.toDouble)
+      case d: Double => num(d)
+      case d: BigDecimal => num(d)
+      case _ => throw new RuntimeException(s"Unsupported Numeric type: $value (${value.getClass.getName})")
+    }
+
+    private def mod(operator: String, right: QueryPart): (Field[N], Query) = {
+      val left = field.fqnPart
+      val middle = QueryPart.Static(s" $operator ")
+      field -> Query(List(left, middle, right))
+    }
+
+    def +(value: N): (Field[N], Query) = mod("+", QueryPart.Variable(toJson(value)))
+    def -(value: N): (Field[N], Query) = mod("-", QueryPart.Variable(toJson(value)))
+    def *(value: N): (Field[N], Query) = mod("*", QueryPart.Variable(toJson(value)))
+    def /(value: N): (Field[N], Query) = mod("/", QueryPart.Variable(toJson(value)))
+    def %(value: N): (Field[N], Query) = mod("%", QueryPart.Variable(toJson(value)))
+  }
+
+  implicit def fieldAndValue2FieldAndQuery[T](fieldAndValue: FieldAndValue[T]): (Field[T], Query) = {
+    (fieldAndValue.field, Query.variable(fieldAndValue.value))
+  }
+
+  def APPEND[T](field: Field[List[T]], values: List[T]): (Field[List[T]], Query) = {
+    (field, Query(List(
+      QueryPart.Static("APPEND("),
+      field.fqnPart,
+      QueryPart.Static(", "),
+      QueryPart.Variable(values.json(field.rw)),
+      QueryPart.Static(")")
+    )))
+  }
+
+  def PUSH[T: RW](field: Field[List[T]], value: T): (Field[List[T]], Query) = {
+    (field, Query(List(
+      QueryPart.Static("PUSH("),
+      field.fqnPart,
+      QueryPart.Static(", "),
+      QueryPart.Variable(value.json),
+      QueryPart.Static(")")
+    )))
+  }
+
   def withReference[Return](ref: Ref)(f: => Return): Return = {
     val context = QueryBuilderContext()
     context.ref = Some(ref)

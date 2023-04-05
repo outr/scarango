@@ -16,7 +16,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       succeed
     }
     "build a simple query" in {
-      val p = Person.ref
+      val p = database.people.ref
 
       val query = aql {
         FOR (p) IN database.people
@@ -30,7 +30,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         |RETURN ref1""".stripMargin)
     }
     "build a query with a filter" in {
-      val p = Person.ref
+      val p = database.people.ref
 
       val query = aql {
         FOR (p) IN database.people
@@ -47,7 +47,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       query should be(expected)
     }
     "build a query with a remove" in {
-      val p = Person.ref
+      val p = database.people.ref
 
       val query = aql {
         FOR (p) IN database.people
@@ -61,7 +61,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       query should be(expected)
     }
     "build an update query" in {
-      val p = Person.ref
+      val p = database.people.ref
 
       val query = aql {
         FOR(p) IN database.people
@@ -80,7 +80,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       query.variables should be(Map("arg0" -> fabric.num(21), "arg1" -> fabric.str("Adam"), "arg2" -> fabric.num(22)))
     }
     "build a query to return result count" in {
-      val p = Person.ref
+      val p = database.people.ref
       val count = ref("count")
       val query = aql {
         FOR (p) IN database.people

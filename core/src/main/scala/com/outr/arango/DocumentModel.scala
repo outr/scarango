@@ -16,8 +16,6 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   implicit val rw: RW[D]
 
-  def ref: DocumentRef[D, this.type] = DocumentRef(this, None)
-
   val _id: Field[Id[D]] = field("_id", mutation = Some(IdMutation))
 
   protected def generateId(): String = Unique()

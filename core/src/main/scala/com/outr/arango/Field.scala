@@ -52,6 +52,20 @@ class Field[F](val fieldName: String,
     }
   }
 
+  private def refPart(name: Option[String]): QueryPart = {
+    val context = QueryBuilderContext()
+    val (refOption, _) = withReference(this)
+    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
+    val leftName = context.name(ref)
+    name match {
+      case Some(n) => QueryPart.Static(s"$leftName.$n")
+      case None => QueryPart.Static(leftName)
+    }
+  }
+
+  def fqnPart: QueryPart = refPart(Some(fullyQualifiedName))
+  def fqfPart: QueryPart = refPart(Some(fullyQualifiedFilter))
+
   def parent: Option[Field[_]] = _parent
 
   model.foreach(_.defineField(this))
@@ -91,11 +105,7 @@ class Field[F](val fieldName: String,
   override def toQueryPart: QueryPart = QueryPart.Static(fullyQualifiedName)
 
   private def cond[T: RW](value: T, condition: String): Filter = {
-    val context = QueryBuilderContext()
-    val (refOption, f) = withReference(this)
-    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(ref)
-    val left = Query(s"$leftName.${f.fullyQualifiedFilter}")
+    val left = Query(List(fqfPart))
     val right = Query.variable(value.json)
     val arrayClosures = (0 until arrayDepth).toList.map(_ => QueryPart.Static("]"))
 
@@ -103,36 +113,21 @@ class Field[F](val fieldName: String,
   }
 
   private def cond(that: => Field[F], condition: String): Filter = {
-    val context = QueryBuilderContext()
-    val (leftRefOption, leftField) = withReference(this)
-    val leftRef = leftRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(leftRef)
-    val left = Query(s"$leftName.${leftField.fieldName}")
-    val (rightRefOption, rightField) = withReference(that)
-    val rightRef = rightRefOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val rightName = context.name(rightRef)
-    val right = Query(s"$rightName.${rightField.fieldName}")
+    val left = Query(List(fqfPart))
+    val right = Query(List(that.fqfPart))
 
     new Filter(left, condition, right)
   }
 
   private def cond(values: Seq[F], condition: String): Filter = {
-    val context = QueryBuilderContext()
-    val (refOption, f) = withReference(this)
-    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(ref)
-    val left = Query(s"$leftName.${fieldName}")
+    val left = Query(List(fqnPart))
     val right = Query.variable(arr(values.map(_.json): _*))
 
     new Filter(left, condition, right)
   }
 
   private def stringCond(value: String, condition: String): Filter = {
-    val context = QueryBuilderContext()
-    val (refOption, f) = withReference(this)
-    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(ref)
-    val left = Query(s"$leftName.${f.fieldName}")
+    val left = Query(List(fqnPart))
     val right = Query.variable(Str(value))
 
     new Filter(left, condition, right)
