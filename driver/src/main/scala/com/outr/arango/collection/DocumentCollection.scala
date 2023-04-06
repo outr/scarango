@@ -39,9 +39,24 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
 
   def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
 
-  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = {
+  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = updateWithOptions()(f)
+
+  def updateWithOptions(ignoreErrors: Boolean = false,
+                        keepNull: Boolean = true,
+                        mergeObjects: Boolean = true,
+                        waitForSync: Boolean = false,
+                        ignoreRevs: Boolean = true,
+                        exclusive: Boolean = false,
+                        refillIndexCaches: Boolean = false)
+                       (f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = {
     val v = ref
     val count = NamedRef("count")
+
+    def opt(name: String, value: Boolean, default: Boolean): Option[Query] = if (value != default) {
+      Some(Query.static(s"$name: $value"))
+    } else {
+      None
+    }
 
     val query = aql {
       FOR(v) IN this
@@ -63,7 +78,15 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
         Query.static(" WITH {"),
         modifiers,
         Query.static("} IN "),
-        Query.static(name)
+        Query.static(name),
+        Query.static(" OPTIONS {"),
+        Query.merge(List(
+          opt("ignoreErrors", ignoreErrors, default = false), opt("keepNull", keepNull, default = true),
+          opt("mergeObjects", mergeObjects, default = true), opt("waitForSync", waitForSync, default = false),
+          opt("ignoreRevs", ignoreRevs, default = true), opt("exclusive", exclusive, default = false),
+          opt("refillIndexCaches", refillIndexCaches, default = false)
+        ).flatten, ", "),
+        Query.static("}")
       )
       addQuery(Query.merge(updateQueries, ""))
       COLLECT WITH COUNT INTO count

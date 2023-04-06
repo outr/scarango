@@ -12,11 +12,10 @@ import fabric.rw.RW
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
-import cats.syntax.all._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
+import fabric.{Json, obj}
 
 import java.nio.file.Paths
-import java.util.concurrent.CompletionException
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   private var transaction: StreamTransaction = _
@@ -141,7 +140,8 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database.people.update { p =>
         (p.age is 21) -> List(
           p.age + 1,
-          PUSH(p.favoriteNumbers, 21)
+          PUSH(p.favoriteNumbers, 21),
+          p.extra(obj("test1" -> "Success!"))
         )
       }.map(modified => modified should be(1))
     }
@@ -154,12 +154,14 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .map { people =>
           people.map(_.name) should be(List("Adam"))
           people.map(_.favoriteNumbers) should be(List(List(21)))
+          people.map(_.extra) should be(List(obj("test1" -> "Success!")))
         }
     }
     "append more favorite numbers" in {
-      database.people.update { p =>
+      database.people.updateWithOptions(mergeObjects = false) { p =>
         (p.age is 22) -> List(
-          APPEND(p.favoriteNumbers, List(7, 42))
+          APPEND(p.favoriteNumbers, List(7, 42)),
+          p.extra(obj("test2" -> "Replaced!"))
         )
       }.map(modified => modified should be(1))
     }
@@ -172,6 +174,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .map { people =>
           people.map(_.name) should be(List("Adam"))
           people.map(_.favoriteNumbers) should be(List(List(21, 7, 42)))
+          people.map(_.extra) should be(List(obj("test2" -> "Replaced!")))
         }
     }
     "update multiple fields in a record using DSL" in {
@@ -262,6 +265,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     age: Int,
                     bio: String = "",
                     favoriteNumbers: List[Int] = Nil,
+                    extra: Json = obj(),
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
@@ -271,6 +275,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     val age: Field[Int] = field("age")
     val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
     val favoriteNumbers: Field[List[Int]] = field("favoriteNumbers")
+    val extra: Field[Json] = field("extra")
 
     override def indexes: List[Index] = List(name.index.persistent(unique = true))
 

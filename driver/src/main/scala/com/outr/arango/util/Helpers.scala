@@ -94,7 +94,7 @@ object Helpers {
   implicit def value2AnyRef(v: fabric.Json): AnyRef = v match {
     case fabric.Obj(map) => map.map {
       case (key, value) => key -> value2AnyRef(value)
-    }
+    }.asJava
     case fabric.Str(s) => s
     case fabric.NumInt(n) => Long.box(n)
     case fabric.NumDec(n) => n.underlying()
