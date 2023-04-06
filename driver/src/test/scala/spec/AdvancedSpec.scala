@@ -143,7 +143,12 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           PUSH(p.favoriteNumbers, 21),
           p.extra(obj("test1" -> "Success!"))
         )
-      }.map(modified => modified should be(1))
+      }.compile.toList.map { modified =>
+        modified.map(_.name) should be(List("Adam"))
+        modified.map(_.age) should be(List(22))
+        modified.map(_.favoriteNumbers) should be(List(List(21)))
+        modified.map(_.extra) should be(List(obj("test1" -> "Success!")))
+      }
     }
     "verify the age was updated" in {
       database
@@ -163,7 +168,11 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           APPEND(p.favoriteNumbers, List(7, 42)),
           p.extra(obj("test2" -> "Replaced!"))
         )
-      }.map(modified => modified should be(1))
+      }.compile.toList.map { people =>
+        people.map(_.name) should be(List("Adam"))
+        people.map(_.favoriteNumbers) should be(List(List(21, 7, 42)))
+        people.map(_.extra) should be(List(obj("test2" -> "Replaced!")))
+      }
     }
     "verify the age is between a range" in {
       database
@@ -185,9 +194,9 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
             Person.bio("I have a new bio!"),
             Person.age(23)
           )
-        }
-        .map { modified =>
-          modified should be(1)
+        }.compile.toList.map { people =>
+          people.map(_.bio) should be(List("I have a new bio!"))
+          people.map(_.age) should be(List(23))
         }
     }
     "use the DBQueue to insert multiple records" in {

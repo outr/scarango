@@ -39,7 +39,7 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
 
   def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
 
-  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = updateWithOptions()(f)
+  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): fs2.Stream[IO, D] = updateWithOptions()(f)
 
   def updateWithOptions(ignoreErrors: Boolean = false,
                         keepNull: Boolean = true,
@@ -48,9 +48,8 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
                         ignoreRevs: Boolean = true,
                         exclusive: Boolean = false,
                         refillIndexCaches: Boolean = false)
-                       (f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): IO[Int] = {
+                       (f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): fs2.Stream[IO, D] = {
     val v = ref
-    val count = NamedRef("count")
 
     def opt(name: String, value: Boolean, default: Boolean): Option[Query] = if (value != default) {
       Some(Query.static(s"$name: $value"))
@@ -89,9 +88,8 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
         Query.static("}")
       )
       addQuery(Query.merge(updateQueries, ""))
-      COLLECT WITH COUNT INTO count
-      RETURN(count)
+      RETURN(NEW)
     }
-    graph.query[Int](query).one
+    this.query(query).stream
   }
 }
