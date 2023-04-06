@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.9.1"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.10.0"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.9.1"
+ivy"com.outr::scarango-driver:3.10.0"
 ```
 
 ## Introduction
@@ -61,7 +61,7 @@ object Person extends DocumentModel[Person] {
 
 // We represent our entire database here referencing all collections
 object Database extends Graph("example") {
-  val people: DocumentCollection[Person] = vertex[Person](Person)
+  val people: DocumentCollection[Person, Person.type] = vertex(Person)
 }
 ```
 This is the basic setup of a single-collection database. Notice the `RW` in the companion object. That is defined
@@ -121,17 +121,17 @@ Database
 //   Person(
 //     name = "User 1",
 //     age = 30,
-//     _id = Id(value = "PxRXP8AdE9uUgYqPwru9M9CMWnkaQwiD", collection = "people")
+//     _id = Id(value = "Wp2HeKPyq5GfbA3LGjdcBGkoXXu2Abh2", collection = "people")
 //   ),
 //   Person(
 //     name = "Adam",
 //     age = 21,
-//     _id = Id(value = "TQhChMHABWCxIA9xFjnDucVVXzibIdsY", collection = "people")
+//     _id = Id(value = "NaFxici9sM6WAavwzeYsNAokaq06l9fE", collection = "people")
 //   ),
 //   Person(
 //     name = "Bethany",
 //     age = 19,
-//     _id = Id(value = "VruR8StEJTFZ90oI2UKvuCVC44eIXlNS", collection = "people")
+//     _id = Id(value = "kIOupeICCZAuEnJcmbqLzKCKFMq9iLBD", collection = "people")
 //   )
 // )
 ```

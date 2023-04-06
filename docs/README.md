@@ -61,7 +61,7 @@ object Person extends DocumentModel[Person] {
 
 // We represent our entire database here referencing all collections
 object Database extends Graph("example") {
-  val people: DocumentCollection[Person] = vertex[Person](Person)
+  val people: DocumentCollection[Person, Person.type] = vertex(Person)
 }
 ```
 This is the basic setup of a single-collection database. Notice the `RW` in the companion object. That is defined
