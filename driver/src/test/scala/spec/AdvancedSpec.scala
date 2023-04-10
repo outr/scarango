@@ -137,13 +137,13 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "update the records using DSL" in {
-      database.people.update { p =>
+      database.people.update.all { p =>
         (p.age is 21) -> List(
           p.age + 1,
           PUSH(p.favoriteNumbers, 21),
           p.extra(obj("test1" -> "Success!"))
         )
-      }.compile.toList.map { modified =>
+      }.map { modified =>
         modified.map(_.name) should be(List("Adam"))
         modified.map(_.age) should be(List(22))
         modified.map(_.favoriteNumbers) should be(List(List(21)))
@@ -163,12 +163,12 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         }
     }
     "append more favorite numbers" in {
-      database.people.updateWithOptions(mergeObjects = false) { p =>
+      database.people.update.withOptions(mergeObjects = false).all { p =>
         (p.age is 22) -> List(
           APPEND(p.favoriteNumbers, List(7, 42)),
           p.extra(obj("test2" -> "Replaced!"))
         )
-      }.compile.toList.map { people =>
+      }.map { people =>
         people.map(_.name) should be(List("Adam"))
         people.map(_.favoriteNumbers) should be(List(List(21, 7, 42)))
         people.map(_.extra) should be(List(obj("test2" -> "Replaced!")))
@@ -189,12 +189,12 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "update multiple fields in a record using DSL" in {
       database
         .people
-        .update { p =>
+        .update.all { p =>
           (p.age is 22) -> List(
             Person.bio("I have a new bio!"),
             Person.age(23)
           )
-        }.compile.toList.map { people =>
+        }.map { people =>
           people.map(_.bio) should be(List("I have a new bio!"))
           people.map(_.age) should be(List(23))
         }

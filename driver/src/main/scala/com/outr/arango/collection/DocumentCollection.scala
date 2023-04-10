@@ -3,7 +3,6 @@ package com.outr.arango.collection
 import cats.effect.IO
 import com.outr.arango._
 import com.outr.arango.core.ArangoDBCollection
-import com.outr.arango.query.Query
 import com.outr.arango.query.dsl._
 import fabric.Json
 
@@ -39,57 +38,5 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
 
   def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
 
-  def update(f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): fs2.Stream[IO, D] = updateWithOptions()(f)
-
-  def updateWithOptions(ignoreErrors: Boolean = false,
-                        keepNull: Boolean = true,
-                        mergeObjects: Boolean = true,
-                        waitForSync: Boolean = false,
-                        ignoreRevs: Boolean = true,
-                        exclusive: Boolean = false,
-                        refillIndexCaches: Boolean = false)
-                       (f: DocumentRef[D, M] => (Filter, List[(Field[_], Query)])): fs2.Stream[IO, D] = {
-    val v = ref
-
-    def opt(name: String, value: Boolean, default: Boolean): Option[Query] = if (value != default) {
-      Some(Query.static(s"$name: $value"))
-    } else {
-      None
-    }
-
-    val query = aql {
-      FOR(v) IN this
-      val (filter, queries) = f(v)
-      FILTER(filter)
-      val context = QueryBuilderContext()
-      val refName = context.name(v)
-      val modifiers = Query.merge(queries.map {
-        case (field, query) => Query.merge(List(
-          Query.static("'"),
-          Query.static(field.fullyQualifiedName),
-          Query.static("': "),
-          query
-        ), "")
-      }, ", ")
-      val updateQueries = List(
-        Query("UPDATE "),
-        Query.static(refName),
-        Query.static(" WITH {"),
-        modifiers,
-        Query.static("} IN "),
-        Query.static(name),
-        Query.static(" OPTIONS {"),
-        Query.merge(List(
-          opt("ignoreErrors", ignoreErrors, default = false), opt("keepNull", keepNull, default = true),
-          opt("mergeObjects", mergeObjects, default = true), opt("waitForSync", waitForSync, default = false),
-          opt("ignoreRevs", ignoreRevs, default = true), opt("exclusive", exclusive, default = false),
-          opt("refillIndexCaches", refillIndexCaches, default = false)
-        ).flatten, ", "),
-        Query.static("}")
-      )
-      addQuery(Query.merge(updateQueries, ""))
-      RETURN(NEW)
-    }
-    this.query(query).stream
-  }
+  lazy val update: UpdateBuilder[D, M] = UpdateBuilder(this)
 }
