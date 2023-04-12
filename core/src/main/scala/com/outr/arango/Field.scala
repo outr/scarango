@@ -112,7 +112,7 @@ class Field[F](val fieldName: String,
     new Filter(left, condition, right.withParts(arrayClosures: _*))
   }
 
-  private def cond(that: => Field[F], condition: String): Filter = {
+  private def cond(that: => Field[_], condition: String): Filter = {
     val left = Query(List(fqfPart))
     val right = Query(List(that.fqfPart))
 
@@ -136,6 +136,8 @@ class Field[F](val fieldName: String,
   def is(value: F): Filter = ===(value)
 
   def is[T: RW](value: T): Filter = cond(value, "==")
+
+  def is(field: Field[F]): Filter = cond(field, "==")
 
   def ===(value: F): Filter = {
     cond(value, "==")
@@ -173,6 +175,10 @@ class Field[F](val fieldName: String,
 
   def IN(values: Seq[F]): Filter = {
     cond(values, "IN")
+  }
+
+  def IN(field: Field[List[F]]): Filter = {
+    cond(field, "IN")
   }
 
   def NOT_IN(values: Seq[F]): Filter = {

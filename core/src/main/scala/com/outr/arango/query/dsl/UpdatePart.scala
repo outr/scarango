@@ -16,7 +16,7 @@ case class UpdatePart[D <: Document[D], Model <: DocumentModel[D]](ref: Document
       case q => q.copy(q.parts.tail)
     }
     val pre = Query.static(s"UPDATE $name WITH {")
-    val post = Query.static(s"} IN ${ref.collectionName}")
+    val post = Query.static(s"} IN ${ref.model.collectionName}")
     Query.merge(List(pre, fields, post))
   }
 }

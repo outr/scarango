@@ -1,6 +1,6 @@
 package com.outr.arango.query
 
-import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, NamedRef, Ref, WrappedRef}
+import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, Id, NamedRef, Ref, WrappedRef}
 import fabric._
 import fabric.rw._
 
@@ -103,6 +103,14 @@ package object dsl {
     context.ref = Some(ref)
     ref.wrapped
   }
+
+  def DOCUMENT[T](id: Id[T]): Query = Query(List(
+    QueryPart.Static("DOCUMENT("),
+    QueryPart.Variable(id),
+    QueryPart.Static(")")
+  ))
+
+  def LET(ref: Ref): LetPartial = LetPartial(ref)
 
   def FOR[D <: Document[D], Model <: DocumentModel[D]](ref: DocumentRef[D, Model]): ForPartial[D, Model] = ForPartial(ref)
 
