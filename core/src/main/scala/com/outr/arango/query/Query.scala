@@ -65,7 +65,7 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   override def toQueryPart: QueryPart = QueryPart.Container(parts)
 
-  override def toString: String = s"$parts (${variables.map(t => s"${t._1}: ${t._2}")})"
+  override def toString: String = s"$string (${variables.map(t => s"${t._1}: ${t._2}")})"
 
   override def equals(obj: Any): Boolean = obj match {
     case that: Query => this.compressed == that.compressed && this.variables == that.variables

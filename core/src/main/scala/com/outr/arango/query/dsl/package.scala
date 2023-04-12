@@ -44,8 +44,6 @@ package object dsl {
 
   implicit def int2Value(i: Int): Json = num(i)
 
-  implicit def string2Json(s: String): Json = str(s)
-
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
   }
