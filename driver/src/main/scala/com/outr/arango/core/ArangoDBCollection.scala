@@ -1,17 +1,17 @@
 package com.outr.arango.core
 
 import cats.effect.IO
+import cats.implicits._
 import com.arangodb.async.ArangoCollectionAsync
 import com.arangodb.entity.IndexEntity
 import com.arangodb.model._
+import com.outr.arango.mutation.DataMutation
 import com.outr.arango.util.Helpers._
 import com.outr.arango.{Field, Index, IndexInfo, IndexType}
-
-import scala.jdk.CollectionConverters._
-import cats.implicits._
-import com.outr.arango.mutation.DataMutation
 import fabric.Json
 import fabric.rw.RW
+
+import scala.jdk.CollectionConverters._
 
 class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Json] {
   def name: String = _collection.name()

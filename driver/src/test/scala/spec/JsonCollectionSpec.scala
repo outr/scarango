@@ -1,9 +1,9 @@
 package spec
 
 import cats.effect.testing.scalatest.AsyncIOSpec
-import com.outr.arango.{Graph, Index}
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.json._
+import com.outr.arango.{Graph, Index}
 import fabric._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

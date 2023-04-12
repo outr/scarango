@@ -1,16 +1,16 @@
 package com.outr.arango.util
 
 import cats.effect.IO
-import com.arangodb.{ArangoDBException, entity, model}
 import com.arangodb.entity.ErrorEntity
 import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
+import com.arangodb.{ArangoDBException, entity, model}
 import com.outr.arango._
 import com.outr.arango.core._
 import fabric.Json
 
 import java.util.concurrent.{CompletableFuture, CompletionException}
-import scala.jdk.FutureConverters._
 import scala.jdk.CollectionConverters._
+import scala.jdk.FutureConverters._
 import scala.language.implicitConversions
 
 object Helpers {

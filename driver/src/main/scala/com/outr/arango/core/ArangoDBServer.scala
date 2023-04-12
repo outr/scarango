@@ -5,9 +5,9 @@ import com.arangodb.async.ArangoDBAsync
 import com.arangodb.entity.{LoadBalancingStrategy => LBS}
 import com.arangodb.mapping.ArangoJack
 import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
-import com.fasterxml.jackson.databind.{DeserializationContext, JsonDeserializer, JsonNode, JsonSerializer, SerializerProvider}
-import com.fasterxml.jackson.databind.module.{SimpleAbstractTypeResolver, SimpleModule}
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.JsonNodeType
+import com.fasterxml.jackson.databind._
 import fabric._
 
 import scala.jdk.CollectionConverters._

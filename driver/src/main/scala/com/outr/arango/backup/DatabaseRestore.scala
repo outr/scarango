@@ -2,7 +2,6 @@ package com.outr.arango.backup
 
 import cats.effect.IO
 import cats.syntax.all._
-import com.outr.arango.backup.DatabaseBackup.AnyDocModel
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.{Document, DocumentModel, Graph}
 import fabric.io.{Format, JsonParser}

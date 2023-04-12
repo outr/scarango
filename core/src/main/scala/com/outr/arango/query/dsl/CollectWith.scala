@@ -1,7 +1,7 @@
 package com.outr.arango.query.dsl
 
 import com.outr.arango.Ref
-import com.outr.arango.query.Query
+import com.outr.arango.query.{Query, QueryPart}
 
 sealed trait CollectWith {
   def value: String
@@ -15,9 +15,10 @@ object CollectWith {
   class Partial(collectWith: CollectWith) {
     def INTO(ref: Ref): Unit = {
       val context = QueryBuilderContext()
-      val query = Query(
-        s"COLLECT WITH ${collectWith.value} INTO ${context.name(ref)}"
-      )
+      val query = Query(List(
+        QueryPart.Static(s"COLLECT WITH ${collectWith.value} INTO "),
+        QueryPart.Ref(ref)
+      ))
       context.addQuery(query)
     }
   }

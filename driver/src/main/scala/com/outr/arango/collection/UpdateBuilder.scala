@@ -1,9 +1,9 @@
 package com.outr.arango.collection
 
 import cats.effect.IO
-import com.outr.arango.query.Query
-import com.outr.arango.query.dsl._
 import com.outr.arango._
+import com.outr.arango.query.dsl._
+import com.outr.arango.query.{Query, QueryPart}
 
 case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
                                                                   ignoreErrors: Boolean = false,
@@ -32,7 +32,7 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
   )
 
   def toQuery(f: Update,
-              applyReturn: => Unit): Query = {
+              applyReturn: => Unit): Query = noConsumingRefs {
     val v = collection.ref
 
     def opt(name: String, value: Boolean, default: Boolean): Option[Query] = if (value != default) {
@@ -45,8 +45,6 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
       FOR(v) IN collection
       val (filter, queries) = f(v)
       FILTER(filter)
-      val context = QueryBuilderContext()
-      val refName = context.name(v)
       val modifiers = Query.merge(queries.map {
         case (field, query) => Query.merge(List(
           Query.static("'"),
@@ -57,7 +55,7 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
       }, ", ")
       val updateQueries = List(
         Query("UPDATE "),
-        Query.static(refName),
+        Query(List(QueryPart.Ref(v))),
         Query.static(" WITH {"),
         modifiers,
         Query.static("} IN "),

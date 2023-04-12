@@ -1,15 +1,46 @@
 package com.outr.arango.query
 
-import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, Id, NamedRef, Ref, WrappedRef}
+import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, Id, Ref, WrappedRef}
 import fabric._
 import fabric.rw._
 
 import scala.language.implicitConversions
 
 package object dsl {
-  private val forced = new ThreadLocal[Boolean] {
-    override def initialValue(): Boolean = false
+  private val refs = new ThreadLocal[List[Ref]] {
+    override def initialValue(): List[Ref] = Nil
   }
+
+  private val consumeRefs = new ThreadLocal[Boolean] {
+    override def initialValue(): Boolean = true
+  }
+
+  def noConsumingRefs[Return](f: => Return): Return = {
+    val previous = consumeRefs.get()
+    consumeRefs.set(false)
+    try {
+      f
+    } finally {
+      consumeRefs.set(previous)
+    }
+  }
+
+  def addRef(ref: Ref): Unit = {
+    val list = ref :: refs.get()
+    refs.set(list)
+  }
+
+  def useRef(): Ref = useRefOpt().getOrElse(throw new RuntimeException("No ref found!"))
+
+  def useRefOpt(): Option[Ref] = {
+    val ref = refs.get().lastOption
+    if (consumeRefs.get() && ref.nonEmpty) {
+      refs.set(refs.get().init)
+    }
+    ref
+  }
+
+  def clearRefs(): Unit = refs.set(Nil)
 
   implicit def int2Value(i: Int): Json = num(i)
 
@@ -23,11 +54,12 @@ package object dsl {
 
   implicit class ValueExtras[T](value: T) {
     def IN(field: Field[T]): Filter = {
-      val context = QueryBuilderContext()
-      val (refOption, f) = withReference(field)
-      val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-      val leftName = context.name(ref)
-      new Filter(Query(List(QueryPart.Variable(value.json(field.rw)))), "IN", Query(s"$leftName.${f.fieldName}"))
+      val (ref, f) = withReference(field)
+      val query = Query(List(
+        QueryPart.Ref(ref),
+        QueryPart.Static(s".${f.fieldName}")
+      ))
+      new Filter(Query(List(QueryPart.Variable(value.json(field.rw)))), "IN", query)
     }
   }
 
@@ -79,28 +111,17 @@ package object dsl {
   }
 
   def withReference[Return](ref: Ref)(f: => Return): Return = {
-    val context = QueryBuilderContext()
-    context.ref = Some(ref)
-    val previous = forced.get()
-    forced.set(true)
-    try {
-      val r: Return = f
-      r
-    } finally {
-      context.ref = None
-      forced.set(previous)
-    }
+    addRef(ref)
+    f
   }
 
-  def withReference[Return](f: => Return): (Option[Ref], Return) = {
-    val context = QueryBuilderContext()
+  def withReference[Return](f: => Return): (Ref, Return) = {
     val r: Return = f
-    (context.ref, r)
+    (useRef(), r)
   }
 
   implicit def ref2Wrapped[T](ref: WrappedRef[T]): T = {
-    val context = QueryBuilderContext()
-    context.ref = Some(ref)
+    addRef(ref)
     ref.wrapped
   }
 
@@ -118,14 +139,16 @@ package object dsl {
 
   def SORT[T](f: => (Field[T], SortDirection)): Unit = {
     val context = QueryBuilderContext()
-    val (refOption, (field, sort)) = withReference(f)
-    val ref = refOption.getOrElse(throw new RuntimeException("No ref option found for SORT!"))
-    val name = context.name(ref)
+    val (ref, (field, sort)) = withReference(f)
     val sortValue = sort match {
       case SortDirection.ASC => "ASC"
       case SortDirection.DESC => "DESC"
     }
-    context.addQuery(Query(s"SORT $name.${field.fieldName} $sortValue"))
+    context.addQuery(Query(List(
+      QueryPart.Static("SORT "),
+      QueryPart.Ref(ref),
+      QueryPart.Static(s".${field.fieldName} $sortValue")
+    )))
   }
 
   def FILTER(filter: Filter): Unit = {
@@ -156,11 +179,12 @@ package object dsl {
   def RETURN(part: ReturnPart): Unit = addQuery(part.build())
 
   def RETURN[T](field: => Field[T]): Unit = {
-    val context = QueryBuilderContext()
-    val (refOption, f) = withReference(field)
-    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(ref)
-    addQuery(Query(s"RETURN $leftName.${f.fieldName}"))
+    val (ref, f) = withReference(field)
+    addQuery(Query(List(
+      QueryPart.Static("RETURN "),
+      QueryPart.Ref(ref),
+      QueryPart.Static(s".${f.fieldName}")
+    )))
   }
 
   def addQuery(query: Query): Unit = {
@@ -168,13 +192,9 @@ package object dsl {
     context.addQuery(query)
   }
 
-  def ref: Ref = new Ref {
-    override def refName: Option[String] = None
-  }
-
-  def ref(name: String): Ref = NamedRef(name)
-
-  def ref[T](wrapped: T, name: Option[String]): WrappedRef[T] = new WrappedRef[T](wrapped, name)
+//  def ref(name: String): Ref = NamedRef(name)
+//
+//  def ref[T](wrapped: T, name: Option[String]): WrappedRef[T] = new WrappedRef[T](wrapped, name)
 
   def aql(f: => Unit): Query = QueryBuilderContext.contextualize(f)
 }

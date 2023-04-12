@@ -3,8 +3,8 @@ package com.outr.arango.mutation
 import com.outr.arango.Field
 import com.outr.scalapass.{CryptoInstance, Encrypted}
 import fabric.io.{Format, JsonFormatter, JsonParser}
-import fabric.{Json, obj}
 import fabric.rw._
+import fabric.{Json, obj}
 
 case class EncryptedFieldMutation(crypto: Field[_] => CryptoInstance, fields: Field[_]*) extends DataMutation {
   override def store(value: Json): Json = fields.foldLeft(value)((v, f) =>

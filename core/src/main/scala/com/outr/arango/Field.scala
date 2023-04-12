@@ -4,7 +4,7 @@ import com.outr.arango.mutation.{DataMutation, ModifyFieldValue}
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, SortDirection}
 import fabric.rw._
-import fabric.{Json, Str, arr}
+import fabric.{Str, arr}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -53,13 +53,10 @@ class Field[F](val fieldName: String,
   }
 
   private def refPart(name: Option[String]): QueryPart = {
-    val context = QueryBuilderContext()
-    val (refOption, _) = withReference(this)
-    val ref = refOption.getOrElse(throw new RuntimeException("No reference for field!"))
-    val leftName = context.name(ref)
+    val ref = useRef()
     name match {
-      case Some(n) => QueryPart.Static(s"$leftName.$n")
-      case None => QueryPart.Static(leftName)
+      case Some(n) => QueryPart.Ref(ref).withPart(QueryPart.Static(s".$n"))
+      case None => QueryPart.Ref(ref)
     }
   }
 

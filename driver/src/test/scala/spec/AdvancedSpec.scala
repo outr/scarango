@@ -3,17 +3,17 @@ package spec
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
+import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.DBQueue
 import fabric.rw.RW
+import fabric.{Json, obj}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
-import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
-import fabric.{Json, obj}
 
 import java.nio.file.Paths
 
@@ -154,7 +154,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query
-        .byFilter(Person.age is 22)
+        .byFilter(_.age is 22)
         .all
         .map { people =>
           people.map(_.name) should be(List("Adam"))
@@ -178,7 +178,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query
-        .byFilter((Person.age < 23) && (Person.age > 21))
+        .byFilter(p => (p.age < 23) && (p.age > 21))
         .all
         .map { people =>
           people.map(_.name) should be(List("Adam"))
@@ -257,7 +257,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "batch delete" in {
-      database.people.query.byFilter(Person.age > 10).all.flatMap { list =>
+      database.people.query.byFilter(_.age > 10).all.flatMap { list =>
         list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))
         database.people.batch.delete(list.map(_._id), DeleteOptions(waitForSync = true, silent = false)).map { results =>
           results.documents.length should be(3)

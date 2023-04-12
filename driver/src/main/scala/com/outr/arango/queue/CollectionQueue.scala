@@ -1,8 +1,8 @@
 package com.outr.arango.queue
 
 import cats.effect.IO
-import com.outr.arango.{Document, DocumentModel}
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.{Document, DocumentModel}
 
 case class CollectionQueue[D <: Document[D], M <: DocumentModel[D]](batchSize: Int,
                                              collection: DocumentCollection[D, M],

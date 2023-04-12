@@ -2,8 +2,8 @@ package com.outr.arango.json
 
 import com.outr.arango.{DocumentModel, Id, Unique}
 import fabric.define.DefType
-import fabric.{Json, obj}
 import fabric.rw._
+import fabric.{Json, obj}
 
 import scala.language.implicitConversions
 

@@ -2,8 +2,8 @@ package com.outr.arango.backup
 
 import cats.effect.IO
 import cats.syntax.all._
-import com.outr.arango.{Document, DocumentModel, Graph}
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.{Document, DocumentModel, Graph}
 import fabric.io._
 
 import java.io.{FileWriter, PrintWriter}

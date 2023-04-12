@@ -2,8 +2,8 @@ package com.outr.arango.queue
 
 import cats.effect.IO
 import cats.syntax.all._
-import com.outr.arango.{Document, DocumentModel}
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.{Document, DocumentModel}
 
 /**
   * Useful for batch operations where the batch may overflow. This will create multiple batches and flush as they fill

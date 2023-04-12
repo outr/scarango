@@ -1,8 +1,8 @@
 package com.outr.arango.audit
 
 import cats.effect.IO
-import com.outr.arango.{Document, Graph}
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.{Document, Graph}
 import fabric.Json
 import fabric.rw._
 

@@ -2,6 +2,7 @@ package spec
 
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.query.dsl._
 import com.outr.arango.query.sc2AQL
 import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
 import fabric.rw.RW
@@ -37,7 +38,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "query by filter" in {
       val query = database.users.query
-        .byFilter(User.addresses.lines is "One")
+        .byFilter(_.addresses.lines is "One")
       query
         .all
         .map { users =>

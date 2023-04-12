@@ -1,8 +1,8 @@
 package com.outr.arango.mutation
 
 import com.outr.arango.Field
-import fabric.rw._
 import fabric._
+import fabric.rw._
 
 case class ModifyFieldValue[F](field: Field[F],
                                storage: F => F,

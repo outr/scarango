@@ -2,7 +2,7 @@ package com.outr.arango.core
 
 import cats.effect.IO
 import com.arangodb.async.ArangoDatabaseAsync
-import com.arangodb.entity.arangosearch.{ArangoSearchCompression, CollectionLink, FieldLink, PrimarySort, StoreValuesType}
+import com.arangodb.entity.arangosearch._
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
 import com.outr.arango.query.{Query, Sort, SortDirection}
 import com.outr.arango.util.Helpers._
@@ -39,7 +39,8 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
         .attempt
         .map {
           case Left(throwable) =>
-            scribe.error(s"An error occurred executing a query: $query", throwable)
+            val queryString = query.string
+            scribe.error(s"An error occurred executing a query: $queryString", throwable)
             throw throwable
           case Right(c) =>
             val cursor: java.util.Iterator[Json] = c

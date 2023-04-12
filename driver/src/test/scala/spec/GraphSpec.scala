@@ -4,8 +4,8 @@ import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.collection.{DocumentCollection, EdgeCollection}
-import com.outr.arango.query.dsl._
 import com.outr.arango.query._
+import com.outr.arango.query.dsl._
 import com.outr.arango.upgrade.DatabaseUpgrade
 import com.outr.arango.view.{View, ViewLink}
 import fabric.rw.RW
@@ -54,7 +54,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       val keys = List("JFK", "LAX")
       database.airports
         .query
-        .byFilter(Airport._id IN keys.map(Airport.id))
+        .byFilter(a => a._id IN keys.map(a.id))
         .all
         .map { airports =>
           airports.length should be(2)
@@ -64,7 +64,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "query by airport name" in {
       database.airports
         .query
-        .byFilter(Airport.name is "John F Kennedy Intl")
+        .byFilter(_.name is "John F Kennedy Intl")
         .one
         .map { airport =>
           airport._id should be(Airport.id("JFK"))

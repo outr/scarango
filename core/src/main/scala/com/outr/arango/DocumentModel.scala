@@ -2,7 +2,6 @@ package com.outr.arango
 
 import com.outr.arango.core.CreateCollectionOptions
 import com.outr.arango.mutation.{DataMutation, IdMutation}
-import com.outr.arango.query.Query
 import fabric.rw.RW
 
 trait DocumentModel[D <: Document[D]] { model =>

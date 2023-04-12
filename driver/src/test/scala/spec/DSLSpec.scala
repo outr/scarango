@@ -2,7 +2,6 @@ package spec
 
 import com.outr.arango._
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import fabric.rw._
 import org.scalatest.matchers.should.Matchers
@@ -37,14 +36,11 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         FILTER((p.age is 21) && (p.name isNot "Adam"))
         RETURN (p)
       }
-      val expected = Query
-        .static("FOR ref1 IN people ")
-        .static("FILTER ")
-        .withQuery(aql"ref1.age == ${21}")
-        .static(" && ")
-        .withQuery(aql"ref1.name != ${"Adam"} ")
-        .static("RETURN ref1")
-      query should be(expected)
+      val expected =
+        """FOR ref1 IN people
+          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |RETURN ref1""".stripMargin
+      query.string should be(expected)
     }
     "build a query with a remove" in {
       val p = database.people.ref
@@ -54,11 +50,11 @@ class DSLSpec extends AsyncWordSpec with Matchers {
         FILTER((p.age is 21) && (p.name isNot "Adam"))
         REMOVE (p) IN database.people
       }
-      val expected = Query
-        .static("FOR ref1 IN people ")
-        .withQuery(aql"FILTER ref1.age == ${21} && ref1.name != ${"Adam"} ")
-        .static("REMOVE ref1 IN people")
-      query should be(expected)
+      val expected =
+        """FOR ref1 IN people
+          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |REMOVE ref1 IN people""".stripMargin
+      query.string should be(expected)
     }
     "build an update query" in {
       val p = database.people.ref
@@ -81,19 +77,36 @@ class DSLSpec extends AsyncWordSpec with Matchers {
     }
     "build a query to return result count" in {
       val p = database.people.ref
-      val count = ref("count")
+      val count = NamedRef("count")
       val query = aql {
         FOR (p) IN database.people
         FILTER (p.age >= 20)
         COLLECT WITH COUNT INTO count
         RETURN (count)
       }
-      val expected = Query
-        .static("FOR ref1 IN people ")
-        .withQuery(aql"FILTER ref1.age >= ${20} ")
-        .static("COLLECT WITH COUNT INTO count ")
-        .static("RETURN count")
-      query should be(expected)
+      val expected =
+        """FOR ref1 IN people
+          |FILTER ref1.age >= @arg0
+          |COLLECT WITH COUNT INTO count
+          |RETURN count""".stripMargin
+      query.string should be(expected)
+    }
+    "build a query with two refs" in {
+      val r1 = database.people.ref
+      val r2 = database.people.ref
+      r1.hashCode() should not be r2.hashCode()
+      val query = aql {
+        LET(r1) := DOCUMENT(Person.id("123"))
+        FOR(r2) IN database.people
+        FILTER(r1._id is r2._id)
+        RETURN(r2)
+      }
+      val expected =
+        """LET ref1 = DOCUMENT(@arg0)
+          |FOR ref2 IN people
+          |FILTER ref1._id == ref2._id
+          |RETURN ref2""".stripMargin
+      query.string should be(expected)
     }
   }
 
