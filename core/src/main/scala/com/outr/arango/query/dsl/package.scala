@@ -50,6 +50,8 @@ package object dsl {
 
   implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
 
+  implicit def fieldsAndQuery2Query[T](faq: (Field[List[T]], Query)): Query = faq._2
+
   implicit class ValueExtras[T](value: T) {
     def IN(field: Field[T]): Filter = {
       val (ref, f) = withReference(field)
@@ -98,12 +100,14 @@ package object dsl {
     )))
   }
 
-  def PUSH[T: RW](field: Field[List[T]], value: T): (Field[List[T]], Query) = {
+  def PUSH[T: RW](field: Field[List[T]], value: T, unique: Boolean = false): (Field[List[T]], Query) = {
     (field, Query(List(
       QueryPart.Static("PUSH("),
       field.fqnPart,
       QueryPart.Static(", "),
       QueryPart.Variable(value.json),
+      QueryPart.Static(", "),
+      QueryPart.Static(unique.toString),
       QueryPart.Static(")")
     )))
   }
