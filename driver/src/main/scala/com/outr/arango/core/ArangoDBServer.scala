@@ -15,7 +15,7 @@ import scala.jdk.CollectionConverters._
 class ArangoDBServer(connection: ArangoDBAsync) {
   lazy val db: ArangoDB = new ArangoDB(this, connection.db())
 
-  def db(name: String): ArangoDB = new ArangoDB(this, connection.db(DbName.of(name)))
+  def db(name: String): ArangoDB = new ArangoDB(this, connection.db(name))
 }
 
 object ArangoDBServer {
