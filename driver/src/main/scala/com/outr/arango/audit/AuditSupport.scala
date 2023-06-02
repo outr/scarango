@@ -42,11 +42,13 @@ trait AuditSupport {
     def record[T <: Document[T] : RW](action: String,
                                       value: T,
                                       origin: Option[String] = None,
+                                      sessionRef: Option[Json] = None,
                                       metadata: Map[String, Json] = Map.empty): IO[AuditRecord] = {
       val record = AuditRecord(
         action = action,
         resource = name,
         origin = origin,
+        sessionRef = sessionRef,
         userRef = Some(value._id.json),
         value = Some(value.json),
         metadata = metadata
