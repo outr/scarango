@@ -3,15 +3,23 @@ import sbt.*
 object Dependencies {
   object version {
     val fabric: String = "1.10.8"
+    
     val profig: String = "3.4.10"
+    
     val scalaPass: String = "1.2.5"
+
     val arangoDBJavaDriver: String = "6.25.0"
+
     val jackson: String = "4.1.0"
-    val catsEffect: String = "3.4.11"
+    
+    val catsEffect: String = "3.5.0"
+    
     val fs2: String = "3.7.0"
+    
     val scribe: String = "3.11.5"
 
     val scalaTest: String = "3.2.16"
+    
     val catsEffectTesting: String = "1.5.0"
   }
 
