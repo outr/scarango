@@ -135,7 +135,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              RETURN v.${Airport.name}
            """
       database.query[String](query).all.map { response =>
-        response should be(List("Bismarck Municipal", "Denver Intl", "John F Kennedy Intl"))
+        response should be(List("Bismarck Municipal", "Minneapolis-St Paul Intl", "John F Kennedy Intl"))
       }
     }
     "query the views and verify one exists" in {
