@@ -52,8 +52,15 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
 
   def initialized: Boolean = _initialized.get()
 
-  def init(createDatabase: Boolean = true): IO[Unit] = if (_initialized.compareAndSet(false, true)) {
+  def init(createDatabase: Boolean = true,
+           dropDatabase: Boolean = false): IO[Unit] = if (_initialized.compareAndSet(false, true)) {
     for {
+      _ <- db.exists().flatMap {
+        case true =>
+          scribe.info(s"Dropping database $databaseName")
+          drop()
+        case false => IO.unit
+      }.whenA(dropDatabase)
       _ <- CreateDatabase.upgrade(this).whenA(createDatabase)
       appliedUpgrades <- store[AppliedUpgrades](AppliedUpgrades.key, _ => AppliedUpgrades.empty).map(_.labels)
       upgrades = this.upgrades.filter(u => u.alwaysRun || !appliedUpgrades.contains(u.label))
