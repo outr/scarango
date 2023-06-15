@@ -38,7 +38,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       }
       val expected =
         """FOR ref1 IN people
-          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |FILTER (ref1.age == @arg0 && ref1.name != @arg1)
           |RETURN ref1""".stripMargin
       query.string should be(expected)
     }
@@ -52,7 +52,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       }
       val expected =
         """FOR ref1 IN people
-          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |FILTER (ref1.age == @arg0 && ref1.name != @arg1)
           |REMOVE ref1 IN people""".stripMargin
       query.string should be(expected)
     }
@@ -67,7 +67,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       }
       val expectedQuery =
         """FOR ref1 IN people
-          |FILTER ref1.age == @arg0 && ref1.name != @arg1
+          |FILTER (ref1.age == @arg0 && ref1.name != @arg1)
           |UPDATE ref1 WITH {
           |  age: @arg2
           |} IN people

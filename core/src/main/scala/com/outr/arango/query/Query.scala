@@ -58,6 +58,7 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   def withQuery(that: Query): Query = this + that
 
+  def withPrefixParts(parts: QueryPart*): Query = copy(parts.toList ::: this.parts)
   def withParts(parts: QueryPart*): Query = copy(this.parts ::: parts.toList)
   def static(value: String): Query = withParts(QueryPart.Static(value))
   def variable(value: Json): Query = withParts(QueryPart.Variable(value))

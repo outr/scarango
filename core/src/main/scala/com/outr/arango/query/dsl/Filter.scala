@@ -4,10 +4,18 @@ import com.outr.arango.query._
 
 class Filter(left: Query, condition: String, right: Query) {
   def &&(filter: Filter): Filter = {
-    new Filter(build(), "&&", filter.build())
+    new Filter(
+      left = build().withPrefixParts(Filter.WrapOpen),
+      condition = "&&",
+      right = filter.build().withParts(Filter.WrapClose)
+    )
   }
   def ||(filter: Filter): Filter = {
-    new Filter(build(), "||", filter.build())
+    new Filter(
+      left = build().withPrefixParts(Filter.WrapOpen),
+      condition = "||",
+      right = filter.build().withParts(Filter.WrapClose)
+    )
   }
 
   def build(): Query = Query.merge(List(
@@ -15,4 +23,9 @@ class Filter(left: Query, condition: String, right: Query) {
     Query(List(QueryPart.Static(condition))),
     right
   ), separator = " ")
+}
+
+object Filter {
+  private val WrapOpen: QueryPart = QueryPart.Static("(")
+  private val WrapClose: QueryPart = QueryPart.Static(")")
 }

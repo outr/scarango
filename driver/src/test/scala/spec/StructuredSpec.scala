@@ -45,6 +45,16 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           users.map(_.name) should be(List("Ann"))
         }
     }
+    "validate a multi-conditional query" in {
+      val query = database.users.query
+        .byFilter(ref =>
+          (ref.name === "Ann" || ref.name === "Bob") && ref.addresses.lines.is(List("One"))
+        )
+      query.query.string should be(
+        """FOR d IN users
+          |FILTER ((d.name == @arg0 || d.name == @arg1) && d.addresses[? FILTER CURRENT.lines[? FILTER CURRENT == @arg2]])
+          |RETURN d""".stripMargin)
+    }
     "query with AQL" in {
       val query =
         aql"""
