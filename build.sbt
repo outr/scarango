@@ -1,12 +1,12 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import Tests.*
 
-val scala213 = "2.13.11"
+val scala213 = "2.13.10"
 val scala3 = "3.3.0"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.11.7-SNAPSHOT"
+ThisBuild / version := "3.11.7"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := List(scala3, scala213)
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")

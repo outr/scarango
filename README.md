@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.11.6"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.11.7"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.11.6"
+ivy"com.outr::scarango-driver:3.11.7"
 ```
 
 ## Introduction
@@ -121,17 +121,17 @@ Database
 //   Person(
 //     name = "User 1",
 //     age = 30,
-//     _id = Id(value = "lctq6u07C6Z6Zo7fhy2f2fEY7ii0CWHV", collection = "people")
+//     _id = Id(value = "GAfmkniz676Jvp1Tx53lRejg5Pn4fNtj", collection = "people")
 //   ),
 //   Person(
 //     name = "Adam",
 //     age = 21,
-//     _id = Id(value = "pVE8adWXXw7Xcmc5fYPezAJyc5X8wLng", collection = "people")
+//     _id = Id(value = "wP1dweNkQMnyQfou5l1c74HGTNUULTrs", collection = "people")
 //   ),
 //   Person(
 //     name = "Bethany",
 //     age = 19,
-//     _id = Id(value = "Es8sGShd1EOoKkO8OXpNntD6EE7vjX1x", collection = "people")
+//     _id = Id(value = "WUfE35DcFnhbzh9FhAQH2TUU1R8B6N1g", collection = "people")
 //   )
 // )
 ```
