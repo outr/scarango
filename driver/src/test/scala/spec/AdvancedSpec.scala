@@ -9,7 +9,7 @@ import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, 
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.DBQueue
-import fabric.rw.RW
+import fabric.rw._
 import fabric._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec

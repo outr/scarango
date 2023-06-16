@@ -8,7 +8,7 @@ import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.upgrade.DatabaseUpgrade
 import com.outr.arango.view.{View, ViewLink}
-import fabric.rw.RW
+import fabric.rw._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig

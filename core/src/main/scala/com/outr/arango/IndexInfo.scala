@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import fabric.rw.RW
+import fabric.rw._
 
 case class IndexInfo(`type`: String,
                      id: String,

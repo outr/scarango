@@ -5,7 +5,7 @@ import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.sc2AQL
 import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
-import fabric.rw.RW
+import fabric.rw._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig

@@ -5,6 +5,7 @@ import com.outr.arango._
 import com.outr.arango.core._
 import com.outr.arango.query._
 import fabric._
+import fabric.rw._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 

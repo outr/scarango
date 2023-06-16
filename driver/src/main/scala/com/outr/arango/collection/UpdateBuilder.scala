@@ -4,6 +4,7 @@ import cats.effect.IO
 import com.outr.arango._
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart}
+import fabric.rw._
 
 case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
                                                                   ignoreErrors: Boolean = false,

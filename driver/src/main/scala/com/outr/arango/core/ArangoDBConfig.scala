@@ -1,6 +1,7 @@
 package com.outr.arango.core
 
 import profig.Profig
+import fabric.rw._
 
 import scala.concurrent.duration._
 
