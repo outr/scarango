@@ -13,15 +13,13 @@ case class ArangoException(cause: ArangoDBException) extends RuntimeException(ca
   lazy val constraintViolation: Option[ConstraintViolation] = if (error.errorCode == ArangoCode.ArangoUniqueConstraintViolated) {
     getMessage match {
       case ArangoException.ConstraintViolationRegex(index, tpe, field, key) =>
-        Some(ConstraintViolation(index, tpe, field, key))
+        Some(ConstraintViolation(index, tpe, field.split(',').map(_.trim).toSet, key))
       case s => throw new RuntimeException(s"Failed to parse constraint violation: $s")
     }
   } else {
     None
   }
 }
-
-case class ConstraintViolation(index: String, `type`: String, field: String, key: String)
 
 object ArangoException {
   private val ConstraintViolationRegex = """.+unique constraint violated - in index (\S+) of type (.+) over '(.+?)'; conflicting key: (\S+)""".r

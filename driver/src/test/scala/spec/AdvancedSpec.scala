@@ -58,7 +58,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         case Left(exc: ArangoException) =>
           exc.constraintViolation should not be None
           val c = exc.constraintViolation.get
-          c.field should be("name")
+          c.fields should be(Set("name"))
           c.`type` should be("persistent")
         case _ => fail()
       }
