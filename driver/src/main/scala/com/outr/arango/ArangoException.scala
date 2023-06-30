@@ -10,7 +10,7 @@ case class ArangoException(cause: ArangoDBException) extends RuntimeException(ca
     exception = cause.getException
   )
 
-  lazy val contraintViolation: Option[ConstraintViolation] = if (error.errorCode == ArangoCode.ArangoUniqueConstraintViolated) {
+  lazy val constraintViolation: Option[ConstraintViolation] = if (error.errorCode == ArangoCode.ArangoUniqueConstraintViolated) {
     getMessage match {
       case ArangoException.ConstraintViolationRegex(index, tpe, field, key) =>
         Some(ConstraintViolation(index, tpe, field, key))

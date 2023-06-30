@@ -56,8 +56,8 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "fail to insert a duplicate record" in {
       database.people.insert(Person("Bethany", 321)).attempt.map {
         case Left(exc: ArangoException) =>
-          exc.contraintViolation should not be None
-          val c = exc.contraintViolation.get
+          exc.constraintViolation should not be None
+          val c = exc.constraintViolation.get
           c.field should be("name")
           c.`type` should be("persistent")
         case _ => fail()
