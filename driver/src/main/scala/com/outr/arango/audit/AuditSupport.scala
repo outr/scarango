@@ -40,7 +40,7 @@ trait AuditSupport {
           createdBefore.map(l => r.created < l)
         ).flatten
         filters.foldLeft(r.resource === name)((combined, filter) => combined && filter)
-      }, (sortField, sortDirection))
+      }, Some((sortField, sortDirection)))
     }
 
     def record[T <: Document[T] : RW](action: String,
