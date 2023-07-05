@@ -14,15 +14,14 @@ class View(db: ArangoDB,
 
   private val view = db.db.view(name)
 
-  def create(): IO[ViewInfo] = db.db.createArangoSearch(name, options)
-    .toIO
+  def create(): IO[ViewInfo] = io(db.db.createArangoSearch(name, options))
     .map { entity =>
       ViewInfo(entity.getId, entity.getName)
     }
 
-  def exists(): IO[Boolean] = view.exists().toIO.map(_.booleanValue())
+  def exists(): IO[Boolean] = io(view.exists()).map(_.booleanValue())
 
-  def drop(): IO[Unit] = view.drop().toIO.map(_ => ())
+  def drop(): IO[Unit] = io(view.drop())
 
   override def toQueryPart: QueryPart = QueryPart.Static(name)
 }

@@ -2,7 +2,7 @@ package com.outr.arango.core
 
 import cats.effect.IO
 import cats.implicits._
-import com.arangodb.async.ArangoCollectionAsync
+import com.arangodb
 import com.arangodb.entity.IndexEntity
 import com.arangodb.model._
 import com.outr.arango.mutation.DataMutation
@@ -13,7 +13,7 @@ import fabric.rw.RW
 
 import scala.jdk.CollectionConverters._
 
-class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoDBDocuments[fabric.Json] {
+class ArangoDBCollection(val _collection: arangodb.ArangoCollection) extends ArangoDBDocuments[fabric.Json] {
   def name: String = _collection.name()
 
   override def toT(value: Json): Json = value
@@ -22,12 +22,12 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
 
   object collection {
     def create(options: CreateCollectionOptions = CreateCollectionOptions()): IO[CollectionInfo] = {
-      _collection.create(new ArangoDBCollectionCreateOptions(_collection.name(), options)).toIO.map(collectionEntityConversion)
+      io(_collection.create(new ArangoDBCollectionCreateOptions(_collection.name(), options).arango)).map(collectionEntityConversion)
     }
-    def exists(): IO[Boolean] = _collection.exists().toIO.map(_.booleanValue())
-    def drop(): IO[Unit] = _collection.drop().toIO.map(_ => ())
-    def info(): IO[CollectionInfo] = _collection.getInfo.toIO.map(collectionEntityConversion)
-    def truncate(): IO[CollectionInfo] = _collection.truncate().toIO.map(collectionEntityConversion)
+    def exists(): IO[Boolean] = io(_collection.exists())
+    def drop(): IO[Unit] = io(_collection.drop())
+    def info(): IO[CollectionInfo] = io(_collection.getInfo).map(collectionEntityConversion)
+    def truncate(): IO[CollectionInfo] = io(_collection.truncate()).map(collectionEntityConversion)
   }
 
   object field {
@@ -37,27 +37,30 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
 
   object index {
     def query(): IO[List[IndexInfo]] = {
-      _collection.getIndexes.toIO.map(_.asScala.toList).map(_.map(indexEntityConversion))
+      io(_collection.getIndexes).map(_.asScala.toList).map(_.map(indexEntityConversion))
     }
 
     def ensure(indexes: List[Index]): IO[List[IndexInfo]] = {
       val generate: List[IO[IndexEntity]] = indexes.map { i =>
         val fields = i.fields.asJava
         i.`type` match {
-          case IndexType.Persistent =>
+          case IndexType.Persistent => io {
             val options = new PersistentIndexOptions
             options.sparse(i.sparse)
             options.unique(i.unique)
             options.estimates(i.estimates)
-            _collection.ensurePersistentIndex(fields, options).toIO
-          case IndexType.Geo =>
+            _collection.ensurePersistentIndex(fields, options)
+          }
+          case IndexType.Geo => io {
             val options = new GeoIndexOptions
             options.geoJson(i.geoJson)
-            _collection.ensureGeoIndex(fields, options).toIO
-          case IndexType.TTL =>
+            _collection.ensureGeoIndex(fields, options)
+          }
+          case IndexType.TTL => io {
             val options = new TtlIndexOptions
             options.expireAfter(i.expireAfterSeconds)
-            _collection.ensureTtlIndex(fields, options).toIO
+            _collection.ensureTtlIndex(fields, options)
+          }
         }
       }
       generate.map(_.map(indexEntityConversion)).sequence
@@ -65,7 +68,7 @@ class ArangoDBCollection(val _collection: ArangoCollectionAsync) extends ArangoD
 
     def delete(indexIds: List[String]): IO[List[String]] = {
       indexIds.map { indexId =>
-        _collection.deleteIndex(indexId).toIO
+        io(_collection.deleteIndex(indexId))
       }.sequence
     }
   }

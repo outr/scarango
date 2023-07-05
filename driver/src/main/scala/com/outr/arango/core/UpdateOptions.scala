@@ -7,7 +7,6 @@ case class UpdateOptions(keepNull: Boolean = false,
                          ifMatch: Option[String] = None,
                          returnNew: Boolean = false,
                          returnOld: Boolean = false,
-                         serializeNull: Boolean = true,
                          silent: Boolean = true,
                          streamTransaction: Option[StreamTransaction] = None)
 

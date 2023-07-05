@@ -14,14 +14,12 @@ import scala.jdk.FutureConverters._
 import scala.language.implicitConversions
 
 object Helpers {
-  implicit class CompletableFutureExtras[T](cf: CompletableFuture[T]) {
-    def toIO: IO[T] = IO.fromFuture(IO(cf.asScala)).recover {
-      case exc: CompletionException => exc.getCause match {
-        case t: ArangoDBException => throw ArangoException(t)
-        case t => throw t
-      }
+  def io[Return](f: => Return): IO[Return] = IO
+    .blocking(f)
+    .recover {
+      case t: ArangoDBException => throw ArangoException(t)
+      case t => throw t
     }
-  }
 
   implicit def collectionEntityConversion(ce: entity.CollectionEntity): CollectionInfo = CollectionInfo(
     name = ce.getName,
@@ -148,7 +146,6 @@ object Helpers {
     duo.ifMatch(o.ifMatch.orNull)
     duo.returnNew(o.returnNew)
     duo.returnOld(o.returnOld)
-    duo.serializeNull(o.serializeNull)
     duo.silent(o.silent)
     duo.streamTransactionId(o.streamTransaction.map(_.id).orNull)
     duo

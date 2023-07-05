@@ -1,9 +1,9 @@
 package com.outr.arango.core
 
-import com.arangodb.DbName
-import com.arangodb.async.ArangoDBAsync
+import com.arangodb
+import com.arangodb.ContentType
 import com.arangodb.entity.{LoadBalancingStrategy => LBS}
-import com.arangodb.mapping.ArangoJack
+import com.arangodb.serde.jackson.JacksonSerde
 import com.fasterxml.jackson.core.{JsonGenerator, JsonParser}
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.JsonNodeType
@@ -12,7 +12,7 @@ import fabric._
 
 import scala.jdk.CollectionConverters._
 
-class ArangoDBServer(connection: ArangoDBAsync) {
+class ArangoDBServer(connection: arangodb.ArangoDB) {
   lazy val db: ArangoDB = new ArangoDB(this, connection.db())
 
   def db(name: String): ArangoDB = new ArangoDB(this, connection.db(name))
@@ -27,9 +27,9 @@ object ArangoDBServer {
     override def deserialize(p: JsonParser, ctxt: DeserializationContext): Json =
       jackson2Fabric(p.getCodec.readTree[JsonNode](p))
   }
-  private lazy val arangoJack: ArangoJack = {
-    val j = new ArangoJack
-    j.configure { mapper =>
+  private lazy val serde: JacksonSerde = {
+    val serde = JacksonSerde.of(ContentType.JSON)
+    serde.configure { mapper =>
       val module = new SimpleModule("FabricModule")
       val types = List(
         classOf[Obj], classOf[Null], classOf[Arr], classOf[Str], classOf[Num], classOf[NumInt], classOf[NumDec],
@@ -42,7 +42,7 @@ object ArangoDBServer {
       }
       mapper.registerModule(module)
     }
-    j
+    serde
   }
 
   private def fabric2Jackson(json: Json, g: JsonGenerator): Unit = json match {
@@ -86,7 +86,7 @@ object ArangoDBServer {
     case JsonNodeType.STRING => Str(node.asText())
   }
 
-  def apply(connection: ArangoDBAsync): ArangoDBServer = new ArangoDBServer(connection)
+  def apply(connection: arangodb.ArangoDB): ArangoDBServer = new ArangoDBServer(connection)
 
   def apply(config: ArangoDBConfig): ArangoDBServer = {
     val loadBalancingStrategy = config.loadBalancingStrategy match {
@@ -94,17 +94,13 @@ object ArangoDBServer {
       case LoadBalancingStrategy.RoundRobin => LBS.ROUND_ROBIN
       case LoadBalancingStrategy.OneRandom => LBS.ONE_RANDOM
     }
-    val builder = new ArangoDBAsync.Builder()
-      .serializer(arangoJack)
+    val builder = new arangodb.ArangoDB.Builder()
+      .serde(serde)
       .user(config.username)
       .password(config.password)
       .useSsl(config.ssl)
       .timeout(Option(config.timeout).map(_.toMillis.toInt).map(Integer.valueOf).getOrElse(0))
       .acquireHostList(config.acquireHostList)
-      .chunksize(config.chunkSize match {
-        case -1 => null
-        case n => n
-      })
       .connectionTtl(Option(config.connectionTtl).map(_.toMillis).map(java.lang.Long.valueOf).orNull)
       .keepAliveInterval(Option(config.keepAliveInterval).map(_.toMillis.toInt).map(Integer.valueOf).orNull)
       .loadBalancingStrategy(loadBalancingStrategy)

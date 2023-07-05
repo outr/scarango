@@ -1,7 +1,7 @@
 package com.outr.arango.core
 
 import cats.effect.IO
-import com.arangodb.async.ArangoDatabaseAsync
+import com.arangodb
 import com.arangodb.entity.StreamTransactionStatus
 import com.arangodb.model.StreamTransactionOptions
 import com.outr.arango.util.Helpers._
@@ -9,7 +9,7 @@ import com.outr.arango.util.Helpers._
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
 
-class ArangoDBTransaction[Collection](db: ArangoDatabaseAsync, c2Name: Collection => String) {
+class ArangoDBTransaction[Collection](db: arangodb.ArangoDatabase, c2Name: Collection => String) {
   def apply[Return](allowImplicit: Boolean = true,
                     lockTimeout: Option[FiniteDuration] = None,
                     waitForSync: Boolean = false,
@@ -53,8 +53,7 @@ class ArangoDBTransaction[Collection](db: ArangoDatabaseAsync, c2Name: Collectio
     if (exclusive.nonEmpty) {
       options.exclusiveCollections(exclusive: _*)
     }
-    db.beginStreamTransaction(options)
-      .toIO
+    io(db.beginStreamTransaction(options))
       .map(entity => StreamTransaction(entity.getId))
   }
 
@@ -64,21 +63,17 @@ class ArangoDBTransaction[Collection](db: ArangoDatabaseAsync, c2Name: Collectio
     case StreamTransactionStatus.aborted => TransactionStatus.Aborted
   }
 
-  def status(transaction: StreamTransaction): IO[TransactionStatus] = db.getStreamTransaction(transaction.id)
-    .toIO
+  def status(transaction: StreamTransaction): IO[TransactionStatus] = io(db.getStreamTransaction(transaction.id))
     .map(e => t2Status(e.getStatus))
 
-  def abort(transaction: StreamTransaction): IO[TransactionStatus] = db.abortStreamTransaction(transaction.id)
-    .toIO
+  def abort(transaction: StreamTransaction): IO[TransactionStatus] = io(db.abortStreamTransaction(transaction.id))
     .map(e => t2Status(e.getStatus))
 
-  def commit(transaction: StreamTransaction): IO[TransactionStatus] = db.commitStreamTransaction(transaction.id)
-    .toIO
+  def commit(transaction: StreamTransaction): IO[TransactionStatus] = io(db.commitStreamTransaction(transaction.id))
     .map(e => t2Status(e.getStatus))
 
-  def all: IO[List[(StreamTransaction, TransactionStatus)]] = db.getStreamTransactions
-    .toIO
+  def all: IO[List[(StreamTransaction, TransactionStatus)]] = io(db.getStreamTransactions)
     .map(_.asScala.toList.map { entity =>
-      (StreamTransaction(entity.getId), t2Status(entity.getStatus))
+      (StreamTransaction(entity.getId), t2Status(entity.getState))
     })
 }

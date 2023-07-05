@@ -60,7 +60,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           val c = exc.constraintViolation.get
           c.fields should be(Set("name"))
           c.`type` should be("persistent")
-        case _ => fail()
+        case other => fail(s"Received $other instead of ArangoException!")
       }
     }
     "create a transaction" in {
