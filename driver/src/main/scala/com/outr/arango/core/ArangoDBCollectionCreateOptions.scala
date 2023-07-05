@@ -1,15 +1,12 @@
 package com.outr.arango.core
 
 import com.arangodb.model
+import com.arangodb.model.OptionsBuilder
 import com.outr.arango.util.Helpers._
 
 class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectionOptions) {
   private[arango] lazy val arango: model.CollectionCreateOptions = {
     val c = new model.CollectionCreateOptions
-    // Crappy work-around for setting the collection name
-    val setName = c.getClass.getDeclaredMethod("name", classOf[String])
-    setName.setAccessible(true)
-    setName.invoke(c, collectionName)
 
     o.replicationFactor.foreach(c.replicationFactor)
     o.writeConcern.foreach(c.writeConcern(_))
@@ -48,6 +45,7 @@ class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectio
     }
     o.collectionSchema.message.foreach(schema.setMessage)
     c.schema(schema)
-    c
+
+    OptionsBuilder.build(c, collectionName)
   }
 }

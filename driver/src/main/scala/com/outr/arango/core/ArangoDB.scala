@@ -1,9 +1,9 @@
 package com.outr.arango.core
 
 import cats.effect.IO
-import com.arangodb.ArangoDatabase
+import com.arangodb.{ArangoCursor, ArangoDatabase}
 import com.arangodb.entity.arangosearch._
-import com.arangodb.model.AqlQueryOptions
+import com.arangodb.model.{AqlQueryOptions, OptionsBuilder}
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
 import com.outr.arango.query.{Query, Sort, SortDirection}
 import com.outr.arango.util.Helpers._
@@ -29,41 +29,41 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
       io(db.parseQuery(query.string)).map(aqlParseEntityConversion)
     }
 
-    /*def cursor(query: Query, options: QueryOptions = QueryOptions()) = io {
-      val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
-        case (key, value) => key -> value2AnyRef(value)
-      }.asJava
+    private def wrap(arangoCursor: ArangoCursor[Json]): Cursor[Json] = Cursor(
+      id = arangoCursor.getId,
+      nextBatchId = arangoCursor.getNextBatchId,
+      iterator = arangoCursor.asInstanceOf[java.util.Iterator[Json]].asScala,
+      converter = identity
+    )
 
-//      db.cursor[Json](cursorId, classOf[Json], nextBatchId)
-      val options = new AqlQueryOptions
-      options.batchSize(batchSize)
-      db.query[Json](query.string, classOf[Json], bindVars)
-    }.attempt
+    private def handle(queryString: String, cursorIO: IO[ArangoCursor[Json]]): IO[Cursor[Json]] = cursorIO
+      .map(wrap)
+      .attempt
       .map {
         case Left(throwable) =>
-          val queryString = query.string
           scribe.error(s"An error occurred executing a query: $queryString", throwable)
           throw throwable
         case Right(c) => c
-      }*/
+      }
 
-    def iterator(query: Query): IO[Iterator[Json]] = {
-      val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
-        case (key, value) => key -> value2AnyRef(value)
-      }.asJava
+    def createCursor(query: Query, options: QueryOptions = QueryOptions()): IO[Cursor[Json]] = handle(
+      queryString = query.string,
+      cursorIO = io {
+        val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
+          case (key, value) => key -> value2AnyRef(value)
+        }.asJava
 
-      io(db.query(query.string, classOf[Json], bindVars))
-        .attempt
-        .map {
-          case Left(throwable) =>
-            val queryString = query.string
-            scribe.error(s"An error occurred executing a query: $queryString", throwable)
-            throw throwable
-          case Right(c) =>
-            val cursor: java.util.Iterator[Json] = c
-            cursor.asScala
-        }
-    }
+        val o = OptionsBuilder.build(options.arango, query.string, bindVars)
+        db.query[Json](query.string, classOf[Json], bindVars, o)
+      }
+    )
+
+    def resumeCursor(cursorId: String, nextBatchId: String): IO[Cursor[Json]] = handle(
+      queryString = "existing query: $cursorId",
+      cursorIO = io(db.cursor[Json](cursorId, classOf[Json], nextBatchId))
+    )
+
+    def iterator(query: Query): IO[Iterator[Json]] = createCursor(query).map(_.iterator)
 
     def apply(query: Query): fs2.Stream[IO, Json] = fs2.Stream.force(iterator(query).flatMap { iterator =>
       IO(fs2.Stream.fromIterator[IO](iterator, 512))
@@ -73,6 +73,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
   }
 
   def collection(name: String): ArangoDBCollection = new ArangoDBCollection(db.collection(name))
+
   def view(name: String,
            managed: Boolean,
            links: List[ViewLink],
