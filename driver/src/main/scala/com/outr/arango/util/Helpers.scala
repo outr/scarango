@@ -33,7 +33,6 @@ object Helpers {
   implicit def statusConversion(status: entity.CollectionStatus): CollectionStatus = status match {
     case entity.CollectionStatus.LOADED => CollectionStatus.Loaded
     case entity.CollectionStatus.DELETED => CollectionStatus.Deleted
-    case _ => throw new RuntimeException(s"Use of deprecated collection status: $status")
   }
 
   implicit def keyTypeConversionFromJava(kt: entity.KeyType): KeyType = kt match {
