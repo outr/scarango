@@ -2,12 +2,14 @@ package com.outr.arango.collection
 
 import cats.effect.IO
 import com.outr.arango.Graph
+import com.outr.arango.core.{Cursor, QueryOptions}
 import com.outr.arango.query.Query
 import com.outr.arango.queue.DBQueue
 import fabric.Json
 import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicInteger
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) {
   /**
@@ -18,6 +20,36 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
     * @return QueryBuilder[T]
     */
   def as[T](implicit rw: RW[T]): QueryBuilder[T] = new QueryBuilder[T](graph, query, rw.write)
+
+  /**
+    * Retrieves the results as a Cursor.
+    *
+    * @param batchSize the page size to use (the number of records per page, defaults to 512)
+    * @param ttl the time the cursor will live (defaults to 30 seconds)
+    * @param streaming if set to true, one page will be loaded at a time and the full count may not be known but the
+    *                  query should executed quite a bit faster
+    */
+  def cursor(batchSize: Int = 512,
+                ttl: FiniteDuration = 30.seconds,
+                streaming: Boolean = false): IO[Cursor[R]] = {
+    val options = QueryOptions(
+      count = Some(true),
+      batchSize = Some(batchSize),
+      ttl = Some(ttl),
+      fullCount = Some(true),
+      allowRetry = Some(true),
+      stream = Some(streaming)
+    )
+    graph.db.query.createCursor(query, options).map(_.as[R](converter))
+  }
+
+  /**
+    * Retrieves the next page of a cursor.
+    *
+    * @param cursorId the cursor id
+    */
+  def cursorNext(cursorId: String): IO[Cursor[R]] =
+    graph.db.query.nextCursor(cursorId).map(_.as[R](converter))
 
   /**
     * Creates a Stream to get all the results from the query

@@ -32,7 +32,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
     private def wrap(arangoCursor: ArangoCursor[Json]): Cursor[Json] = Cursor(
       id = arangoCursor.getId,
       nextBatchId = arangoCursor.getNextBatchId,
-      iterator = arangoCursor.asInstanceOf[java.util.Iterator[Json]].asScala,
+      arangoCursor = arangoCursor,
       converter = identity
     )
 
@@ -58,10 +58,12 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
       }
     )
 
-    def resumeCursor(cursorId: String, nextBatchId: String): IO[Cursor[Json]] = handle(
-      queryString = "existing query: $cursorId",
-      cursorIO = io(db.cursor[Json](cursorId, classOf[Json], nextBatchId))
-    )
+    def nextCursor(cursorId: String): IO[Cursor[Json]] = {
+      handle(
+        queryString = "existing query: $cursorId",
+        cursorIO = io(db.cursor[Json](cursorId, classOf[Json]))
+      )
+    }
 
     def iterator(query: Query): IO[Iterator[Json]] = createCursor(query).map(_.iterator)
 

@@ -152,6 +152,31 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         names should be(List("Navajo State Park"))
       }
     }
+    // TODO: Revisit
+    /*"cursor through the airports" in {
+      val query =
+        aql"""
+            FOR a IN ${database.airports}
+            LIMIT 10
+            SORT a.${Airport.name} ASC
+            RETURN a
+           """
+      database.airports.query(query).cursor(
+        batchSize = 2
+      ).flatMap { page1 =>
+        page1.resultsCount should be(10)
+        page1.fullCount should be(3375L)
+        page1.toList.map(_.name) should be(Nil)
+
+        database.airports.query.cursorNext(page1.id).flatMap { page2 =>
+          page2.resultsCount should be(10)
+          page2.fullCount should be(3375L)
+          page2.toList.map(_.name) should be(Nil)
+
+          IO.unit
+        }
+      }
+    }*/
     "drop the database" in {
       if (doDrop) {
         database.drop().map { success =>
@@ -166,7 +191,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   def csv2Stream(fileName: String): fs2.Stream[IO, Vector[String]] = {
     val source = Source.fromURL(getClass.getClassLoader.getResource(fileName))
     val iterator = source.getLines()
-    iterator.next()     // Skip heading
+    iterator.next() // Skip heading
     fs2.Stream.fromIterator[IO](iterator.map { s =>
       var open = false
       val entries = ListBuffer.empty[String]
@@ -255,6 +280,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
 
   object DataImportUpgrade extends DatabaseUpgrade {
     override def applyToNew: Boolean = true
+
     override def blockStartup: Boolean = true
 
     override def upgrade(graph: Graph): IO[Unit] = for {
