@@ -2,12 +2,11 @@ package com.outr.arango.pagination
 
 import cats.effect.IO
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.query.dsl.ref2Wrapped
-import com.outr.arango.query.{Query, QueryPart, sc2AQL}
+import com.outr.arango.query.dsl._
+import com.outr.arango.query._
 import com.outr.arango.util.Helpers.io
-import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index, Unique}
-import fabric.Json
-import fabric.rw.{Asable, RW}
+import com.outr.arango._
+import fabric.rw._
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 

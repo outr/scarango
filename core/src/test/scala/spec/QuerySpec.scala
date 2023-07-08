@@ -1,6 +1,7 @@
 package spec
 
 import com.outr.arango.query._
+import com.outr.arango.query.dsl._
 import fabric._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

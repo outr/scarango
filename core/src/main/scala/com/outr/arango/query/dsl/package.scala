@@ -50,6 +50,8 @@ package object dsl {
 
   implicit def string2ReturnPart(json: String): ReturnPart = this.json(json)
 
+  implicit def string2QueryPart(s: String): QueryPart = QueryPart.Static(s)
+
   implicit def fieldsAndQuery2Query[T](faq: (Field[List[T]], Query)): Query = faq._2
 
   implicit class ValueExtras[T](value: T) {
