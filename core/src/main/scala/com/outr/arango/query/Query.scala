@@ -68,6 +68,11 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   override def toString: String = s"$string (${variables.map(t => s"${t._1}: ${t._2}")})"
 
+  def normalize: Query = Query(parts.flatMap {
+    case QueryPart.Static(value) => value.split('\n').toList.filter(_.trim.nonEmpty).map(s => QueryPart.Static(s"\n$s"))
+    case part => List(part)
+  })
+
   override def equals(obj: Any): Boolean = obj match {
     case that: Query => this.compressed == that.compressed && this.variables == that.variables
     case _ => false
