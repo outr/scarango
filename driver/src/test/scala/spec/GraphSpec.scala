@@ -40,7 +40,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER airport.vip
              RETURN airport
            """
-      database.airports.query(query).all.asserting { results =>
+      database.airports.query(query).toList.asserting { results =>
         results.map(_._id.value).toSet should be(Set("JFK", "ORD", "LAX", "ATL", "AMA", "SFO", "DFW"))
       }
     }
@@ -55,7 +55,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database.airports
         .query
         .byFilter(a => a._id IN keys.map(a.id))
-        .all
+        .toList
         .map { airports =>
           airports.length should be(2)
           airports.map(_.name).toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
@@ -78,7 +78,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER a._key IN $keys
              RETURN {fullName: a.name}
            """
-      database.query[AirportName](query).all.map { airportNames =>
+      database.query[AirportName](query).toList.map { airportNames =>
         airportNames.length should be(2)
         airportNames.toSet should be(Set(AirportName("John F Kennedy Intl"), AirportName("Los Angeles International")))
       }
@@ -91,7 +91,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FILTER a._key IN $keys
              RETURN a.name
            """
-      database.query[String](query).all.map { airportNames =>
+      database.query[String](query).toList.map { airportNames =>
         airportNames.length should be(2)
         airportNames.toSet should be(Set("John F Kennedy Intl", "Los Angeles International"))
       }
@@ -109,7 +109,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              FOR airport IN 1..1 OUTBOUND $lax ${database.flights}
              RETURN DISTINCT airport.name
            """
-      database.query[String](query).all.map { response =>
+      database.query[String](query).toList.map { response =>
         response.length should be(82)
       }
     }
@@ -121,7 +121,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              OPTIONS { bfs: true, uniqueVertices: 'global' }
              RETURN airport
            """
-      database.airports.query(query).all.map { response =>
+      database.airports.query(query).toList.map { response =>
         response.length should be(82)
       }
     }
@@ -134,7 +134,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
              SHORTEST_PATH $bis TO $jfk ${database.flights}
              RETURN v.${Airport.name}
            """
-      database.query[String](query).all.map { response =>
+      database.query[String](query).toList.map { response =>
         response should be(List("Bismarck Municipal", "Minneapolis-St Paul Intl", "John F Kennedy Intl"))
       }
     }
@@ -147,7 +147,7 @@ class GraphSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         aql"""
              FOR a IN ${database.airportSearch} SEARCH PHRASE(a.name, $word, ${Analyzer.TextEnglish}) RETURN a
            """
-      database.airports.query(query).all.map { response =>
+      database.airports.query(query).toList.map { response =>
         val names = response.map(_.name)
         names should be(List("Navajo State Park"))
       }

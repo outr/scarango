@@ -66,14 +66,14 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
   /**
     * Convenience method to get the results from the stream as a List
     */
-  def all: IO[List[R]] = iterator.map(_.toList)
+  def toList: IO[List[R]] = iterator.map(_.toList)
 
   /**
     * Retrieves exactly one result from the query. If there is zero or more than one an exception will be thrown.
     *
     * @return IO[R]
     */
-  def one: IO[R] = all.map {
+  def one: IO[R] = toList.map {
     case Nil => throw new RuntimeException("No results")
     case d :: Nil => d
     case list => throw new RuntimeException(s"More than one result returned: $list")

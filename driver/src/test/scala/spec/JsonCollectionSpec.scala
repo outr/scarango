@@ -30,7 +30,7 @@ class JsonCollectionSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       )).map(_ => succeed)
     }
     "verify the two records" in {
-      database.users.query.all.map { users =>
+      database.users.query.toList.map { users =>
         val names = users.map(_.json("name").asString)
         names should be(List("John Doe", "Jane Doe"))
       }

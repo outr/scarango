@@ -47,7 +47,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .all
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
           people.map(_.bio).toSet should be(Set("", "ynahteB m'I\n,iH"))
@@ -99,7 +99,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .all
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany"))
         }
@@ -113,7 +113,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       database
         .people
         .query(aql"FOR p IN ${database.people} RETURN p")
-        .all
+        .toList
         .map { people =>
           people.map(_.name).toSet should be(Set("Adam", "Bethany", "Charles", "Donna"))
           people.map(_.age).toSet should be(Set(21, 19, 35, 41))
@@ -129,7 +129,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         database
           .people
           .query(aql"FOR p IN ${database.people} RETURN p")
-          .all
+          .toList
           .map { people =>
             people.map(_.name).toSet should be(Set("Adam", "Bethany", "Donna"))
             people.map(_.age).toSet should be(Set(21, 19, 41))
@@ -155,7 +155,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .people
         .query
         .byFilter(_.age is 22)
-        .all
+        .toList
         .map { people =>
           people.map(_.name) should be(List("Adam"))
           people.map(_.favoriteNumbers) should be(List(List(21)))
@@ -179,7 +179,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         .people
         .query
         .byFilter(p => (p.age < 23) && (p.age > 21))
-        .all
+        .toList
         .map { people =>
           people.map(_.name) should be(List("Adam"))
           people.map(_.favoriteNumbers) should be(List(List(21, 7, 42)))
@@ -223,7 +223,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         }
     }
     "verify the DBQueue properly inserted the records" in {
-      database.people.query.all.map(_.map(_.name).toSet).map { set =>
+      database.people.query.toList.map(_.map(_.name).toSet).map { set =>
         set should be(Set(
           "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Bethany", "Donna", "Adam"
         ))
@@ -240,7 +240,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "verify the collection is empty" in {
-      database.people.query.all.map { people =>
+      database.people.query.toList.map { people =>
         people should be(Nil)
       }
     }
@@ -250,14 +250,14 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "verify all the records are restored" in {
-      database.people.query.all.map(_.map(_.name).toSet).map { names =>
+      database.people.query.toList.map(_.map(_.name).toSet).map { names =>
         names should be(Set(
           "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Bethany", "Donna", "Adam"
         ))
       }
     }
     "batch delete" in {
-      database.people.query.byFilter(_.age > 10).all.flatMap { list =>
+      database.people.query.byFilter(_.age > 10).toList.flatMap { list =>
         list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))
         database.people.batch.delete(list.map(_._id), DeleteOptions(waitForSync = true, silent = false)).map { results =>
           results.documents.length should be(3)

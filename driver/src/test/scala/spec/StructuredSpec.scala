@@ -40,7 +40,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       val query = database.users.query
         .byFilter(_.addresses.lines is "One")
       query
-        .all
+        .toList
         .map { users =>
           users.map(_.name) should be(List("Ann"))
         }
@@ -63,7 +63,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
             RETURN u
            """
       database.users.query(query)
-        .all
+        .toList
         .map { users =>
           users.map(_.name) should be(List("Ann", "Bob"))
         }
