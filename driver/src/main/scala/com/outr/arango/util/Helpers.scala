@@ -160,10 +160,12 @@ object Helpers {
     ddo
   }
 
-  implicit def multiDocumentCreateConversion[T](e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[Json]], toT: Json => T): CreateResults[T] = CreateResults(
-    results = e.getDocumentsAndErrors.asScala.toList.map {
-      case ce: entity.DocumentCreateEntity[Json @unchecked] => Right(createDocumentEntityConversion(ce, toT))
-      case err: ErrorEntity => Left(err)
+  implicit def multiDocumentCreateConversion[T](e: entity.MultiDocumentEntity[entity.DocumentCreateEntity[Json]],
+                                                toT: Json => T,
+                                                documents: List[T]): CreateResults[T] = CreateResults(
+    results = e.getDocumentsAndErrors.asScala.toList.zip(documents).map {
+      case (ce: entity.DocumentCreateEntity[Json @unchecked], document) => Right(createDocumentEntityConversion(ce, toT, document))
+      case (err: ErrorEntity, _) => Left(err)
     }
   )
 
@@ -174,10 +176,11 @@ object Helpers {
     }
   )
 
-  implicit def createDocumentEntityConversion[T](e: entity.DocumentCreateEntity[Json], toT: Json => T): CreateResult[T] = CreateResult(
+  implicit def createDocumentEntityConversion[T](e: entity.DocumentCreateEntity[Json], toT: Json => T, document: T): CreateResult[T] = CreateResult(
     key = Option(e.getKey),
     id = Option(e.getId),
     rev = Option(e.getRev),
+    document = document,
     newDocument = Option(e.getNew).map(toT),
     oldDocument = Option(e.getOld).map(toT)
   )

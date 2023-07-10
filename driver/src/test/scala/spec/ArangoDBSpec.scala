@@ -114,10 +114,10 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         obj("name" -> "ten"),
       ), CreateOptions(waitForSync = true, returnNew = true, silent = false)).asserting { results =>
         results.errors should be(Nil)
-        results.documents.flatMap(_.newDocument).flatMap(_.get("name")).map(_.asString).toSet should be(
+        results.success.flatMap(_.newDocument).flatMap(_.get("name")).map(_.asString).toSet should be(
           Set("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
         )
-        results.documents.length should be(10)
+        results.success.length should be(10)
       }
     }
     "verify the records were created successfully" in {

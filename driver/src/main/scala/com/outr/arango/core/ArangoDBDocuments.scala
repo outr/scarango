@@ -28,7 +28,7 @@ trait ArangoDBDocuments[T] {
              options: CreateOptions = CreateOptions.Insert,
              transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] = io(_collection
     .insertDocument(fromT(doc), options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction)))))
-    .map(createDocumentEntityConversion(_, toT))
+    .map(createDocumentEntityConversion(_, toT, doc))
 
   def upsert(doc: T, options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResult[T]] =
     insert(doc, options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))))
@@ -48,7 +48,7 @@ trait ArangoDBDocuments[T] {
         options.copy(streamTransaction = options.streamTransaction.orElse(Option(transaction))),
         classOf[Json]
       ))
-      insert.map(multiDocumentCreateConversion(_, toT))
+      insert.map(multiDocumentCreateConversion(_, toT, docs))
     }
 
     def upsert(docs: List[T], options: CreateOptions = CreateOptions.Upsert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] =
