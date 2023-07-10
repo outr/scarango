@@ -8,14 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Scala
-        uses: olafurpg/setup-scala@v13
+        uses: actions/checkout@v3
+      - name: Setup JDK
+        uses: actions/setup-java@v3
         with:
-          java-version: "zulu@1.8"
-      - uses: xinova/arangodb-action@v1
-        with:
-          arangodb version: 'latest'
+          distribution: 'zulu'
+          java-version: 11
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: Build and test
