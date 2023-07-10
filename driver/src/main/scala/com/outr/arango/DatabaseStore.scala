@@ -5,7 +5,7 @@ import com.outr.arango.core.{ArangoDBCollection, CreateResult, DeleteResult, Not
 import fabric.Json
 import fabric.rw._
 
-case class DatabaseStore(collection: ArangoDBCollection, val managed: Boolean) {
+case class DatabaseStore(collection: ArangoDBCollection, managed: Boolean) {
   def get[T: RW](key: String): IO[Option[T]] = collection
     .get(id(key))
     .map(_.map(_.as[StoreValue].value.as[T]))
@@ -16,7 +16,13 @@ case class DatabaseStore(collection: ArangoDBCollection, val managed: Boolean) {
 
   def update[T: RW](key: String, value: T): IO[CreateResult[T]] = collection
     .upsert(StoreValue(key, value.json).json)
-    .map(_.convert(_.as[T]))
+    .map { result =>
+      result.copy[T](
+        document = value,
+        newDocument = result.newDocument.map(_.apply("value").as[T]),
+        oldDocument = result.oldDocument.map(_.apply("value").as[T])
+      )
+    }
 
   def delete(key: String): IO[DeleteResult[Json]] = collection.delete(id(key))
 
