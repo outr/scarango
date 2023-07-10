@@ -59,7 +59,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       val query =
         aql"""
             FOR u IN ${database.users}
-            FILTER "Two" IN u.${User.addresses.lines}
+            FILTER "Two" IN u.${User.addresses.lines}[**]
             RETURN u
            """
       database.users.query(query)
@@ -83,8 +83,8 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     override implicit val rw: RW[User] = RW.gen
 
     val name: Field[String] = field("name")
-    object addresses extends Field[List[Address]]("addresses", isArray = true) {
-      val lines: Field[List[String]] = field("lines", isArray = true)
+    object addresses extends Field[List[Address]]("addresses") {
+      val lines: Field[List[String]] = field("lines")
     }
 
     override val collectionName: String = "users"

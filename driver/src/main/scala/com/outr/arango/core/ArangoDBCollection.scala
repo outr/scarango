@@ -31,8 +31,11 @@ class ArangoDBCollection(val _collection: arangodb.ArangoCollection) extends Ara
   }
 
   object field {
-    def apply[F: RW](name: String, isArray: Boolean = false, mutation: Option[DataMutation] = None): Field[F] =
-      new Field[F](name, isArray, mutation)(implicitly[RW[F]], None)
+    def apply[F: RW](name: String, mutation: Option[DataMutation] = None): Field[F] =
+      new Field[F](
+        fieldName = name,
+        container = false,
+        mutation = mutation)(implicitly[RW[F]], None)
   }
 
   object index {

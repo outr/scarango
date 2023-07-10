@@ -3,24 +3,30 @@ package com.outr.arango
 import com.outr.arango.mutation.{DataMutation, ModifyFieldValue}
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, SortDirection}
+import fabric.define.DefType
 import fabric.rw._
 import fabric.{Str, arr}
 
 import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
-               val isArray: Boolean = false,
+               val container: Boolean = true,
                val mutation: Option[DataMutation] = None)
               (implicit val rw: RW[F],
                model: Option[DocumentModel[_]],
                private val _parent: Option[Field[_]] = None) extends QueryPart.Support {
+  protected val isArray: Boolean = rw.definition match {
+    case DefType.Arr(_) => true
+    case DefType.Opt(DefType.Arr(_)) => true
+    case _ => false
+  }
   protected implicit def thisField: Option[Field[_]] = Some(this)
 
   lazy val fullyQualifiedName: String = fqn(true)
 
   protected def fqn(top: Boolean): String = {
-    def asterisk = if (top) "**" else "*"
-    val name = if (isArray) s"$fieldName[$asterisk]" else fieldName
+    def asterisk: String = if (top) "**" else "*"
+    val name = if (isArray && container) s"$fieldName[$asterisk]" else fieldName
     parent match {
       case Some(p) => s"${p.fqn(false)}.$name"
       case None => name
@@ -90,14 +96,14 @@ class Field[F](val fieldName: String,
 
   def withMutation(mutation: DataMutation): Field[F] = {
     this.mutation.foreach(m => throw new RuntimeException(s"Field $fieldName already has a mutation set: $m"))
-    new Field[F](fieldName, isArray, Some(mutation))(rw, model, parent)
+    new Field[F](fieldName, container, Some(mutation))(rw, model, parent)
   }
 
   def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(this, storage, retrieval))
 
   def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 
-  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, isArray, mutation)(implicitly[RW[Option[F]]], model, parent)
+  lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, container, mutation)(implicitly[RW[Option[F]]], model, parent)
 
   override def toQueryPart: QueryPart = QueryPart.Static(fullyQualifiedName)
 

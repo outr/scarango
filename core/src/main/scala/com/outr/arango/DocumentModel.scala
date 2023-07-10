@@ -25,10 +25,12 @@ trait DocumentModel[D <: Document[D]] { model =>
   }
 
   protected[arango] def field[T](name: String,
-                                 isArray: Boolean = false,
                                  mutation: Option[DataMutation] = None)
                                 (implicit rw: RW[T], parent: Option[Field[_]] = None): Field[T] =
-    new Field[T](name, isArray, mutation)(rw, Some(this), parent)
+    new Field[T](
+      fieldName = name,
+      container = false,
+      mutation = mutation)(rw, Some(this), parent)
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
