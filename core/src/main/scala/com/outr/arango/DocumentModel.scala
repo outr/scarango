@@ -1,6 +1,6 @@
 package com.outr.arango
 
-import com.outr.arango.core.CreateCollectionOptions
+import com.outr.arango.core.{CollectionSchema, ComputeOn, ComputedValue, CreateCollectionOptions}
 import com.outr.arango.mutation.{DataMutation, IdMutation}
 import fabric.rw.RW
 
@@ -8,6 +8,13 @@ trait DocumentModel[D <: Document[D]] { model =>
   protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
 
   val collectionName: String
+
+  def waitForSync: Option[Boolean] = None
+  def schema: Option[CollectionSchema] = None
+
+  protected def computedValues: List[ComputedValue] = Nil
+
+  final def allComputedValues: List[ComputedValue] = computedValues ::: fields.flatMap(_.computedValues)
 
   private var _fields = List.empty[Field[_]]
 
@@ -31,6 +38,12 @@ trait DocumentModel[D <: Document[D]] { model =>
       fieldName = name,
       container = false,
       mutation = mutation)(rw, Some(this), parent)
+
+  protected[arango] def modifiedField(name: String = "modified"): Field[Long] = field[Long](name)
+    .computed(
+      expression = "RETURN DATE_NOW()",
+      computeOn = Set(ComputeOn.Replace, ComputeOn.Update)
+    )
 
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList

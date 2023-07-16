@@ -17,11 +17,11 @@ class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectio
       v.name(cv.name)
       v.expression(cv.expression)
       v.overwrite(cv.overwrite)
-      v.computeOn(cv.computeOn match {
+      v.computeOn(cv.computeOn.map {
         case ComputeOn.Insert => model.ComputedValue.ComputeOn.insert
         case ComputeOn.Update => model.ComputedValue.ComputeOn.update
         case ComputeOn.Replace => model.ComputedValue.ComputeOn.replace
-      })
+      }.toList: _*)
       v.keepNull(cv.keepNull)
       v.failOnWarning(cv.failOnWarning)
       v

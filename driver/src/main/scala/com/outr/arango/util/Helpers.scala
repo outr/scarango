@@ -27,8 +27,24 @@ object Helpers {
     isSystem = ce.getIsSystem,
     status = ce.getStatus,
     `type` = ce.getType,
-    schema = ce.getSchema
+    schema = ce.getSchema,
+    computedValues = Option(ce.getComputedValues).map(_.asScala.toList).getOrElse(Nil)
   )
+
+  implicit def computedValuesConversion(list: List[model.ComputedValue]): List[ComputedValue] = list.map { ce =>
+    ComputedValue(
+      name = ce.getName,
+      expression = ce.getExpression,
+      overwrite = ce.getOverwrite,
+      computeOn = ce.getComputeOn.asScala.map {
+        case model.ComputedValue.ComputeOn.insert => ComputeOn.Insert
+        case model.ComputedValue.ComputeOn.update => ComputeOn.Update
+        case model.ComputedValue.ComputeOn.replace => ComputeOn.Replace
+      }.toSet,
+      keepNull = ce.getKeepNull,
+      failOnWarning = ce.getFailOnWarning
+    )
+  }
 
   implicit def statusConversion(status: entity.CollectionStatus): CollectionStatus = status match {
     case entity.CollectionStatus.LOADED => CollectionStatus.Loaded

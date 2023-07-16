@@ -5,7 +5,7 @@ import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
+import com.outr.arango.core.{ComputeOn, ComputedValue, DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.DBQueue
@@ -16,9 +16,11 @@ import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 import java.nio.file.Paths
+import scala.concurrent.duration.DurationInt
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
   private var transaction: StreamTransaction = _
+  private var bethanyLastModified: Long = _
 
   "Advanced" should {
     "initialize configuration" in {
@@ -26,7 +28,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       succeed
     }
     "initialize" in {
-      database.init().map { _ =>
+      database.init(dropDatabase = true).map { _ =>
         succeed
       }
     }
@@ -256,6 +258,27 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         ))
       }
     }
+    "check the modified stamp on Bethany" in {
+      database.people.query.byFilter(p => p.name === "Bethany").one.map { person =>
+        person.name should be("Bethany")
+        bethanyLastModified = person.modified
+      }
+    }
+    "modify Bethany's bio" in {
+      database.people.update { p =>
+        (p.name === "Bethany") -> List(
+          p.bio("Updated bio!")
+        )
+      }.map { modified =>
+        modified should be(1)
+      }
+    }
+    "verify the modified stamp has been updated" in {
+      database.people.query.byFilter(p => p.name === "Bethany").one.map { person =>
+        person.name should be("Bethany")
+        person.modified should be > bethanyLastModified
+      }
+    }
     "batch delete" in {
       database.people.query.byFilter(_.age > 10).toList.flatMap { list =>
         list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))
@@ -275,6 +298,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     bio: String = "",
                     favoriteNumbers: List[Int] = Nil,
                     extra: Json = obj(),
+                    modified: Long = System.currentTimeMillis(),
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
   object Person extends DocumentModel[Person] {
@@ -285,6 +309,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
     val favoriteNumbers: Field[List[Int]] = field("favoriteNumbers")
     val extra: Field[Json] = field("extra")
+    val modified: Field[Long] = modifiedField()
 
     override def indexes: List[Index] = List(name.index.persistent(unique = true))
 

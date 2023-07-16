@@ -7,4 +7,5 @@ case class CollectionInfo(name: String,
                           isSystem: Boolean,
                           status: CollectionStatus,
                           `type`: CollectionType,
-                          schema: CollectionSchema)
+                          schema: CollectionSchema,
+                          computedValues: List[ComputedValue])

@@ -4,7 +4,8 @@ import cats.effect.IO
 import cats.implicits._
 import com.arangodb
 import com.arangodb.entity.IndexEntity
-import com.arangodb.model._
+import com.arangodb.model
+import com.arangodb.model.{CollectionPropertiesOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
 import com.outr.arango.mutation.DataMutation
 import com.outr.arango.util.Helpers._
 import com.outr.arango.{Field, Index, IndexInfo, IndexType}
@@ -36,6 +37,50 @@ class ArangoDBCollection(val _collection: arangodb.ArangoCollection) extends Ara
         fieldName = name,
         container = false,
         mutation = mutation)(implicitly[RW[F]], None)
+  }
+
+  def ensure(waitForSync: Option[Boolean],
+             schema: Option[CollectionSchema],
+             computedValues: List[ComputedValue]): IO[Unit] = collection.info().flatMap { info =>
+    if ((waitForSync.nonEmpty && !waitForSync.contains(info.waitForSync)) ||
+        (schema.nonEmpty && !schema.contains(info.schema)) ||
+        info.computedValues != computedValues) {
+      io {
+        val o = new CollectionPropertiesOptions
+        val arangoSchema = new model.CollectionSchema
+        schema.foreach { s =>
+          s.rule.foreach(arangoSchema.setRule)
+          s.level.foreach { l =>
+            arangoSchema.setLevel(l match {
+              case Level.Moderate => model.CollectionSchema.Level.MODERATE
+              case Level.New => model.CollectionSchema.Level.NEW
+              case Level.None => model.CollectionSchema.Level.NONE
+              case Level.Strict => model.CollectionSchema.Level.STRICT
+            })
+          }
+        }
+        waitForSync.foreach(o.waitForSync(_))
+        o.schema(arangoSchema)
+        val arangoComputedValues = computedValues.map { cv =>
+          val v = new model.ComputedValue()
+          v.name(cv.name)
+          v.expression(cv.expression)
+          v.overwrite(cv.overwrite)
+          v.computeOn(cv.computeOn.map {
+            case ComputeOn.Insert => model.ComputedValue.ComputeOn.insert
+            case ComputeOn.Update => model.ComputedValue.ComputeOn.update
+            case ComputeOn.Replace => model.ComputedValue.ComputeOn.replace
+          }.toList: _*)
+          v.keepNull(cv.keepNull)
+          v.failOnWarning(cv.failOnWarning)
+          v
+        }
+        o.computedValues(arangoComputedValues: _*)
+        _collection.changeProperties(o)
+      }
+    } else {
+      IO.unit
+    }
   }
 
   object index {

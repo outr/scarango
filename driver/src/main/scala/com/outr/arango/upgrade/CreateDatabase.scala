@@ -3,7 +3,7 @@ package com.outr.arango.upgrade
 import cats.effect.IO
 import cats.implicits._
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.core.CreateCollectionOptions
+import com.outr.arango.core.{CollectionSchema, CreateCollectionOptions}
 import com.outr.arango.view.View
 import com.outr.arango.{DatabaseStore, DocumentModel, Graph}
 
@@ -44,7 +44,10 @@ object CreateDatabase extends DatabaseUpgrade {
       } else {
         scribe.info(s"${collection.dbName}.${collection.name} collection doesn't exist. Creating...")
         val options = CreateCollectionOptions(
-          `type` = Some(collection.`type`)
+          `type` = Some(collection.`type`),
+          waitForSync = collection.model.waitForSync,
+          computedValues = collection.model.allComputedValues,
+          collectionSchema = collection.model.schema.getOrElse(CollectionSchema())
           // TODO: Support other collection options
         )
         collection.arangoCollection.collection.create(options).map(_ => true)
@@ -52,6 +55,11 @@ object CreateDatabase extends DatabaseUpgrade {
       _ = assert(created, s"${collection.dbName}.${collection.name} collection was not created successfully")
       indexes = collection.model.indexes
       _ <- collection.arangoCollection.index.ensure(indexes)
+      _ <- collection.arangoCollection.ensure(
+        waitForSync = collection.model.waitForSync,
+        schema = collection.model.schema,
+        computedValues = collection.model.allComputedValues
+      )
     } yield {
       ()
     }

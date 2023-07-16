@@ -1,5 +1,6 @@
 package com.outr.arango
 
+import com.outr.arango.core.{ComputeOn, ComputedValue}
 import com.outr.arango.mutation.{DataMutation, ModifyFieldValue}
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart, SortDirection}
@@ -11,7 +12,8 @@ import scala.concurrent.duration.FiniteDuration
 
 class Field[F](val fieldName: String,
                val container: Boolean = true,
-               val mutation: Option[DataMutation] = None)
+               val mutation: Option[DataMutation] = None,
+               val computedValues: List[ComputedValue] = Nil)
               (implicit val rw: RW[F],
                model: Option[DocumentModel[_]],
                private val _parent: Option[Field[_]] = None) extends QueryPart.Support {
@@ -96,10 +98,33 @@ class Field[F](val fieldName: String,
 
   def withMutation(mutation: DataMutation): Field[F] = {
     this.mutation.foreach(m => throw new RuntimeException(s"Field $fieldName already has a mutation set: $m"))
-    new Field[F](fieldName, container, Some(mutation))(rw, model, parent)
+    new Field[F](
+      fieldName = fieldName,
+      container = container,
+      mutation = Some(mutation),
+      computedValues = computedValues
+    )(rw, model, parent)
   }
 
   def modify(storage: F => F, retrieval: F => F): Field[F] = withMutation(ModifyFieldValue(this, storage, retrieval))
+
+  def computed(expression: String,
+               computeOn: Set[ComputeOn],
+               overwrite: Boolean = true,
+               keepNull: Boolean = false,
+               failOnWarning: Boolean = false): Field[F] = new Field[F](
+    fieldName = fieldName,
+    container = container,
+    mutation = mutation,
+    computedValues = computedValues ::: List(ComputedValue(
+      name = fieldName,
+      expression = expression,
+      overwrite = overwrite,
+      computeOn = computeOn,
+      keepNull = keepNull,
+      failOnWarning = failOnWarning
+    ))
+  )(rw, model, parent)
 
   def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 

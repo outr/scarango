@@ -154,7 +154,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   }
 
   def edge[E <: Edge[E, From, To], M <: EdgeModel[E, From, To], From, To](model: M,
-                                             managed: Boolean = this.managed): EdgeCollection[E, M, From, To] = synchronized {
+                                                                          managed: Boolean = this.managed): EdgeCollection[E, M, From, To] = synchronized {
     val c = new EdgeCollection[E, M, From, To](this, db.collection(model.collectionName), model, managed)
     _collections = _collections ::: List(c)
     c
