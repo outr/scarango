@@ -39,12 +39,6 @@ trait DocumentModel[D <: Document[D]] { model =>
       container = false,
       mutation = mutation)(rw, Some(this), parent)
 
-  protected[arango] def modifiedField(name: String = "modified"): Field[Long] = field[Long](name)
-    .computed(
-      expression = "RETURN DATE_NOW()",
-      computeOn = Set(ComputeOn.Replace, ComputeOn.Update)
-    )
-
   object index {
     def apply(fields: Field[_]*): List[Index] = fields.map(_.index.persistent()).toList
 

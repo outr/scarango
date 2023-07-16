@@ -126,6 +126,11 @@ class Field[F](val fieldName: String,
     ))
   )(rw, model, parent)
 
+  def modified(): Field[F] = computed(
+    expression = "RETURN DATE_NOW()",
+    computeOn = Set(ComputeOn.Replace, ComputeOn.Update)
+  )
+
   def apply(value: F): FieldAndValue[F] = FieldAndValue(this, value.json)
 
   lazy val opt: Field[Option[F]] = new Field[Option[F]](fieldName, container, mutation)(implicitly[RW[Option[F]]], model, parent)

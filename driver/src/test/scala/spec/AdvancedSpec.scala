@@ -301,18 +301,24 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
                     modified: Long = System.currentTimeMillis(),
                     _id: Id[Person] = Person.id()) extends Document[Person]
 
-  object Person extends DocumentModel[Person] {
-    override implicit val rw: RW[Person] = RW.gen
-
-    val name: Field[String] = field("name")
-    val age: Field[Int] = field("age")
-    val bio: Field[String] = field[String]("bio").modify(_.reverse, identity)
-    val favoriteNumbers: Field[List[Int]] = field("favoriteNumbers")
-    val extra: Field[Json] = field("extra")
-    val modified: Field[Long] = modifiedField()
+  object Person extends PersonModel {
+    override val bio: Field[String] = super.bio.modify(_.reverse, identity)
+    override val modified: Field[Long] = super.modified.modified()
 
     override def indexes: List[Index] = List(name.index.persistent(unique = true))
+  }
 
-    override val collectionName: String = "people"
+  // TODO: Support SBT pre-compile generation
+  trait PersonModel extends DocumentModel[Person] {
+    override implicit val rw: RW[Person] = RW.gen
+
+    def name: Field[String] = field("name")
+    def age: Field[Int] = field("age")
+    def bio: Field[String] = field[String]("bio")
+    def favoriteNumbers: Field[List[Int]] = field("favoriteNumbers")
+    def extra: Field[Json] = field("extra")
+    def modified: Field[Long] = field[Long]("modified")
+
+    override val collectionName: String = "person"
   }
 }
