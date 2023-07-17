@@ -96,7 +96,7 @@ class DSLSpec extends AsyncWordSpec with Matchers {
       val r2 = database.people.ref
       r1.hashCode() should not be r2.hashCode()
       val query = aql {
-        LET(r1) := DOCUMENT(Person.id("123"))
+        LET(r1) := DOCUMENT(DSLPerson.id("123"))
         FOR(r2) IN database.people
         FILTER(r1._id is r2._id)
         RETURN(r2)
@@ -111,13 +111,13 @@ class DSLSpec extends AsyncWordSpec with Matchers {
   }
 
   object database extends Graph(name = "advanced") {
-    val people: DocumentCollection[Person, Person.type] = vertex(Person)
+    val people: DocumentCollection[DSLPerson, DSLPerson.type] = vertex(DSLPerson)
   }
 
-  case class Person(name: String, age: Int, _id: Id[Person] = Person.id()) extends Document[Person]
+  case class DSLPerson(name: String, age: Int, _id: Id[DSLPerson] = DSLPerson.id()) extends Document[DSLPerson]
 
-  object Person extends DocumentModel[Person] {
-    override implicit val rw: RW[Person] = RW.gen
+  object DSLPerson extends DocumentModel[DSLPerson] {
+    override implicit val rw: RW[DSLPerson] = RW.gen
 
     val name: Field[String] = field("name")
     val age: Field[Int] = field("age")
