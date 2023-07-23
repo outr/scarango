@@ -39,7 +39,7 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(coreJS, coreJVM, driver) //, monitored)
+  .aggregate(coreJS, coreJVM, driver, docs, example)
   .settings(
     publish := {},
     publishLocal := {}
@@ -90,3 +90,9 @@ lazy val docs = project
     ),
     mdocOut := file(".")
   )
+
+lazy val example = project.in(file("example"))
+  .settings(
+    name := "scarango-example"
+  )
+  .dependsOn(driver)
