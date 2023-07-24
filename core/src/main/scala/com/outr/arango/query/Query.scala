@@ -2,7 +2,7 @@ package com.outr.arango.query
 
 import fabric.Json
 
-case class Query(parts: List[QueryPart]) extends QueryPart.Support {
+case class Query(parts: List[QueryPart], options: QueryOptions) extends QueryPart.Support with QueryOptionsSupport[Query] {
   lazy val (variables: Map[String, fabric.Json], reverseLookup: Map[fabric.Json, String]) = {
     var argCounter = 0
     var map = Map.empty[String, fabric.Json]
@@ -39,6 +39,8 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
 
   lazy val string: String = asString(new RefManager)
 
+  override def withOptions(f: QueryOptions => QueryOptions): Query = copy(options = f(options))
+
   private def asString(refManager: RefManager): String = {
     def part2String(part: QueryPart): String = part match {
       case QueryPart.Ref(ref) => refManager.nameFor(ref)
@@ -71,7 +73,7 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
   def normalize: Query = Query(parts.flatMap {
     case QueryPart.Static(value) => value.split('\n').toList.filter(_.trim.nonEmpty).map(s => QueryPart.Static(s"\n$s"))
     case part => List(part)
-  })
+  }, options)
 
   override def equals(obj: Any): Boolean = obj match {
     case that: Query => this.compressed == that.compressed && this.variables == that.variables
@@ -79,8 +81,9 @@ case class Query(parts: List[QueryPart]) extends QueryPart.Support {
   }
 }
 
-object Query extends Query(Nil) {
-  def apply(query: String): Query = Query(List(QueryPart.Static(query)))
+object Query extends Query(Nil, QueryOptions()) {
+  def apply(query: String): Query = Query(List(QueryPart.Static(query)), options)
+  def apply(parts: List[QueryPart]): Query = Query(parts, options)
 
   /**
     * Merges queries and renames overlapping argument names
@@ -97,6 +100,6 @@ object Query extends Query(Nil) {
         merged ::: List(QueryPart.Static(separator)) ::: current
       }
     })
-    Query(parts)
+    Query(parts, QueryOptions.merge(queries.map(_.options)))
   }
 }

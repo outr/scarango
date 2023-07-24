@@ -25,7 +25,7 @@ object DatabaseBackup {
     val w = new PrintWriter(new FileWriter(file.toFile))
     collection
       .query
-      .stream
+      .stream()
       .foreach { value =>
         IO {
           val json = collection.model.rw.read(value)

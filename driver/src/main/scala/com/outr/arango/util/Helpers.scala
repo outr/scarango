@@ -2,10 +2,11 @@ package com.outr.arango.util
 
 import cats.effect.IO
 import com.arangodb.entity.ErrorEntity
-import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
+import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions, AqlQueryOptions}
 import com.arangodb.{ArangoDBException, entity, model}
 import com.outr.arango._
 import com.outr.arango.core._
+import com.outr.arango.query.QueryOptions
 import fabric.Json
 
 import java.util.concurrent.{CompletableFuture, CompletionException}
@@ -223,4 +224,28 @@ object Helpers {
     message = e.getErrorMessage,
     exception = e.getException
   )
+
+  implicit def queryOptions2Arango(e: QueryOptions): AqlQueryOptions = {
+    val o = new AqlQueryOptions
+    e.count.foreach(o.count(_))
+    e.batchSize.foreach(o.batchSize(_))
+    e.ttl.foreach(d => o.ttl(d.toSeconds.toInt))
+    e.cache.foreach(o.cache(_))
+    e.memoryLimit.foreach(o.memoryLimit(_))
+    e.fullCount.foreach(o.fullCount(_))
+    e.fillBlockCache.foreach(o.fillBlockCache(_))
+    e.maxNumberOfPlans.foreach(o.maxPlans(_))
+    e.maxWarningCount.foreach(o.maxWarningCount(_))
+    e.failOnWarning.foreach(o.failOnWarning(_))
+    e.allowRetry.foreach(o.allowRetry(_))
+    e.stream.foreach(o.stream(_))
+    e.profile.foreach(o.profile(_))
+    e.satelliteSyncWait.foreach(d => o.satelliteSyncWait(d.toMillis / 1000.0))
+    e.maxRuntime.foreach(d => o.maxRuntime(d.toMillis / 1000.0))
+    e.maxTransactionSize.foreach(o.maxTransactionSize(_))
+    e.intermediateCommitSize.foreach(o.intermediateCommitSize(_))
+    e.intermediateCommitCount.foreach(o.intermediateCommitCount(_))
+    e.skipInaccessibleCollections.foreach(o.skipInaccessibleCollections(_))
+    o
+  }
 }

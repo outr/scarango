@@ -14,6 +14,6 @@ class AQLInterpolator(val sc: StringContext) extends AnyVal {
         parts = part :: parts
       }
     }
-    Query(parts.reverse)
+    Query(parts.reverse, QueryOptions())
   }
 }
