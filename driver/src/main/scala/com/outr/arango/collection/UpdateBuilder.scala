@@ -86,7 +86,7 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
 
   def toStream(f: Update): fs2.Stream[IO, D] = {
     val query = toQuery(f, RETURN(NEW))
-    collection.query(query).stream
+    collection.query(query).stream()
   }
 
   def all(f: Update): IO[List[D]] = toStream(f).compile.toList

@@ -121,6 +121,20 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           people.map(_.age).toSet should be(Set(21, 19, 35, 41))
         }
     }
+    "verify fullCount works" in {
+      database
+        .people
+        .query(aql"FOR p IN ${database.people} LIMIT 1 RETURN p")
+        .withCount()
+        .withFullCount()
+        .cursor()
+        .map { cursor =>
+          val people = cursor.toList
+          people.map(_.name) should be(List("Adam"))
+          cursor.count should be(1L)
+          cursor.fullCount should be(4L)
+        }
+    }
     "delete a single record via AQL" in {
       database.execute(
         aql"""

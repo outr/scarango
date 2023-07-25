@@ -5,7 +5,7 @@ import com.arangodb.{ArangoCursor, ArangoDatabase}
 import com.arangodb.entity.arangosearch._
 import com.arangodb.model.{AqlQueryOptions, OptionsBuilder}
 import com.arangodb.model.arangosearch.ArangoSearchCreateOptions
-import com.outr.arango.query.{Query, Sort, SortDirection}
+import com.outr.arango.query.{Query, QueryOptions, Sort, SortDirection}
 import com.outr.arango.util.Helpers._
 import com.outr.arango.view.{View, ViewLink}
 import fabric.Json
@@ -46,14 +46,14 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
         case Right(c) => c
       }
 
-    def createCursor(query: Query, options: QueryOptions = QueryOptions()): IO[Cursor[Json]] = handle(
+    def createCursor(query: Query): IO[Cursor[Json]] = handle(
       queryString = query.string,
       cursorIO = io {
         val bindVars: java.util.Map[String, AnyRef] = query.variables.map {
           case (key, value) => key -> value2AnyRef(value)
         }.asJava
 
-        val o = OptionsBuilder.build(options.arango, query.string, bindVars)
+        val o = OptionsBuilder.build(query.options, query.string, bindVars)
         db.query[Json](query.string, classOf[Json], bindVars, o)
       }
     )
@@ -65,7 +65,7 @@ class ArangoDB(val server: ArangoDBServer, private[arango] val db: ArangoDatabas
       )
     }
 
-    def iterator(query: Query): IO[Iterator[Json]] = createCursor(query).map(_.iterator)
+    def iterator(query: Query): IO[Iterator[Json]] = createCursor(query).map(_.jsonIterator)
 
     def apply(query: Query): fs2.Stream[IO, Json] = fs2.Stream.force(iterator(query).flatMap { iterator =>
       IO(fs2.Stream.fromIterator[IO](iterator, 512))

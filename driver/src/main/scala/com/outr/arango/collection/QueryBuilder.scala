@@ -2,16 +2,19 @@ package com.outr.arango.collection
 
 import cats.effect.IO
 import com.outr.arango.Graph
-import com.outr.arango.core.{Cursor, QueryOptions}
-import com.outr.arango.query.Query
+import com.outr.arango.core.Cursor
+import com.outr.arango.query.{Query, QueryOptions, QueryOptionsSupport}
 import com.outr.arango.queue.DBQueue
 import fabric.Json
 import fabric.rw._
 
 import java.util.concurrent.atomic.AtomicInteger
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) {
+case class QueryBuilder[R](graph: Graph,
+                           query: Query,
+                           converter: Json => R) extends QueryOptionsSupport[QueryBuilder[R]] {
+  override def withOptions(f: QueryOptions => QueryOptions): QueryBuilder[R] = copy(query = query.withOptions(f))
+
   /**
     * Translates the results to a return type of T
     *
@@ -19,29 +22,14 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
     * @tparam T return type
     * @return QueryBuilder[T]
     */
-  def as[T](implicit rw: RW[T]): QueryBuilder[T] = new QueryBuilder[T](graph, query, rw.write)
+  def as[T](implicit rw: RW[T]): QueryBuilder[T] = QueryBuilder[T](graph, query, rw.write)
 
   /**
     * Retrieves the results as a Cursor.
-    *
-    * @param batchSize the page size to use (the number of records per page, defaults to 512)
-    * @param ttl the time the cursor will live (defaults to 30 seconds)
-    * @param streaming if set to true, one page will be loaded at a time and the full count may not be known but the
-    *                  query should executed quite a bit faster
     */
-  def cursor(batchSize: Int = 512,
-                ttl: FiniteDuration = 30.seconds,
-                streaming: Boolean = false): IO[Cursor[R]] = {
-    val options = QueryOptions(
-      count = Some(true),
-      batchSize = Some(batchSize),
-      ttl = Some(ttl),
-      fullCount = Some(true),
-      allowRetry = Some(true),
-      stream = Some(streaming)
-    )
-    graph.db.query.createCursor(query, options).map(_.as[R](converter))
-  }
+  def cursor(): IO[Cursor[R]] = graph.db.query
+    .createCursor(query)
+    .map(_.as[R](converter))
 
   /**
     * Retrieves the next page of a cursor.
@@ -56,17 +44,14 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
     *
     * @return fs2.Stream[IO, R]
     */
-  def stream: fs2.Stream[IO, R] = graph
-    .db
-    .query(query)
-    .map(converter)
+  def stream(chunkSize: Int = 512): fs2.Stream[IO, R] = fs2.Stream.force(cursor().map(_.stream(chunkSize)))
 
-  def iterator: IO[Iterator[R]] = graph.db.query.iterator(query).map(_.map(converter))
+  def iterator: IO[Iterator[R]] = cursor().map(_.iterator)
 
   /**
     * Convenience method to get the results from the stream as a List
     */
-  def toList: IO[List[R]] = iterator.map(_.toList)
+  def toList: IO[List[R]] = cursor().map(_.toList)
 
   /**
     * Retrieves exactly one result from the query. If there is zero or more than one an exception will be thrown.
@@ -82,17 +67,17 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
   /**
     * The first result from the stream if there are any results.
     */
-  def first: IO[Option[R]] = stream.take(1).compile.last
+  def first: IO[Option[R]] = stream().take(1).compile.last
 
   /**
     * The last result from the stream if there are any results.
     */
-  def last: IO[Option[R]] = stream.compile.last
+  def last: IO[Option[R]] = stream().compile.last
 
   /**
     * Streams the result to return a count. A query that generates a count would be more efficient.
     */
-  def count: IO[Int] = stream.compile.count.map(_.toInt)
+  def count: IO[Int] = stream().compile.count.map(_.toInt)
 
   /**
     * Process through the stream with the ability to batch queue db inserts, upserts, and deletes.
@@ -104,7 +89,7 @@ class QueryBuilder[R](graph: Graph, val query: Query, val converter: Json => R) 
   def process(processor: (DBQueue, R) => IO[DBQueue],
               batchSize: Int = 1000): IO[ProcessStats] = {
     val counter = new AtomicInteger(0)
-    stream
+    stream()
       .evalScan(DBQueue(batchSize))((queue, value) => {
         counter.incrementAndGet()
         processor(queue, value)
