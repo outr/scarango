@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.13.0"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.14.0"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.13.0"
+ivy"com.outr::scarango-driver:3.14.0"
 ```
 
 ## Introduction
@@ -92,6 +92,11 @@ Database.people.insert(Person("User 1", 30)).unsafeRunSync()
 //   key = None,
 //   id = None,
 //   rev = None,
+//   document = Person(
+//     name = "User 1",
+//     age = 30,
+//     _id = Id(value = "wIriXTTaPRi5vZcyKRIzhSGozr0pFXlH", collection = "people")
+//   ),
 //   newDocument = None,
 //   oldDocument = None
 // )
@@ -115,23 +120,23 @@ In order to get the data out that we just inserted we can do a simple AQL query:
 Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p")
-  .all
+  .toList
   .unsafeRunSync()
 // res4: List[Person] = List(
 //   Person(
 //     name = "User 1",
 //     age = 30,
-//     _id = Id(value = "rW8pxreaMasW1y2FdHxI57HBMu0xRMtb", collection = "people")
+//     _id = Id(value = "wIriXTTaPRi5vZcyKRIzhSGozr0pFXlH", collection = "people")
 //   ),
 //   Person(
 //     name = "Adam",
 //     age = 21,
-//     _id = Id(value = "J46jMxIu1Zwr6J59UWUeAVhMawij9fKI", collection = "people")
+//     _id = Id(value = "OQJvD0Za0chlfKQdMVUceE59mQ9PwjRk", collection = "people")
 //   ),
 //   Person(
 //     name = "Bethany",
 //     age = 19,
-//     _id = Id(value = "nZLKWq6teSbGykuvBC2T0bXJFzrhuH5e", collection = "people")
+//     _id = Id(value = "H2slHbwzwkKKeK7SklJaT3vV6SSe46oJ", collection = "people")
 //   )
 // )
 ```
@@ -142,7 +147,7 @@ Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p.name")
   .as[String]
-  .all
+  .toList
   .unsafeRunSync()
 // res5: List[String] = List("Adam", "Bethany", "User 1")
 ```

@@ -105,7 +105,7 @@ In order to get the data out that we just inserted we can do a simple AQL query:
 Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p")
-  .all
+  .toList
   .unsafeRunSync()
 ```
 
@@ -115,7 +115,7 @@ Database
   .people
   .query(aql"FOR p IN ${Database.people} RETURN p.name")
   .as[String]
-  .all
+  .toList
   .unsafeRunSync()
 ```
 
