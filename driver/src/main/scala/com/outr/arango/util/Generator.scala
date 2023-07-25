@@ -4,6 +4,9 @@ import java.nio.file.{Files, Path, Paths}
 import scala.annotation.tailrec
 import scala.collection.immutable.ListMap
 
+/**
+  * WARNING: This is a work-in-progress and not ready for use yet.
+  */
 object Generator {
   def main(args: Array[String]): Unit = {
     val cf = apply(Paths.get("..", "example", "src", "main", "scala", "example", "Person.scala"))
@@ -101,6 +104,7 @@ object Generator {
 
   def apply(codeFile: Path): CodeFile = {
     val source = Files.readString(codeFile)
+    // TODO: Detect blocks
     val packageName = PackageRegex.findFirstMatchIn(source).get.group(1)
     val caseClasses = detectCaseClasses(source)
     CodeFile(

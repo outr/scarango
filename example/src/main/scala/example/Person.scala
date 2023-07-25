@@ -1,7 +1,7 @@
 package example
 
 import com.outr.arango.{Document, DocumentModel, Field, Id, Index}
-import fabric.rw.RW
+import fabric.rw._
 
 case class Person(name: String,
                   age: Int = 21,
