@@ -38,7 +38,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     }
     "query by filter" in {
       val query = database.users.query
-        .byFilter(_.addresses.lines is "One")
+        .byFilter(_.addresses.lines contains "One")
       query
         .toList
         .map { users =>
@@ -52,7 +52,7 @@ class StructuredSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         )
       query.query.string should be(
         """FOR d IN users
-          |FILTER ((d.name == @arg0 || d.name == @arg1) && d.addresses[? FILTER CURRENT.lines[? FILTER CURRENT == @arg2]])
+          |FILTER ((d.name == @arg0 || d.name == @arg1) && d.addresses[? FILTER CURRENT.lines == @arg2])
           |RETURN d""".stripMargin)
     }
     "query with AQL" in {

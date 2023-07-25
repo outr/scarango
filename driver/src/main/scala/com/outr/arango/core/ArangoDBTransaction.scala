@@ -72,7 +72,7 @@ class ArangoDBTransaction[Collection](db: arangodb.ArangoDatabase, c2Name: Colle
   def commit(transaction: StreamTransaction): IO[TransactionStatus] = io(db.commitStreamTransaction(transaction.id))
     .map(e => t2Status(e.getStatus))
 
-  def all: IO[List[(StreamTransaction, TransactionStatus)]] = io(db.getStreamTransactions)
+  def toList: IO[List[(StreamTransaction, TransactionStatus)]] = io(db.getStreamTransactions)
     .map(_.asScala.toList.map { entity =>
       (StreamTransaction(entity.getId), t2Status(entity.getState))
     })

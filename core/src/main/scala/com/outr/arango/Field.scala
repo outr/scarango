@@ -41,7 +41,7 @@ class Field[F](val fieldName: String,
   }
 
   lazy val arrayDepth: Int = {
-    val v = if (isArray) 1 else 0
+    val v = if (isArray && container) 1 else 0
     parent match {
       case Some(p) => p.arrayDepth + v
       case None => v
@@ -49,6 +49,18 @@ class Field[F](val fieldName: String,
   }
 
   lazy val fullyQualifiedFilter: String = {
+    val filter = if (isArray && container) {
+      s"$fieldName[? FILTER CURRENT"
+    } else {
+      fieldName
+    }
+    parent match {
+      case Some(p) => s"${p.fullyQualifiedFilter}.$filter"
+      case None => filter
+    }
+  }
+
+  lazy val fullyQualifiedFilterContains: String = {
     val filter = if (isArray) {
       s"$fieldName[? FILTER CURRENT"
     } else {
@@ -70,6 +82,7 @@ class Field[F](val fieldName: String,
 
   def fqnPart: QueryPart = refPart(Some(fullyQualifiedName))
   def fqfPart: QueryPart = refPart(Some(fullyQualifiedFilter))
+  def fqfcPart: QueryPart = refPart(Some(fullyQualifiedFilterContains))
 
   def parent: Option[Field[_]] = _parent
 

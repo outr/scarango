@@ -86,6 +86,16 @@ package object dsl {
     def %(value: N): (Field[N], Query) = mod("%", QueryPart.Variable(toJson(value)))
   }
 
+  implicit class ListFieldExtras[T: RW](field: Field[List[T]]) {
+    def contains(value: T): Filter = {
+      val left = Query(List(field.fqfcPart))
+      val right = Query.variable(value.json)
+      val arrayClosures = (0 until field.arrayDepth + 1).toList.map(_ => QueryPart.Static("]"))
+
+      new Filter(left, "==", right.withParts(arrayClosures: _*))
+    }
+  }
+
   implicit def fieldAndValue2FieldAndQuery[T](fieldAndValue: FieldAndValue[T]): (Field[T], Query) = {
     (fieldAndValue.field, Query.variable(fieldAndValue.value))
   }

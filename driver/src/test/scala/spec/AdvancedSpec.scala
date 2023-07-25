@@ -153,7 +153,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
     "update the records using DSL" in {
-      database.people.update.all { p =>
+      database.people.update.toList { p =>
         (p.age is 21) -> List(
           p.age + 1,
           PUSH(p.favoriteNumbers, 21),
@@ -179,7 +179,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         }
     }
     "append more favorite numbers" in {
-      database.people.update.withOptions(mergeObjects = false).all { p =>
+      database.people.update.withOptions(mergeObjects = false).toList { p =>
         (p.age is 22) -> List(
           APPEND(p.favoriteNumbers, List(7, 42)),
           p.extra(obj("test2" -> "Replaced!"))
@@ -205,7 +205,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
     "update multiple fields in a record using DSL" in {
       database
         .people
-        .update.all { p =>
+        .update.toList { p =>
           (p.age is 22) -> List(
             Person.bio("I have a new bio!"),
             Person.age(23)

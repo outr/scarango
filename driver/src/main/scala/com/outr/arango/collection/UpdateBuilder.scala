@@ -89,5 +89,5 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
     collection.query(query).stream()
   }
 
-  def all(f: Update): IO[List[D]] = toStream(f).compile.toList
+  def toList(f: Update): IO[List[D]] = toStream(f).compile.toList
 }
