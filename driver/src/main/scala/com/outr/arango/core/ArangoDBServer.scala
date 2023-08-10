@@ -81,7 +81,7 @@ object ArangoDBServer {
     case JsonNodeType.BINARY => ???
     case JsonNodeType.BOOLEAN => Bool(node.asBoolean())
     case JsonNodeType.MISSING => ???
-    case JsonNodeType.NUMBER if node.canConvertToLong => NumInt(node.asLong())
+    case JsonNodeType.NUMBER if node.canConvertToExactIntegral => NumInt(node.asLong())
     case JsonNodeType.NUMBER => NumDec(BigDecimal(node.asDouble())) // TODO: Is there a better way to do this?
     case JsonNodeType.STRING => Str(node.asText())
   }

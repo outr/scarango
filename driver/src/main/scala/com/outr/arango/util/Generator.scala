@@ -16,6 +16,13 @@ object Generator {
   private val PackageRegex = """package (.+)""".r
   private val ParamRegex = """(.+):\s*(\S+)(?:\s+=\s+(\S+))?""".r
 
+  private def detectObjects(source: String): List[Companion] = {
+    "object (\\S+)(.+)\\{".r.findAllMatchIn(source).toList.foreach { m =>
+      scribe.info(s"MATCH: ${m.group(0)}")
+    }
+    Nil
+  }
+
   private def detectCaseClasses(source: String): List[CaseClass] = {
     "case class (\\S+)[(]".r.findAllMatchIn(source).toList.map { m =>
       val b = new StringBuilder(m.group(0))
@@ -106,6 +113,7 @@ object Generator {
     val source = Files.readString(codeFile)
     // TODO: Detect blocks
     val packageName = PackageRegex.findFirstMatchIn(source).get.group(1)
+    val objects = detectObjects(source)
     val caseClasses = detectCaseClasses(source)
     CodeFile(
       path = codeFile,
@@ -176,3 +184,5 @@ case class CaseClass(className: String,
 case class Param(name: String, `type`: String, default: Option[String]) {
   override def toString: String = s"$name: ${`type`}${default.map(d => s" = $d").getOrElse("")}"
 }
+
+case class Companion()

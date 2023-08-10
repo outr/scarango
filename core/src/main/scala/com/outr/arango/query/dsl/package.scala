@@ -42,8 +42,6 @@ package object dsl {
 
   def clearRefs(): Unit = refs.set(Nil)
 
-  implicit def int2Value(i: Int): Json = num(i)
-
   implicit def ref2ReturnPart(ref: Ref): ReturnPart = {
     ReturnPart.RefReturn(ref)
   }

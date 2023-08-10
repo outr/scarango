@@ -37,6 +37,33 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         succeed
       }
     }
+    "verify conversions of basic types" in {
+      database
+        .query[Json](
+        aql"""
+            RETURN {
+              b: true,
+              i: 123,
+              d: 1.23,
+              s: "1.23",
+              j: {
+                test: "value"
+              }
+            }
+           """)
+        .one
+        .map { json =>
+          json should be(obj(
+            "b" -> true,
+            "i" -> 123,
+            "d" -> BigDecimal(1.23),
+            "s" -> "1.23",
+            "j" -> obj(
+              "test" -> "value"
+            )
+          ))
+        }
+    }
     "insert two records" in {
       database.people.batch.insert(List(
         Person("Adam", 21),
