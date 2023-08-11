@@ -77,13 +77,12 @@ object ArangoDBServer {
     case JsonNodeType.ARRAY => Arr((0 until node.size()).map { index =>
       jackson2Fabric(node.get(index))
     }.toVector)
-    case JsonNodeType.POJO => ???
-    case JsonNodeType.BINARY => ???
     case JsonNodeType.BOOLEAN => Bool(node.asBoolean())
-    case JsonNodeType.MISSING => ???
     case JsonNodeType.NUMBER if node.canConvertToExactIntegral => NumInt(node.asLong())
-    case JsonNodeType.NUMBER => NumDec(BigDecimal(node.asDouble())) // TODO: Is there a better way to do this?
+    case JsonNodeType.NUMBER => NumDec(BigDecimal(node.decimalValue()))
     case JsonNodeType.STRING => Str(node.asText())
+    case JsonNodeType.POJO | JsonNodeType.BINARY | JsonNodeType.MISSING =>
+      throw new UnsupportedOperationException(s"Unsupported node type: ${node.getNodeType} - $node")
   }
 
   def apply(connection: arangodb.ArangoDB): ArangoDBServer = new ArangoDBServer(connection)
