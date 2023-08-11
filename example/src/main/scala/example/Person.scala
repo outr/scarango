@@ -21,7 +21,10 @@ case class Test(value: String)
 
 case class Correct(name: String, _id: Id[Correct] = Correct.id()) extends Document[Correct]
 
-object Correct extends DocumentModel[Correct] {
+object Correct extends CorrectModel {
+}
+
+trait CorrectModel extends DocumentModel[Correct] {
   override implicit val rw: RW[Correct] = RW.gen
 
   val name: Field[String] = field("name")

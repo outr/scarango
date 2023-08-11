@@ -18,6 +18,8 @@ object Dependencies {
     
     val scribe: String = "3.11.9"
 
+    val scalaMeta: String = "4.8.7"
+
     val scalaTest: String = "3.2.16"
     
     val catsEffectTesting: String = "1.5.0"
@@ -32,6 +34,7 @@ object Dependencies {
   val fs2: ModuleID = "co.fs2" %% "fs2-core" % version.fs2
   val scribe: ModuleID = "com.outr" %% "scribe" % version.scribe
   val scribeSlf4j: ModuleID = "com.outr" %% "scribe-slf4j2" % version.scribe
+  val scalaMeta: ModuleID = "org.scalameta" %% "scalameta" % version.scalaMeta
 
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % version.scalaTest % "test"
   val catsEffectTesting: ModuleID = "org.typelevel" %% "cats-effect-testing-scalatest" % version.catsEffectTesting % "test"

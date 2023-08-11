@@ -80,6 +80,16 @@ lazy val driver = project.in(file("driver"))
   )
   .dependsOn(coreJVM)
 
+lazy val generator = project.in(file("generator"))
+  .settings(
+    name := "scarango-generator",
+    fork := true,
+    libraryDependencies ++= Seq(
+      dep.scribe,
+      dep.scalaMeta
+    )
+  )
+
 lazy val docs = project
   .in(file("documentation"))
   .dependsOn(driver)
