@@ -20,7 +20,7 @@ object Dependencies {
 
     val scalaMeta: String = "4.8.7"
 
-    val scalaTest: String = "3.2.16"
+    val scalaTest: String = "3.2.17"
     
     val catsEffectTesting: String = "1.5.0"
   }
