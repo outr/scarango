@@ -19,7 +19,10 @@ import fabric.rw._
 //  // Internal code
 //}
 
-case class JustDoc(name: String) extends Foo with Document[JustDoc]
+case class JustDoc(name: String) extends Foo with Document[JustDoc] {
+  // Custom method
+  def doSomething(): Unit = scribe.info("Testing!")
+}
 
 //case class Correct(name: String, _id: Id[Correct] = Correct.id()) extends Document[Correct]
 //

@@ -40,7 +40,7 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(coreJS, coreJVM, driver, docs, example)
+  .aggregate(coreJS, coreJVM, driver, docs) // example, generator
   .settings(
     publish := {},
     publishLocal := {}
