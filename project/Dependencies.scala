@@ -16,7 +16,7 @@ object Dependencies {
     
     val fs2: String = "3.9.2"
     
-    val scribe: String = "3.11.9"
+    val scribe: String = "3.12.2"
 
     val scalaMeta: String = "4.8.7"
 
