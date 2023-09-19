@@ -14,7 +14,7 @@ object Dependencies {
     
     val catsEffect: String = "3.5.1"
     
-    val fs2: String = "3.8.0"
+    val fs2: String = "3.9.2"
     
     val scribe: String = "3.11.9"
 
