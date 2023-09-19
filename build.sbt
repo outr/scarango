@@ -1,7 +1,8 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import Tests.*
 
-val scala213 = "2.13.10"
+val scala213 = "2.13.12"
+
 val scala3 = "3.3.1"
 
 name := "scarango"

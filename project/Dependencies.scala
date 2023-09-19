@@ -14,13 +14,13 @@ object Dependencies {
     
     val catsEffect: String = "3.5.1"
     
-    val fs2: String = "3.8.0"
+    val fs2: String = "3.9.2"
     
     val scribe: String = "3.11.9"
 
     val scalaMeta: String = "4.8.7"
 
-    val scalaTest: String = "3.2.16"
+    val scalaTest: String = "3.2.17"
     
     val catsEffectTesting: String = "1.5.0"
   }
