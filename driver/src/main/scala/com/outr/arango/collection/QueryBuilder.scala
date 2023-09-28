@@ -4,11 +4,8 @@ import cats.effect.IO
 import com.outr.arango.Graph
 import com.outr.arango.core.Cursor
 import com.outr.arango.query.{Query, QueryOptions, QueryOptionsSupport}
-import com.outr.arango.queue.DBQueue
 import fabric.Json
 import fabric.rw._
-
-import java.util.concurrent.atomic.AtomicInteger
 
 case class QueryBuilder[R](graph: Graph,
                            query: Query,
@@ -78,30 +75,6 @@ case class QueryBuilder[R](graph: Graph,
     * Streams the result to return a count. A query that generates a count would be more efficient.
     */
   def count: IO[Int] = stream().compile.count.map(_.toInt)
-
-  /**
-    * Process through the stream with the ability to batch queue db inserts, upserts, and deletes.
-    *
-    * @param processor the function to handle processing the items in the stream
-    * @param batchSize the maximum records to hold in memory for a specific collection and operation
-    * @return IO[ProcessStats]
-    */
-  def process(processor: (DBQueue, R) => IO[DBQueue],
-              batchSize: Int = 1000): IO[ProcessStats] = {
-    val counter = new AtomicInteger(0)
-    stream()
-      .evalScan(DBQueue(batchSize))((queue, value) => {
-        counter.incrementAndGet()
-        processor(queue, value)
-      })
-      .compile
-      .lastOrError
-      .flatMap { queue =>
-        queue.finish().map { _ =>
-          ProcessStats(counter.get(), queue.inserted, queue.upserted, queue.deleted)
-        }
-      }
-  }
 
   override def toString: String = query.toString
 }

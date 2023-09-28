@@ -8,7 +8,7 @@ import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.{ComputeOn, ComputedValue, DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
-import com.outr.arango.queue.DBQueue
+import com.outr.arango.queue.OperationQueueSupport
 import fabric.rw._
 import fabric._
 import org.scalatest.matchers.should.Matchers
@@ -18,9 +18,11 @@ import profig.Profig
 import java.nio.file.Paths
 import scala.concurrent.duration.DurationInt
 
-class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
+class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with OperationQueueSupport {
   private var transaction: StreamTransaction = _
   private var bethanyLastModified: Long = _
+
+
 
   "Advanced" should {
     "initialize configuration" in {
@@ -242,8 +244,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
           people.map(_.age) should be(List(23))
         }
     }
-    "use the DBQueue to insert multiple records" in {
-      val queue = DBQueue(3)
+    "use the queue support to insert multiple records" in {
       val people = List(
         Person("One", 1),
         Person("Two", 2),
@@ -256,13 +257,11 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         Person("Nine", 9),
         Person("Ten", 10),
       )
-      queue
-        .insert(database.people, fs2.Stream[IO, Person](people: _*))
-        .flatMap { _.finish().map { queue =>
-            queue.inserted should be(10)
-            queue.upserted should be(0)
-            queue.deleted should be(0)
-          }
+      database.people.op
+        .upsert(people: _*)
+        .flatMap(_ => flushQueue())
+        .map { _ =>
+          database.people.op.upsert.processed should be(10)
         }
     }
     "verify the DBQueue properly inserted the records" in {
@@ -329,6 +328,10 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
       }
     }
   }
+
+  override protected def opFlushSize: Int = 3
+
+  override protected def opChunkSize: Int = 3
 
   object database extends Graph("advanced") {
     val people: DocumentCollection[Person, Person.type] = vertex(Person)
