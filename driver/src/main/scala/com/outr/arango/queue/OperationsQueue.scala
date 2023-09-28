@@ -10,17 +10,25 @@ import java.util.concurrent.atomic.AtomicInteger
 
 case class OperationsQueue[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
                                                                     flushSize: Int,
-                                                                    chunkSize: Int) {
-  oq =>
+                                                                    chunkSize: Int) { oq =>
   private var queues = List.empty[OpQueue]
 
+  /**
+    * Provide queue operations on a collection. Call `flush()` at the end to make sure all batched data is pushed.
+    */
   object op {
     lazy val insert: OpQueue = OpQueue(stream => collection.stream.insert(stream, chunkSize).void)
     lazy val upsert: OpQueue = OpQueue(stream => collection.stream.upsert(stream, chunkSize).void)
     lazy val delete: OpQueue = OpQueue(stream => collection.stream.delete(stream.map(_._id), chunkSize).void)
-  }
 
-  def flush(): IO[Unit] = queues.map(_.flush()).sequence.void
+    /**
+      * Flushes the queue
+      *
+      * @param fullFlush if true, all operations are applied. If false, flushing only occurs until the operation count
+      *                  is below the flushSize threshold.
+      */
+    def flush(fullFlush: Boolean = true): IO[Unit] = queues.map(_.flush(fullFlush)).sequence.void
+  }
 
   case class OpQueue(process: fs2.Stream[IO, D] => IO[Unit]) {
     oq.synchronized {
@@ -46,18 +54,28 @@ case class OperationsQueue[D <: Document[D], M <: DocumentModel[D]](collection: 
       }
     }
 
+    /**
+      * Queue operations for the supplied docs. If this causes the flushSize to overflow, a flush will occur before this
+      * returns. Otherwise, this is a very fast operation.
+      */
     def apply(docs: D*): IO[Unit] = IO {
       docs.foreach(queue.add)
       counter.addAndGet(docs.length)
     }.flatMap { size =>
       if (size >= flushSize) {
-        flush()
+        flush(fullFlush = false)
       } else {
         IO.unit
       }
     }
 
-    def flush(fullFlush: Boolean = false): IO[Unit] = IO(take(chunkSize)).flatMap { list =>
+    /**
+      * Flushes the queue
+      *
+      * @param fullFlush if true, all operations are applied. If false, flushing only occurs until the operation count
+      *                  is below the flushSize threshold.
+      */
+    def flush(fullFlush: Boolean = true): IO[Unit] = IO(take(chunkSize)).flatMap { list =>
       if (list.isEmpty) {
         IO.unit
       } else {

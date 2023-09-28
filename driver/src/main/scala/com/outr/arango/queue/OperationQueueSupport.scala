@@ -15,7 +15,8 @@ import scala.language.implicitConversions
   * database.collection.op.upsert(docs: _*): IO[Unit]
   *
   * This will queue up to `opFlushSize` and then stream the batch in `opChunkSize` into the database. Very useful when
-  * you are needing to do various operations across potentially multiple collections efficiently.
+  * you are needing to do various operations across potentially multiple collections efficiently. Make sure to call
+  * `flushQueue()` when finished to avoid un-pushed operations.
   */
 trait OperationQueueSupport {
   protected def opFlushSize: Int = 10_000
@@ -28,7 +29,13 @@ trait OperationQueueSupport {
     q.asInstanceOf[OperationsQueue[D, M]]
   }
 
-  def flushQueue(): IO[Unit] = ops.values.map(_.flush()).toList.sequence.void
+  /**
+    * Fully flushes all pending operation queues.
+    */
+  def flushQueue(): IO[Unit] = ops.values.map(_.op.flush()).toList.sequence.void
 
-  def clear(): IO[Unit] = IO(ops.clear())
+  /**
+    * Clears the operation queues and removes all pending operations.
+    */
+  def clearQueue(): IO[Unit] = IO(ops.clear())
 }
