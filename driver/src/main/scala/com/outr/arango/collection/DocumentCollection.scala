@@ -1,7 +1,8 @@
 package com.outr.arango.collection
 
-import com.outr.arango._
+import com.outr.arango.{upsert, _}
 import com.outr.arango.core.{ArangoDBCollection, CollectionSchema, ComputedValue}
+import com.outr.arango.upsert.UpsertBuilder
 import fabric.Json
 
 class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[arango] val graph: Graph,

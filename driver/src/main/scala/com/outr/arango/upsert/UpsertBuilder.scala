@@ -1,6 +1,7 @@
-package com.outr.arango.collection
+package com.outr.arango.upsert
 
 import cats.effect.IO
+import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.{Document, DocumentModel, DocumentRef, Field, FieldAndValue, Ref}
@@ -130,35 +131,5 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
   def execute(): IO[Unit] = {
     val query = toQuery(includeReturn = false)
     collection.graph.execute(query)
-  }
-}
-
-sealed trait Upsert[D <: Document[D]]
-
-object Upsert {
-  case class Update[D <: Document[D]](value: String) extends Upsert[D]
-  case class Replace[D <: Document[D]](replacement: D) extends Upsert[D]
-}
-
-case class UpsertResult[D](original: Option[D], newValue: D)
-
-object UpsertResult {
-  implicit def rw[D: RW]: RW[UpsertResult[D]] = RW.gen
-}
-
-sealed trait Searchable {
-  def toSearch: QueryPart
-}
-
-object Searchable {
-  case class Filter[F](field1: Field[F], condition: String, field2: Field[F]) extends Searchable {
-    override val toSearch: QueryPart = Query.merge(
-      List(
-        Query(field1.fieldName),
-        Query(":"),
-        Query(List(field2.fqfPart))
-      ),
-      separator = " "
-    )
   }
 }
