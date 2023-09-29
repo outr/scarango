@@ -10,6 +10,7 @@ import com.outr.arango.mutation.DataMutation
 import com.outr.arango.util.Helpers._
 import com.outr.arango.{Field, Index, IndexInfo, IndexType}
 import fabric.Json
+import fabric.io.JsonFormatter
 import fabric.rw.RW
 
 import scala.jdk.CollectionConverters._
@@ -49,7 +50,7 @@ class ArangoDBCollection(val _collection: arangodb.ArangoCollection) extends Ara
         val o = new CollectionPropertiesOptions
         val arangoSchema = new model.CollectionSchema
         schema.foreach { s =>
-          s.rule.foreach(arangoSchema.setRule)
+          s.rule.foreach(json => arangoSchema.setRule(JsonFormatter.Default(json)))
           s.level.foreach { l =>
             arangoSchema.setLevel(l match {
               case Level.Moderate => model.CollectionSchema.Level.MODERATE

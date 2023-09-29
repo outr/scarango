@@ -319,6 +319,27 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with Ope
         person.modified should be > bethanyLastModified
       }
     }
+    "upsert Donna's bio" in {
+      database.people.upsert
+        .withSearch(Person.name("Donna"))
+        .withInsert(Person(name = "Donna", age = 41, bio = "New Record"))
+        .withReplace(Person(name = "Donna", age = 41, bio = "Replaced!"))
+        .toList
+        .map { results =>
+          results.length should be(1)
+          val result = results.head
+          result.original should not be None
+          result.original.get.name should be("Donna")
+          result.newValue.name should be("Donna")
+          result.newValue.age should be(41)
+          result.newValue.bio should be("Replaced!")
+        }
+    }
+//    "upsert multiple bios" in {
+//      database.people.upsert
+//        .withListSearch()
+//    }
+    // TODO: Upsert from a list
     "batch delete" in {
       database.people.query.byFilter(_.age > 10).toList.flatMap { list =>
         list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))

@@ -3,6 +3,7 @@ package com.outr.arango.core
 import com.arangodb.model
 import com.arangodb.model.OptionsBuilder
 import com.outr.arango.util.Helpers._
+import fabric.io.JsonFormatter
 
 class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectionOptions) {
   private[arango] lazy val arango: model.CollectionCreateOptions = {
@@ -34,7 +35,7 @@ class ArangoDBCollectionCreateOptions(collectionName: String, o: CreateCollectio
     o.shardingStrategy.foreach(c.shardingStrategy)
     o.smartJoinAttribute.foreach(c.smartJoinAttribute)
     val schema = new model.CollectionSchema
-    o.collectionSchema.rule.foreach(schema.setRule)
+    o.collectionSchema.rule.foreach(json => schema.setRule(JsonFormatter.Default(json)))
     o.collectionSchema.level.foreach { l =>
       schema.setLevel(l match {
         case Level.None => model.CollectionSchema.Level.NONE

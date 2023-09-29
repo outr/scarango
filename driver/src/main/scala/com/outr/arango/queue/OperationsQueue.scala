@@ -3,7 +3,9 @@ package com.outr.arango.queue
 import cats.effect.IO
 import cats.implicits.toTraverseOps
 import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.query._
 import com.outr.arango.{Document, DocumentModel}
+import fabric.rw.RW
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -20,6 +22,23 @@ case class OperationsQueue[D <: Document[D], M <: DocumentModel[D]](collection: 
     lazy val insert: OpQueue = OpQueue(stream => collection.stream.insert(stream, chunkSize).void)
     lazy val upsert: OpQueue = OpQueue(stream => collection.stream.upsert(stream, chunkSize).void)
     lazy val delete: OpQueue = OpQueue(stream => collection.stream.delete(stream.map(_._id), chunkSize).void)
+    def createUpsertReplace(searchFields: String*): OpQueue = OpQueue { stream =>
+      val searchQuery = QueryPart.Static(searchFields.map { field =>
+        s"$field: doc.$field"
+      }.mkString("{", ", ", "}"))
+      implicit def rw: RW[D] = collection.model.rw
+      stream.compile.toList.flatMap { list =>
+        val query =
+          aql"""
+              FOR doc IN $list
+              UPSERT $searchQuery
+              INSERT doc
+              REPLACE doc
+              IN $collection
+             """
+        collection.graph.execute(query)
+      }
+    }
 
     /**
       * Flushes the queue

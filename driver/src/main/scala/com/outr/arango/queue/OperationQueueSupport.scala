@@ -25,7 +25,7 @@ trait OperationQueueSupport {
   private val ops = TrieMap.empty[String, OperationsQueue[_, _]]
 
   implicit def collectionToOps[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M]): OperationsQueue[D, M] = {
-    val q = ops.getOrElseUpdate(collection.dbName, OperationsQueue(collection, opFlushSize, opChunkSize))
+    val q = ops.getOrElseUpdate(collection.name, OperationsQueue(collection, opFlushSize, opChunkSize))
     q.asInstanceOf[OperationsQueue[D, M]]
   }
 

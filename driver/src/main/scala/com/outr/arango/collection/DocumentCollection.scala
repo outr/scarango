@@ -22,4 +22,5 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
   def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
 
   lazy val update: UpdateBuilder[D, M] = UpdateBuilder(this)
+  lazy val upsert: UpsertBuilder[D, M] = UpsertBuilder(this)
 }
