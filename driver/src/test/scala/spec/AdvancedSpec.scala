@@ -4,13 +4,14 @@ import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
-import com.outr.arango.collection.DocumentCollection
+import com.outr.arango.collection.{DocumentCollection, Searchable}
 import com.outr.arango.core.{ComputeOn, ComputedValue, DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.OperationQueueSupport
 import fabric.rw._
 import fabric._
+import fabric.search.SearchEntry
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
@@ -335,16 +336,26 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with Ope
           result.newValue.bio should be("Replaced!")
         }
     }
-//    "upsert multiple bios" in {
-//      database.people.upsert
-//        .withListSearch()
-//    }
-    // TODO: Upsert from a list
+    "upsert multiple bios" in {
+      database.people.upsert
+        .withListSearch(List(Person("Bethany", 30), Person("Adam", 30), Person("Tom", 30))) { p =>
+          List(Searchable.Filter(Person.name, "==", p.name))
+        }
+        .withNoUpdate
+        .toList
+        .map { list =>
+          list.length should be(3)
+          val names = list.map(_.newValue.name).toSet
+          names should be(Set("Bethany", "Adam", "Tom"))
+          val ages = list.map(_.newValue.age).toSet
+          ages should be(Set(19, 23, 30))
+        }
+    }
     "batch delete" in {
       database.people.query.byFilter(_.age > 10).toList.flatMap { list =>
-        list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam"))
+        list.map(_.name).toSet should be(Set("Bethany", "Donna", "Adam", "Tom"))
         database.people.batch.delete(list.map(_._id), DeleteOptions(waitForSync = true, silent = false)).map { results =>
-          results.documents.length should be(3)
+          results.documents.length should be(4)
         }
       }
     }
