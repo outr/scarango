@@ -7,7 +7,7 @@ val scala3 = "3.3.1"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
-ThisBuild / version := "3.16.0-SNAPSHOT"
+ThisBuild / version := "3.16.0"
 ThisBuild / scalaVersion := scala213
 ThisBuild / crossScalaVersions := List(scala3, scala213)
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation")
@@ -25,6 +25,7 @@ ThisBuild / scmInfo := Some(
     "scm:git@github.com:outr/scarango.git"
   )
 )
+ThisBuild / versionScheme := Some("pvp")
 ThisBuild / developers := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("https://matthicks.com"))
 )
