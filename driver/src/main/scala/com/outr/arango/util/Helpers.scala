@@ -7,11 +7,9 @@ import com.arangodb.{ArangoDBException, entity, model}
 import com.outr.arango._
 import com.outr.arango.core._
 import com.outr.arango.query.QueryOptions
-import fabric.Json
+import fabric._
 
-import java.util.concurrent.{CompletableFuture, CompletionException}
 import scala.jdk.CollectionConverters._
-import scala.jdk.FutureConverters._
 import scala.language.implicitConversions
 
 object Helpers {

@@ -38,6 +38,7 @@ case class Id[D](value: String,
 
 object Id {
   private val ExtractorRegex = """(.+)/(.+)""".r
+  private lazy val ValidSpecialChars = "_-.@()+,=;$!*'%".toSet
 
   implicit def rw[D]: RW[Id[D]] = RW.from(_._id, v => parse[D](v.asStr.value), DefType.Str)
   implicit def toJson[D](id: Id[D]): Json = rw[D].read(id)
@@ -45,6 +46,10 @@ object Id {
   def parse[D](id: String): Id[D] = id match {
     case ExtractorRegex(collection, value) => Id[D](value, collection)
   }
+
+  def isValid(key: String): Boolean = key.forall(c =>
+    c.isLetterOrDigit || ValidSpecialChars.contains(c)
+  )
 
   def extract[D](json: fabric.Json): Id[D] = update(json)("_id").as[Id[D]]
 

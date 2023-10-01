@@ -259,11 +259,13 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with Ope
         Person("Nine", 9),
         Person("Ten", 10),
       )
-      database.people.op
-        .upsert(people: _*)
+      val upsert = database.people.op.createUpsertReplace(p => List(
+        Searchable(Person.name, p.name)
+      ))
+      upsert(people: _*)
         .flatMap(_ => flushQueue())
         .map { _ =>
-          database.people.op.upsert.processed should be(10)
+          upsert.processed should be(10)
         }
     }
     "verify the DBQueue properly inserted the records" in {
@@ -340,7 +342,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with Ope
     "upsert multiple bios" in {
       database.people.upsert
         .withListSearch(List(Person("Bethany", 30), Person("Adam", 30), Person("Tom", 30))) { p =>
-          List(Searchable.Filter(Person.name, "==", p.name))
+          List(Searchable.Filter(Person.name, p.name))
         }
         .withNoUpdate
         .toList

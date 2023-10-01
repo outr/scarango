@@ -36,8 +36,7 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
                                                               (f: DocumentRef[T, TM] => List[Searchable]): UpsertBuilder[D, M] = {
     copy(
       list = Some(() => {
-        val ref = collection.ref
-        addRef(ref)
+        val ref = collection.ref("doc")
         val entries = f(ref).map(_.toSearch)
         (ref, list.map(_.json(collection.model.rw)), entries)
       })
@@ -106,6 +105,7 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
     val updateReplaceQuery = upsert.map {
       case Upsert.Update(value) => aql"""UPDATE ${QueryPart.Static(value)} IN $collection"""
       case Upsert.Replace(replacement) => aql"""REPLACE $replacement IN $collection"""
+      case _ => throw new RuntimeException("Should not be possible, but Scala 3 says it is...")
     }.getOrElse {
       val ref = listValue.get._1
       aql"""REPLACE ${QueryPart.Ref(ref)} IN $collection"""

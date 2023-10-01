@@ -21,6 +21,7 @@ class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[aran
   override protected def afterRetrieval(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
 
   def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
+  def ref(name: String): DocumentRef[D, M] = DocumentRef(model, Some(name))
 
   lazy val update: UpdateBuilder[D, M] = UpdateBuilder(this)
   lazy val upsert: UpsertBuilder[D, M] = UpsertBuilder(this)
