@@ -42,6 +42,27 @@ class DocumentCollectionQuery[D <: Document[D], M <: DocumentModel[D]](collectio
   }
 
   /**
+    * Creates a QueryBuilder all results with the sorts and limits
+    *
+    * @param sort   the sorting to use
+    * @param offset the offset to start
+    * @param limit  the limit of results
+    * @return QueryBuilder[D]
+    */
+  def all(sort: Option[(Field[_], SortDirection)] = None,
+          offset: Option[Int] = None,
+          limit: Option[Int] = None): QueryBuilder[D] = noConsumingRefs {
+    withRef { d =>
+      FOR(d) IN collection
+      limit.foreach { l =>
+        LIMIT(offset.getOrElse(0), l)
+      }
+      sort.map(_.asInstanceOf[(Field[Any], SortDirection)]).foreach(s => SORT(s))
+      RETURN(d)
+    }
+  }
+
+  /**
     * Receives a DocumentRef in order to create a DSL query.
     *
     * @param f the function to create the query
