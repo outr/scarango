@@ -8,7 +8,7 @@ object Dependencies {
     
     val scalaPass: String = "1.2.6"
 
-    val arangoDBJavaDriver: String = "7.2.0"
+    val arangoDBJavaDriver: String = "7.3.0"
 
     val jackson: String = "4.1.0"
     
