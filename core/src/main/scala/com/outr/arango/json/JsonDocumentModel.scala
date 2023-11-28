@@ -12,7 +12,8 @@ trait JsonDocumentModel extends DocumentModel[JsonDocument] {
     r = jd => jd.json.merge(obj("_id" -> jd._id)),
     w = j => JsonDocument(j, j("_id").as[Id[JsonDocument]]),
     d = DefType.Obj(
-      "json" -> DefType.Obj(),
+      None,
+      "json" -> DefType.Obj(None),
       "_id" -> Id.rw.definition
     )
   )
