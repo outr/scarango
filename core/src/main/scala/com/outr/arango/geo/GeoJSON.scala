@@ -23,7 +23,8 @@ object GeoJSON {
   private[geo] def multiPointsFromCoords(json: Json): List[List[GeoPoint]] = json.asArr.value.toList.map(pointsFromCoords)
   private[geo] def createRW[T <: GeoJSON](toCoordinates: T => Json,
                                           fromCoordinates: Json => T,
-                                          dimensions: Int): RW[T] = {
+                                          dimensions: Int,
+                                          name: String): RW[T] = {
     def d(dim: Int): DefType = if (dim == 0) {
       DefType.Dec
     } else {
@@ -34,7 +35,7 @@ object GeoJSON {
         "coordinates" -> toCoordinates(t)
       ),
       w = j => fromCoordinates(j("coordinates")),
-      d = DefType.Obj(None, "coordinates" -> d(dimensions))
+      d = DefType.Obj(Some(s"com.outr.arango.geo.$name"), "coordinates" -> d(dimensions))
     )
   }
 
@@ -54,7 +55,8 @@ object GeoPoint {
   implicit val rw: RW[GeoPoint] = createRW[GeoPoint](
     point => pointArray(point),
     pointFromCoords,
-    dimensions = 1
+    dimensions = 1,
+    name = "GeoPoint"
   ).withPostRead(addType("GeoPoint"))
 }
 
@@ -64,7 +66,8 @@ object GeoMultiPoint {
   implicit val rw: RW[GeoMultiPoint] = createRW[GeoMultiPoint](
     mp => mp.points.map(pointArray).json,
     json => GeoMultiPoint(pointsFromCoords(json)),
-    dimensions = 2
+    dimensions = 2,
+    name = "GeoMultiPoint"
   ).withPostRead(addType("GeoMultiPoint"))
 }
 
@@ -74,7 +77,8 @@ object GeoLineString {
   implicit val rw: RW[GeoLineString] = createRW[GeoLineString](
     ls => ls.points.map(pointArray).json,
     json => GeoLineString(pointsFromCoords(json)),
-    dimensions = 2
+    dimensions = 2,
+    name = "GeoLineString"
   ).withPostRead(addType("GeoLineString"))
 }
 
@@ -84,7 +88,8 @@ object GeoMultiLineString {
   implicit val rw: RW[GeoMultiLineString] = createRW[GeoMultiLineString](
     mls => mls.lines.map(_.map(pointArray)).json,
     json => GeoMultiLineString(multiPointsFromCoords(json)),
-    dimensions = 3
+    dimensions = 3,
+    name = "GeoMultiLineString"
   ).withPostRead(addType("GeoMultiLineString"))
 }
 
@@ -94,7 +99,8 @@ object GeoPolygon {
   implicit val rw: RW[GeoPolygon] = createRW[GeoPolygon](
     p => p.points.map(pointArray).json,
     json => GeoPolygon(pointsFromCoords(json)),
-    dimensions = 3
+    dimensions = 3,
+    name = "GeoPolygon"
   ).withPostRead(addType("GeoPolygon"))
 }
 
@@ -104,6 +110,7 @@ object GeoMultiPolygon {
   implicit val rw: RW[GeoMultiPolygon] = createRW[GeoMultiPolygon](
     mp => mp.polygons.map(_.map(pointArray)).json,
     json => GeoMultiPolygon(multiPointsFromCoords(json)),
-    dimensions = 4
+    dimensions = 4,
+    name = "GeoMultiPolygon"
   ).withPostRead(addType("GeoMultiPolygon"))
 }
