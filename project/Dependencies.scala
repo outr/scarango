@@ -20,11 +20,12 @@ object Dependencies {
 
     val scalaMeta: String = "4.8.7"
 
+    val spice: String = "0.2.0"
+
     val scalaTest: String = "3.2.17"
     
     val catsEffectTesting: String = "1.5.0"
   }
-
   val fabric: ModuleID = "org.typelevel" %% "fabric-io" % version.fabric
   val profig: ModuleID = "com.outr" %% "profig" % version.profig
   val scalaPass: ModuleID = "com.outr" %% "scalapass" % version.scalaPass
@@ -35,6 +36,7 @@ object Dependencies {
   val scribe: ModuleID = "com.outr" %% "scribe" % version.scribe
   val scribeSlf4j: ModuleID = "com.outr" %% "scribe-slf4j2" % version.scribe
   val scalaMeta: ModuleID = "org.scalameta" %% "scalameta" % version.scalaMeta
+  val spiceClient: ModuleID = "com.outr" %% "spice-client-jvm" % version.spice
 
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % version.scalaTest % "test"
   val catsEffectTesting: ModuleID = "org.typelevel" %% "cats-effect-testing-scalatest" % version.catsEffectTesting % "test"

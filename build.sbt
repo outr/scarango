@@ -41,7 +41,7 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(coreJS, coreJVM, driver, docs) // example, generator
+  .aggregate(coreJS, coreJVM, driver, monitor, docs) // example, generator
   .settings(
     publish := {},
     publishLocal := {}
@@ -81,6 +81,21 @@ lazy val driver = project.in(file("driver"))
     )
   )
   .dependsOn(coreJVM)
+
+lazy val monitor = project.in(file("monitor"))
+  .settings(
+    name := "scarango-monitor",
+    fork := true,
+    Test / testGrouping := groupByName((Test / definedTests).value),
+    Test / testOptions += Tests.Argument("-oF"),
+    Test / parallelExecution := false,
+    libraryDependencies ++= Seq(
+      dep.spiceClient,
+      dep.scalaTest,
+      dep.catsEffectTesting
+    )
+  )
+  .dependsOn(driver)
 
 lazy val generator = project.in(file("generator"))
   .settings(
