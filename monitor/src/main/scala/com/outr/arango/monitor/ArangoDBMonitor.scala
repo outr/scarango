@@ -4,6 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.outr.arango.Graph
 import com.outr.arango.core.ArangoDBConfig
 import fabric.Json
+import fabric.rw._
 import fabric.io.JsonFormatter
 import spice.http.client.HttpClient
 import spice.net._
