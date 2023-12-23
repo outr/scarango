@@ -1,6 +1,7 @@
 package com.outr.arango
 
 import com.outr.arango.core.{ComputeOn, ComputedValue}
+import fabric.rw._
 
 trait RecordDocumentModel[D <: RecordDocument[D]] extends DocumentModel[D] {
   override final val collectionName: String = getClass.getSimpleName.replace("$", "")
