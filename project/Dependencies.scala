@@ -10,7 +10,7 @@ object Dependencies {
 
     val arangoDBJavaDriver: String = "7.3.0"
 
-    val jackson: String = "4.1.0"
+    val jackson: String = "4.2.0"
     
     val catsEffect: String = "3.5.2"
     
