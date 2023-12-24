@@ -6,7 +6,7 @@ import com.outr.arango.query.dsl._
 import com.outr.arango.query.{Query, QueryPart}
 import fabric.rw._
 
-case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
+case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D],
                                                                   ignoreErrors: Boolean = false,
                                                                   keepNull: Boolean = true,
                                                                   mergeObjects: Boolean = true,

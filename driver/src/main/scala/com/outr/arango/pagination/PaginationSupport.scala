@@ -19,7 +19,7 @@ trait PaginationSupport extends Graph { graph =>
   /**
     * Collection representing the pagination cache
     */
-  val pagedResults: DocumentCollection[PagedResult, PagedResult.type] = vertex(PagedResult)
+  val pagedResults: DocumentCollection[PagedResult] = vertex(PagedResult)
 
   /**
     * Maximum number of results able to be stored in the cache. If this overflows, subsequent queries will fallback to

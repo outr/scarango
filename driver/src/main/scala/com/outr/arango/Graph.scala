@@ -16,7 +16,7 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
   private val _initialized = new AtomicBoolean(false)
 
-  private var _collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = Nil
+  private var _collections: List[DocumentCollection[_ <: Document[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
 
@@ -24,7 +24,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
 
   def server: ArangoDBServer = db.server
 
-  def collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = _collections
+  def collections: List[DocumentCollection[_ <: Document[_]]] = _collections
 
   def views: List[View] = _views
 
@@ -140,9 +140,9 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
 
   def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
 
-  def vertex[D <: Document[D], M <: DocumentModel[D]](model: M,
-                                                      managed: Boolean = this.managed): DocumentCollection[D, M] = synchronized {
-    val c = new DocumentCollection[D, M](
+  def vertex[D <: Document[D]](model: DocumentModel[D],
+                               managed: Boolean = this.managed): DocumentCollection[D] = synchronized {
+    val c = new DocumentCollection[D](
       graph = this,
       arangoCollection = db.collection(model.collectionName),
       model = model,
@@ -153,9 +153,9 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
     c
   }
 
-  def edge[E <: Edge[E, From, To], M <: EdgeModel[E, From, To], From, To](model: M,
-                                                                          managed: Boolean = this.managed): EdgeCollection[E, M, From, To] = synchronized {
-    val c = new EdgeCollection[E, M, From, To](this, db.collection(model.collectionName), model, managed)
+  def edge[E <: Edge[E, From, To], From, To](model: EdgeModel[E, From, To],
+                                                                          managed: Boolean = this.managed): EdgeCollection[E, From, To] = synchronized {
+    val c = new EdgeCollection[E, From, To](this, db.collection(model.collectionName), model, managed)
     _collections = _collections ::: List(c)
     c
   }

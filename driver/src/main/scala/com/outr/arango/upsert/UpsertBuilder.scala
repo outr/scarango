@@ -9,7 +9,7 @@ import fabric._
 import fabric.io.JsonFormatter
 import fabric.rw._
 
-case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
+case class UpsertBuilder[D <: Document[D]](collection: DocumentCollection[D],
                                                                   list: Option[() => (Ref, List[Json], List[QueryPart])] = None,
                                                                   search: List[QueryPart] = Nil,
                                                                   insert: Option[Json] = None,
@@ -24,16 +24,16 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
                                                                   forceIndexHint: Boolean = false) {
   private implicit def rw: RW[D] = collection.model.rw
 
-  def withSearch(f: FieldAndValue[_]): UpsertBuilder[D, M] =
+  def withSearch(f: FieldAndValue[_]): UpsertBuilder[D] =
     withSearch(f.field.fieldName, QueryPart.Variable(f.value))
-  def withSearch(entry: (String, QueryPart)): UpsertBuilder[D, M] = {
+  def withSearch(entry: (String, QueryPart)): UpsertBuilder[D] = {
     val part = QueryPart.Container(List(QueryPart.Static(entry._1), QueryPart.Static(": "), entry._2))
     copy(
       search = part :: search
     )
   }
-  def withListSearch[T <: Document[T], TM <: DocumentModel[T]](collection: DocumentCollection[T, TM], list: List[T])
-                                                              (f: DocumentRef[T, TM] => List[Searchable]): UpsertBuilder[D, M] = {
+  def withListSearch[T <: Document[T]](collection: DocumentCollection[T], list: List[T])
+                                                              (f: DocumentRef[T] => List[Searchable]): UpsertBuilder[D] = {
     copy(
       list = Some(() => {
         val ref = collection.ref("doc")
@@ -42,18 +42,18 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
       })
     )
   }
-  def withListSearch(list: List[D])(f: DocumentRef[D, M] => List[Searchable]): UpsertBuilder[D, M] =
-    withListSearch[D, M](collection, list)(f)
-  def withInsert(doc: D): UpsertBuilder[D, M] = withInsert(doc.json(collection.model.rw))
-  def withInsert(json: Json): UpsertBuilder[D, M] = withInsert(JsonFormatter.Compact(json))
-  def withInsert(insert: String): UpsertBuilder[D, M] = copy(insert = Some(insert))
+  def withListSearch(list: List[D])(f: DocumentRef[D] => List[Searchable]): UpsertBuilder[D] =
+    withListSearch[D](collection, list)(f)
+  def withInsert(doc: D): UpsertBuilder[D] = withInsert(doc.json(collection.model.rw))
+  def withInsert(json: Json): UpsertBuilder[D] = withInsert(JsonFormatter.Compact(json))
+  def withInsert(insert: String): UpsertBuilder[D] = copy(insert = Some(insert))
 
-  def withUpdate(doc: D): UpsertBuilder[D, M] = withUpdate(doc.json(collection.model.rw))
-  def withUpdate(json: Json): UpsertBuilder[D, M] = withUpdate(JsonFormatter.Compact(json))
-  def withUpdate(update: String): UpsertBuilder[D, M] = copy(upsert = Some(Upsert.Update(update)))
-  def withNoUpdate: UpsertBuilder[D, M] = withUpdate(obj())
+  def withUpdate(doc: D): UpsertBuilder[D] = withUpdate(doc.json(collection.model.rw))
+  def withUpdate(json: Json): UpsertBuilder[D] = withUpdate(JsonFormatter.Compact(json))
+  def withUpdate(update: String): UpsertBuilder[D] = copy(upsert = Some(Upsert.Update(update)))
+  def withNoUpdate: UpsertBuilder[D] = withUpdate(obj())
 
-  def withReplace(doc: D): UpsertBuilder[D, M] = copy(upsert = Some(Upsert.Replace(doc)))
+  def withReplace(doc: D): UpsertBuilder[D] = copy(upsert = Some(Upsert.Replace(doc)))
 
   def withOptions(ignoreErrors: Boolean = false,
                   keepNull: Boolean = true,
@@ -62,7 +62,7 @@ case class UpsertBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
                   ignoreRevs: Boolean = true,
                   exclusive: Boolean = false,
                   indexHint: Option[String] = None,
-                  forceIndexHint: Boolean = false): UpsertBuilder[D, M] = copy(
+                  forceIndexHint: Boolean = false): UpsertBuilder[D] = copy(
     ignoreErrors = ignoreErrors,
     keepNull = keepNull,
     mergeObjects = mergeObjects,

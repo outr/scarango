@@ -7,7 +7,7 @@ import com.outr.arango.{Document, DocumentModel}
 import fabric.Json
 import fabric.rw._
 
-trait WritableCollection[D <: Document[D], M <: DocumentModel[D]] extends ReadableCollection[D, M] with ArangoDBDocuments[D] {
+trait WritableCollection[D <: Document[D]] extends ReadableCollection[D] with ArangoDBDocuments[D] {
   protected def arangoCollection: ArangoDBCollection
   override protected def _collection: arangodb.ArangoCollection = arangoCollection._collection
 

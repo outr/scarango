@@ -7,6 +7,11 @@ import fabric.rw._
 import scala.language.implicitConversions
 
 package object dsl {
+  implicit class DocumentModelExtras[D <: Document[D], M <: DocumentModel[D]](model: M) {
+    def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
+    def ref(name: String): DocumentRef[D, M] = DocumentRef(model, Some(name))
+  }
+
   private val refs = new ThreadLocal[List[Ref]] {
     override def initialValue(): List[Ref] = Nil
   }

@@ -11,7 +11,7 @@ import fabric.rw._
 trait AuditSupport {
   this: Graph =>
 
-  val auditLog: DocumentCollection[AuditRecord, AuditRecord.type] = vertex(AuditRecord)
+  val auditLog: DocumentCollection[AuditRecord] = vertex(AuditRecord)
 
   object audit {
     def resource(name: String): Resource = Resource(name)
@@ -28,7 +28,7 @@ trait AuditSupport {
               createdBefore: Option[Long] = None,
               sortField: Field[_] = AuditRecord.created,
               sortDirection: SortDirection = SortDirection.DESC): QueryBuilder[AuditRecord] = {
-      auditLog.query.byFilter({ r =>
+      auditLog.query.byFilter[AuditRecord.type]({ r =>
         val filters = List(
           action.map(s => r.action === s),
           origin.map(s => r.origin === s),

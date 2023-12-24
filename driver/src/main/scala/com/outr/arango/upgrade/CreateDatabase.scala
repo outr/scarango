@@ -35,7 +35,7 @@ object CreateDatabase extends DatabaseUpgrade {
     IO.unit
   }
 
-  private def verifyCollection(collection: DocumentCollection[_, _ <: DocumentModel[_]]): IO[Unit] = if (collection.managed) {
+  private def verifyCollection(collection: DocumentCollection[_]): IO[Unit] = if (collection.managed) {
     for {
       exists <- collection.arangoCollection.collection.exists()
       created <- if (exists) {

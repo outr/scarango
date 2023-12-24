@@ -5,24 +5,21 @@ import com.outr.arango.core.{ArangoDBCollection, CollectionSchema, ComputedValue
 import com.outr.arango.upsert.UpsertBuilder
 import fabric.Json
 
-class DocumentCollection[D <: Document[D], M <: DocumentModel[D]](protected[arango] val graph: Graph,
+class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
                                                                   protected[arango] val arangoCollection: ArangoDBCollection,
-                                                                  val model: M,
+                                                                  val model: DocumentModel[D],
                                                                   val `type`: CollectionType,
-                                                                  val managed: Boolean) extends WritableCollection[D, M] {
+                                                                  val managed: Boolean) extends WritableCollection[D] {
   override def dbName: String = graph.databaseName
 
   override def name: String = arangoCollection.name
 
-  override lazy val query: DocumentCollectionQuery[D, M] = new DocumentCollectionQuery[D, M](this)
+  override lazy val query: DocumentCollectionQuery[D] = new DocumentCollectionQuery[D](this)
 
   override protected def beforeStorage(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.store(v))
 
   override protected def afterRetrieval(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
 
-  def ref: DocumentRef[D, M] = DocumentRef[D, M](model, None)
-  def ref(name: String): DocumentRef[D, M] = DocumentRef(model, Some(name))
-
-  lazy val update: UpdateBuilder[D, M] = UpdateBuilder(this)
-  lazy val upsert: UpsertBuilder[D, M] = UpsertBuilder(this)
+  lazy val update: UpdateBuilder[D] = UpdateBuilder(this)
+  lazy val upsert: UpsertBuilder[D] = UpsertBuilder(this)
 }

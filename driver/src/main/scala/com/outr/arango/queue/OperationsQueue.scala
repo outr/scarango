@@ -11,7 +11,7 @@ import fabric.rw.RW
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
-case class OperationsQueue[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D, M],
+case class OperationsQueue[D <: Document[D]](collection: DocumentCollection[D],
                                                                     flushSize: Int,
                                                                     chunkSize: Int) { oq =>
   private var queues = List.empty[ProcessQueue[D]]
@@ -34,7 +34,7 @@ case class OperationsQueue[D <: Document[D], M <: DocumentModel[D]](collection: 
     lazy val insert: ProcessQueue[D] = create(list => collection.batch.insert(list).void)
     lazy val upsert: ProcessQueue[D] = create(list => collection.batch.upsert(list).void)
     lazy val delete: ProcessQueue[D] = create(list => collection.batch.delete(list.map(_._id)).void)
-    def createUpsertReplace(f: DocumentRef[D, M] => List[Searchable]): ProcessQueue[D] = create { list =>
+    def createUpsertReplace(f: DocumentRef[D] => List[Searchable]): ProcessQueue[D] = create { list =>
       collection.upsert.withListSearch(list)(f).execute()
     }
 
