@@ -1,24 +1,20 @@
 package spec
 
-import cats.effect.IO
-import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
 import com.outr.arango.collection.DocumentCollection
-import com.outr.arango.core.{ComputeOn, ComputedValue, DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
+import com.outr.arango.core.{DeleteOptions, StreamTransaction, TransactionLock, TransactionStatus}
 import com.outr.arango.query._
 import com.outr.arango.query.dsl._
 import com.outr.arango.queue.OperationQueueSupport
 import com.outr.arango.upsert.Searchable
-import fabric.rw._
 import fabric._
-import fabric.search.SearchEntry
+import fabric.rw._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.Profig
 
 import java.nio.file.Paths
-import scala.concurrent.duration.DurationInt
 
 class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with OperationQueueSupport {
   private var transaction: StreamTransaction = _

@@ -41,36 +41,23 @@ def groupByName(tests: Seq[TestDefinition]): Seq[Group] = {
 }
 
 lazy val root = project.in(file("."))
-  .aggregate(coreJS, coreJVM, driver, monitor, docs) // example, generator
+  .aggregate(core, monitor, docs) // example, generator
   .settings(
     publish := {},
     publishLocal := {}
   )
 
-lazy val core = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("core"))
+lazy val core = project.in(file("core"))
   .settings(
-    name := "scarango-core",
-    libraryDependencies ++= Seq(
-      dep.profig,
-      dep.fabric,
-      dep.scalaPass,
-      dep.scalaTest
-    )
-  )
-
-lazy val coreJS = core.js
-lazy val coreJVM = core.jvm
-
-lazy val driver = project.in(file("driver"))
-  .settings(
-    name := "scarango-driver",
+    name := "scarango",
     fork := true,
     Test / testGrouping := groupByName((Test / definedTests).value),
     Test / testOptions += Tests.Argument("-oF"),
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
+      dep.profig,
+      dep.fabric,
+      dep.scalaPass,
       dep.arangoDBJavaDriver,
       dep.jacksonDataformatVelocypack,
       dep.catsEffect,
@@ -80,7 +67,6 @@ lazy val driver = project.in(file("driver"))
       dep.catsEffectTesting
     )
   )
-  .dependsOn(coreJVM)
 
 lazy val monitor = project.in(file("monitor"))
   .settings(
@@ -95,7 +81,7 @@ lazy val monitor = project.in(file("monitor"))
       dep.catsEffectTesting
     )
   )
-  .dependsOn(driver)
+  .dependsOn(core)
 
 lazy val generator = project.in(file("generator"))
   .settings(
@@ -109,7 +95,7 @@ lazy val generator = project.in(file("generator"))
 
 lazy val docs = project
   .in(file("documentation"))
-  .dependsOn(driver)
+  .dependsOn(core)
   .enablePlugins(MdocPlugin)
   .settings(
     mdocVariables := Map(
@@ -122,4 +108,4 @@ lazy val example = project.in(file("example"))
   .settings(
     name := "scarango-example"
   )
-  .dependsOn(driver)
+  .dependsOn(core)

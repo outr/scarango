@@ -1,12 +1,10 @@
 package spec
 
-import cats.effect.IO
-import cats.effect.testing.scalatest.AsyncIOSpec
-import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.pagination.{PaginationSupport, ResultType}
-import com.outr.arango.query.dsl._
 import com.outr.arango.query._
+import com.outr.arango.query.dsl._
+import com.outr.arango.{Document, DocumentModel, Field, Graph, Id, Index}
 import fabric.rw._
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers
