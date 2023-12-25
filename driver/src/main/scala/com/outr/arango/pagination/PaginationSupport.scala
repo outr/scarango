@@ -138,7 +138,7 @@ trait PaginationSupport extends Graph { graph =>
                (implicit rw: RW[R]): IO[Option[Page[R]]] = {
       val offset = page * pageSize
       for {
-        countFiber <- pagedResults.query.byFilter(ref => ref.queryId === queryId).count.start
+        countFiber <- pagedResults.query.byFilter[PagedResult.type](ref => ref.queryId === queryId).count.start
         resultsFiber <- pagedResults.query(
           aql"""
               FOR pr IN $pagedResults

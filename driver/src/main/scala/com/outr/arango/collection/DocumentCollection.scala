@@ -20,6 +20,6 @@ class DocumentCollection[D <: Document[D]](protected[arango] val graph: Graph,
 
   override protected def afterRetrieval(value: Json): Json = model.allMutations.foldLeft(value)((v, m) => m.retrieve(v))
 
-  lazy val update: UpdateBuilder[D] = UpdateBuilder(this)
-  lazy val upsert: UpsertBuilder[D] = UpsertBuilder(this)
+  def update[M <: DocumentModel[D]](model: M): UpdateBuilder[D, M] = UpdateBuilder(this, model)
+  def upsert[M <: DocumentModel[D]](model: M): UpsertBuilder[D, M] = UpsertBuilder(this, model)
 }

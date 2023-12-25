@@ -7,6 +7,7 @@ import com.outr.arango.query.{Query, QueryPart}
 import fabric.rw._
 
 case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: DocumentCollection[D],
+                                                                  model: M,
                                                                   ignoreErrors: Boolean = false,
                                                                   keepNull: Boolean = true,
                                                                   mergeObjects: Boolean = true,
@@ -34,7 +35,8 @@ case class UpdateBuilder[D <: Document[D], M <: DocumentModel[D]](collection: Do
 
   def toQuery(f: Update,
               applyReturn: => Unit): Query = noConsumingRefs {
-    val v = collection.ref
+    val v = DocumentRef[D, M](model, None)
+//    val v: DocumentRef[D, M] = model.ref
 
     def opt(name: String, value: Boolean, default: Boolean): Option[Query] = if (value != default) {
       Some(Query.static(s"$name: $value"))
