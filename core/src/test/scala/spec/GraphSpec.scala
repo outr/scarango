@@ -1,5 +1,7 @@
 package spec
 
+import cats.effect.IO
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.collection.{DocumentCollection, EdgeCollection}
 import com.outr.arango.query._

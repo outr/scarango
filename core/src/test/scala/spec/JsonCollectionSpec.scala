@@ -1,5 +1,6 @@
 package spec
 
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.json._
 import com.outr.arango.{Graph, Index}

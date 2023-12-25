@@ -1,5 +1,6 @@
 package spec
 
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.backup.{DatabaseBackup, DatabaseRestore}
 import com.outr.arango.collection.DocumentCollection

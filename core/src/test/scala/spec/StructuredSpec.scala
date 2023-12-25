@@ -1,5 +1,6 @@
 package spec
 
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.query.dsl._
 import com.outr.arango.query.sc2AQL

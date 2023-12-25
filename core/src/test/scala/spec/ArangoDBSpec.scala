@@ -1,5 +1,6 @@
 package spec
 
+import cats.effect.testing.scalatest.AsyncIOSpec
 import com.outr.arango._
 import com.outr.arango.core._
 import com.outr.arango.query._
