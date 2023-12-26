@@ -1,16 +1,20 @@
 package com.outr.arango
 
+import com.outr.arango.collection.DocumentCollection
 import com.outr.arango.core.{CollectionSchema, ComputeOn, ComputedValue, CreateCollectionOptions}
 import com.outr.arango.mutation.{DataMutation, IdMutation}
 import fabric.rw.RW
 
 trait DocumentModel[D <: Document[D]] { model =>
+  private[arango] var _graphOption: Option[Graph] = None
+
   protected implicit val modelOption: Option[DocumentModel[D]] = Some(model)
 
   val collectionName: String
 
   def waitForSync: Option[Boolean] = None
   def schema: Option[CollectionSchema] = None
+  def `type`: CollectionType = CollectionType.Vertex
 
   protected def computedValues: List[ComputedValue] = Nil
 

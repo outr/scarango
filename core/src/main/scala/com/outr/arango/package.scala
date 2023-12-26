@@ -1,6 +1,9 @@
 package com.outr
 
+import com.outr.arango.collection.DocumentCollection
+
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 package object arango {
   implicit class FieldList(fields: List[Field[_]]) {

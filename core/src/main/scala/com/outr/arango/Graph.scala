@@ -3,6 +3,8 @@ package com.outr.arango
 import cats.effect.IO
 import cats.implicits._
 import com.outr.arango.collection.{Collection, DocumentCollection, EdgeCollection, QueryBuilder}
+import com.outr.arango._
+import com.outr.arango.backup.DatabaseBackup.AnyDoc
 import com.outr.arango.core._
 import com.outr.arango.query.{Query, Sort}
 import com.outr.arango.upgrade.{CreateDatabase, DatabaseUpgrade}
@@ -13,10 +15,9 @@ import fabric.rw._
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
+class Graph(private[arango] val db: ArangoDB, val managed: Boolean) { graph =>
   private val _initialized = new AtomicBoolean(false)
 
-  private var _collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = Nil
   private var _views: List[View] = Nil
   private var _stores: List[DatabaseStore] = Nil
 
@@ -24,7 +25,17 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
 
   def server: ArangoDBServer = db.server
 
-  def collections: List[DocumentCollection[_ <: Document[_], _ <: DocumentModel[_]]] = _collections
+  object collections {
+    private var list: List[DocumentModel[AnyDoc]] = Nil
+
+    def +=[D <: Document[D]](model: DocumentModel[D]): Unit = synchronized {
+      // TODO: if managed and initialized, invoke upgrade
+      model._graphOption = Some(graph)
+      list = list ::: List(model.asInstanceOf[DocumentModel[AnyDoc]])
+    }
+
+    def apply(): List[DocumentModel[AnyDoc]] = list
+  }
 
   def views: List[View] = _views
 
@@ -138,27 +149,7 @@ class Graph(private[arango] val db: ArangoDB, val managed: Boolean) {
     }
   }
 
-  def truncate(): IO[Unit] = collections.map(_.collection.truncate()).sequence.map(_ => ())
-
-  def vertex[D <: Document[D], M <: DocumentModel[D]](model: M,
-                                                      managed: Boolean = this.managed): DocumentCollection[D, M] = synchronized {
-    val c = new DocumentCollection[D, M](
-      graph = this,
-      arangoCollection = db.collection(model.collectionName),
-      model = model,
-      `type` = CollectionType.Vertex,
-      managed = managed
-    )
-    _collections = _collections ::: List(c)
-    c
-  }
-
-  def edge[E <: Edge[E, From, To], M <: EdgeModel[E, From, To], From, To](model: M,
-                                                                          managed: Boolean = this.managed): EdgeCollection[E, M, From, To] = synchronized {
-    val c = new EdgeCollection[E, M, From, To](this, db.collection(model.collectionName), model, managed)
-    _collections = _collections ::: List(c)
-    c
-  }
+  def truncate(): IO[Unit] = collections().map(m => documentModel2Collection(m).collection.truncate()).sequence.map(_ => ())
 
   def view(name: String,
            links: List[ViewLink],
