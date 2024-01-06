@@ -47,6 +47,16 @@ object Id {
     case ExtractorRegex(collection, value) => Id[D](value, collection)
   }
 
+  def parse[D](key: String, collectionName: String): Id[D] = {
+    val index = key.indexOf('/')
+    val v = if (index != -1) {
+      key.substring(index + 1)
+    } else {
+      key
+    }
+    Id[D](v, collectionName)
+  }
+
   def isValid(key: String): Boolean = key.forall(c =>
     c.isLetterOrDigit || ValidSpecialChars.contains(c)
   )

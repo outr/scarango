@@ -53,13 +53,5 @@ trait DocumentModel[D <: Document[D]] { model =>
 
   def collectionOptions: CreateCollectionOptions = CreateCollectionOptions()
 
-  def id(value: String = generateId()): Id[D] = {
-    val index = value.indexOf('/')
-    val v = if (index != -1) {
-      value.substring(index + 1)
-    } else {
-      value
-    }
-    Id[D](v, collectionName)
-  }
+  def id(value: String = generateId()): Id[D] = Id.parse[D](value, collectionName)
 }

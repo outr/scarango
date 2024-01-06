@@ -16,7 +16,7 @@ trait ArangoDBDocuments[T] {
 
   def count: IO[Int] = io(_collection.count()).map(_.getCount.toInt)
 
-  def id(key: String): Id[T] = Id[T](key, _collection.name())
+  def id(key: String): Id[T] = Id.parse[T](key, _collection.name())
 
   def apply(id: Id[T],
             default: Id[T] => T = id => throw NotFoundException(id._id)): IO[T] = get(id).map(_.getOrElse(default(id)))
