@@ -14,13 +14,13 @@ Scarango is published to Sonatype OSS and Maven Central currently supporting Sca
 Configuring the driver in SBT requires:
 
 ```
-libraryDependencies += "com.outr" %% "scarango-driver" % "3.18.2"
+libraryDependencies += "com.outr" %% "scarango-driver" % "3.18.3"
 ```
 
 Or in Mill:
 
 ```
-ivy"com.outr::scarango-driver:3.18.2"
+ivy"com.outr::scarango-driver:3.18.3"
 ```
 
 ## Introduction
@@ -95,7 +95,7 @@ Database.people.insert(Person("User 1", 30)).unsafeRunSync()
 //   document = Person(
 //     name = "User 1",
 //     age = 30,
-//     _id = Id(value = "Q3jcAWrRUOlcmjycwkHfZXutLUgvQbmh", collection = "people")
+//     _id = Id(value = "7LE5koFWWorEjUt4KQeIhW5QDWfSOAgJ", collection = "people")
 //   ),
 //   newDocument = None,
 //   oldDocument = None
@@ -126,17 +126,17 @@ Database
 //   Person(
 //     name = "User 1",
 //     age = 30,
-//     _id = Id(value = "Q3jcAWrRUOlcmjycwkHfZXutLUgvQbmh", collection = "people")
+//     _id = Id(value = "7LE5koFWWorEjUt4KQeIhW5QDWfSOAgJ", collection = "people")
 //   ),
 //   Person(
 //     name = "Adam",
 //     age = 21,
-//     _id = Id(value = "QshAupxHLjk7lXSqA1vMpP8WJmJe2VMA", collection = "people")
+//     _id = Id(value = "O6ZYtRmw67DAElkZ5Y7H5KXxHxSzSl1s", collection = "people")
 //   ),
 //   Person(
 //     name = "Bethany",
 //     age = 19,
-//     _id = Id(value = "gtKZ4OVWbEbs9pfuubqp9b9234QNg5dF", collection = "people")
+//     _id = Id(value = "cNrEEIb9hZPoLegdIIFUwfUzCJ8hSmsP", collection = "people")
 //   )
 // )
 ```
