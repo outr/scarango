@@ -55,14 +55,14 @@ object ArangoDBServer {
           fabric2Jackson(value, g)
       }
       g.writeEndObject()
-    case Arr(vector) =>
+    case Arr(vector, _) =>
       g.writeStartArray()
       vector.foreach(fabric2Jackson(_, g))
       g.writeEndArray()
-    case Bool(b) => g.writeBoolean(b)
-    case NumDec(d) => g.writeNumber(d.underlying())
-    case NumInt(l) => g.writeNumber(l)
-    case Str(s) => g.writeString(s)
+    case Bool(b, _) => g.writeBoolean(b)
+    case NumDec(d, _) => g.writeNumber(d.underlying())
+    case NumInt(l, _) => g.writeNumber(l)
+    case Str(s, _) => g.writeString(s)
   }
 
   private def jackson2Fabric(node: JsonNode): Json = node.getNodeType match {

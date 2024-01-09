@@ -107,11 +107,11 @@ object Helpers {
     case fabric.Obj(map) => map.map {
       case (key, value) => key -> value2AnyRef(value)
     }.asJava
-    case fabric.Str(s) => s
-    case fabric.NumInt(n) => Long.box(n)
-    case fabric.NumDec(n) => n.underlying()
-    case fabric.Bool(b) => java.lang.Boolean.valueOf(b)
-    case fabric.Arr(a) => a.map(value2AnyRef).asJava
+    case fabric.Str(s, _) => s
+    case fabric.NumInt(n, _) => Long.box(n)
+    case fabric.NumDec(n, _) => n.underlying()
+    case fabric.Bool(b, _) => java.lang.Boolean.valueOf(b)
+    case fabric.Arr(a, _) => a.map(value2AnyRef).asJava
     case fabric.Null => None.orNull
   }
 

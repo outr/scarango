@@ -2,9 +2,9 @@ import sbt.*
 
 object Dependencies {
   object version {
-    val fabric: String = "1.12.8"
+    val fabric: String = "1.13.0"
 
-    val profig: String = "3.4.11"
+    val profig: String = "3.4.12"
     
     val scalaPass: String = "1.2.6"
 
