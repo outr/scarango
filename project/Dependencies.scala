@@ -6,7 +6,7 @@ object Dependencies {
 
     val profig: String = "3.4.12"
     
-    val scalaPass: String = "1.2.6"
+    val scalaPass: String = "1.2.8"
 
     val arangoDBJavaDriver: String = "7.4.0"
 
