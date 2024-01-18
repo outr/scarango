@@ -24,7 +24,7 @@ case class QueryBuilder[R](graph: Graph,
   /**
     * Retrieves the results as a Cursor.
     */
-  def cursor(): IO[Cursor[R]] = graph.db.query
+  def cursor: IO[Cursor[R]] = graph.db.query
     .createCursor(query)
     .map(_.as[R](converter))
 
@@ -41,14 +41,14 @@ case class QueryBuilder[R](graph: Graph,
     *
     * @return fs2.Stream[IO, R]
     */
-  def stream(chunkSize: Int = 512): fs2.Stream[IO, R] = fs2.Stream.force(cursor().map(_.stream(chunkSize)))
+  def stream(chunkSize: Int = 512): fs2.Stream[IO, R] = fs2.Stream.force(cursor.map(_.stream(chunkSize)))
 
-  def iterator: IO[Iterator[R]] = cursor().map(_.iterator)
+  def iterator: IO[Iterator[R]] = cursor.map(_.iterator)
 
   /**
     * Convenience method to get the results from the stream as a List
     */
-  def toList: IO[List[R]] = cursor().map(_.toList)
+  def toList: IO[List[R]] = cursor.map(_.toList)
 
   /**
     * Retrieves exactly one result from the query. If there is zero or more than one an exception will be thrown.

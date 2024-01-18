@@ -158,7 +158,7 @@ class AdvancedSpec extends AsyncWordSpec with AsyncIOSpec with Matchers with Ope
         .query(aql"FOR p IN ${database.people} LIMIT 1 RETURN p")
         .withCount()
         .withFullCount()
-        .cursor()
+        .cursor
         .map { cursor =>
           val people = cursor.toList
           people.map(_.name) should be(List("Adam"))
