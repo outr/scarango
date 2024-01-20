@@ -105,6 +105,27 @@ class Field[F](val fieldName: String,
       fields = List(fieldName),
       expireAfterSeconds = expireAfter.toSeconds.toInt
     )
+
+    def inverted(parallelism: Int = 2,
+                 analyzer: Analyzer = Analyzer.Identity,
+                 features: Set[AnalyzerFeature] = Set.empty,
+                 includeAllFields: Boolean = false,
+                 trackListPositions: Boolean = false,
+                 searchField: Boolean = false,
+                 cache: Boolean = false,
+                 primaryKeyCache: Boolean = false): Index = Index.Inverted(
+      parallelism = parallelism,
+      fields = List(InvertedIndexField(
+        name = fieldName
+      )),
+      analyzer = analyzer,
+      features = features,
+      includeAllFields = includeAllFields,
+      trackListPositions = trackListPositions,
+      searchField = searchField,
+      cache = cache,
+      primaryKeyCache = primaryKeyCache
+    )
   }
 
   def withMutation(mutation: DataMutation): Field[F] = {
