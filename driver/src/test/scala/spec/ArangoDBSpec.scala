@@ -62,16 +62,16 @@ class ArangoDBSpec extends AsyncWordSpec with AsyncIOSpec with Matchers {
         list.size should be(1)
         val info = list.head
         nameFieldId = info.id
-        info.`type` should be("persistent")
-        info.fields should be(Some(List("name")))
+        info.index.getClass.getSimpleName should be("Persistent")
+        info.index.asInstanceOf[Index.Persistent].fields should be(List("name"))
       }
     }
     "verify the index was created" in {
       coll.index.query().asserting { list =>
         list.size should be(2)
         val info = list.find(_.id == nameFieldId).getOrElse(fail())
-        info.`type` should be("persistent")
-        info.fields should be(Some(List("name")))
+        info.index.getClass.getSimpleName should be("Persistent")
+        info.index.asInstanceOf[Index.Persistent].fields should be(List("name"))
       }
     }
     "insert a document" in {

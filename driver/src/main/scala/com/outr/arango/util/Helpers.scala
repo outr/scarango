@@ -1,9 +1,10 @@
 package com.outr.arango.util
 
 import cats.effect.IO
-import com.arangodb.entity.ErrorEntity
-import com.arangodb.model.{DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions, AqlQueryOptions}
+import com.arangodb.entity.{ErrorEntity, IndexType}
+import com.arangodb.model.{AqlQueryOptions, DocumentCreateOptions, DocumentDeleteOptions, DocumentUpdateOptions}
 import com.arangodb.{ArangoDBException, entity, model}
+import com.arangodb.entity.arangosearch.{AnalyzerFeature => AF}
 import com.outr.arango._
 import com.outr.arango.core._
 import com.outr.arango.query.QueryOptions
@@ -93,15 +94,67 @@ object Helpers {
 
   implicit def option2Integer(i: Option[Int]): Integer = i.map(Integer.valueOf).orNull
 
-  implicit def indexEntityConversion(e: entity.IndexEntity): IndexInfo = IndexInfo(
-    `type` = e.getType.name(),
-    fields = Option(e.getFields).map(_.asScala.toList),
-    unique = Option(e.getUnique),
-    sparse = Option(e.getSparse),
-    id = e.getId,
-    isNewlyCreated = Option(e.getIsNewlyCreated),
-    selectivityEstimate = Option(e.getSelectivityEstimate)
-  )
+  implicit def indexEntityConversion(e: entity.IndexEntity): IndexInfo = {
+    val index = e.getType match {
+      case IndexType.persistent => Index.Persistent(
+        fields = e.getFields.asScala.toList,
+        sparse = e.getSparse,
+        unique = e.getUnique
+      )
+      case IndexType.geo => Index.Geo(
+        fields = e.getFields.asScala.toList,
+        geoJson = e.getGeoJson
+      )
+      case IndexType.ttl => Index.TTL(
+        fields = e.getFields.asScala.toList,
+        expireAfterSeconds = e.getExpireAfter.toInt
+      )
+      case IndexType.primary => Index.Primary(
+        fields = e.getFields.asScala.toList
+      )
+      case t => throw new UnsupportedOperationException(s"Unsupported IndexType: $t")
+    }
+    IndexInfo(
+      id = e.getId,
+      index = index,
+      isNewlyCreated = Option(e.getIsNewlyCreated),
+      selectivityEstimate = Option(e.getSelectivityEstimate)
+    )
+  }
+
+  implicit def invertedIndexEntityConversion(e: entity.InvertedIndexEntity): IndexInfo = {
+    def convert(features: java.util.Set[AF]): Set[AnalyzerFeature] = features.asScala.map {
+      case AF.frequency => AnalyzerFeature.Frequency
+      case AF.norm => AnalyzerFeature.Norm
+      case AF.position => AnalyzerFeature.Position
+      case AF.offset => AnalyzerFeature.Offset
+    }.toSet
+    IndexInfo(
+      id = e.getId,
+      index = Index.Inverted(
+        fields = e.getFields.asScala.toList.map { f =>
+          InvertedIndexField(
+            name = f.getName,
+            analyzer = Analyzer(f.getAnalyzer),
+            includeAllFields = f.getIncludeAllFields,
+            searchField = f.getSearchField,
+            trackListPositions = f.getTrackListPositions,
+            cache = f.getCache,
+            features = convert(f.getFeatures)
+          )
+        },
+        analyzer = Analyzer(e.getAnalyzer),
+        features = convert(e.getFeatures),
+        includeAllFields = e.getIncludeAllFields,
+        trackListPositions = e.getTrackListPositions,
+        searchField = e.getSearchField,
+        cache = e.getCache,
+        primaryKeyCache = e.getPrimaryKeyCache
+      ),
+      isNewlyCreated = Option(e.getIsNewlyCreated),
+      selectivityEstimate = None
+    )
+  }
 
   implicit def value2AnyRef(v: fabric.Json): AnyRef = v match {
     case fabric.Obj(map) => map.map {

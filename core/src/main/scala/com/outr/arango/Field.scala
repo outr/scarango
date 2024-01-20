@@ -90,24 +90,22 @@ class Field[F](val fieldName: String,
 
   object index {
     def persistent(sparse: Boolean = false,
-                   unique: Boolean = false): Index = {
-      Index(IndexType.Persistent, List(fieldName), sparse, unique)
-    }
+                   unique: Boolean = false): Index = Index.Persistent(
+      fields = List(fieldName),
+      sparse = sparse,
+      unique = unique
+    )
 
-    def geo(geoJson: Boolean = true): Index = {
-      Index(IndexType.Geo, List(fieldName), geoJson = geoJson)
-    }
+    def geo(geoJson: Boolean = true): Index = Index.Geo(
+      fields = List(fieldName),
+      geoJson = geoJson
+    )
 
-    def ttl(expireAfter: FiniteDuration): Index = {
-      val seconds = expireAfter.toSeconds.toInt
-      Index(IndexType.TTL, List(fieldName), expireAfterSeconds = seconds)
-    }
+    def ttl(expireAfter: FiniteDuration): Index = Index.TTL(
+      fields = List(fieldName),
+      expireAfterSeconds = expireAfter.toSeconds.toInt
+    )
   }
-
-//  def field[T: RW](name: String): Field[T] = model match {
-//    case Some(m) => m.field[T](s"$fieldName.$name")
-//    case None => throw new RuntimeException("No model defined!")
-//  }
 
   def withMutation(mutation: DataMutation): Field[F] = {
     this.mutation.foreach(m => throw new RuntimeException(s"Field $fieldName already has a mutation set: $m"))

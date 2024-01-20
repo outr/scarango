@@ -3,12 +3,13 @@ package com.outr.arango.core
 import cats.effect.IO
 import cats.implicits._
 import com.arangodb
-import com.arangodb.entity.IndexEntity
+import com.arangodb.entity.{IndexEntity, InvertedIndexField}
 import com.arangodb.model
-import com.arangodb.model.{CollectionPropertiesOptions, GeoIndexOptions, PersistentIndexOptions, TtlIndexOptions}
+import com.arangodb.model.{CollectionPropertiesOptions, GeoIndexOptions, InvertedIndexOptions, PersistentIndexOptions, TtlIndexOptions}
 import com.outr.arango.mutation.DataMutation
 import com.outr.arango.util.Helpers._
-import com.outr.arango.{Field, Index, IndexInfo, IndexType}
+import com.outr.arango.{AnalyzerFeature, Field, Index, IndexInfo}
+import com.arangodb.entity.arangosearch.{AnalyzerFeature => AF}
 import fabric.Json
 import fabric.io.JsonFormatter
 import fabric.rw.RW
@@ -90,29 +91,53 @@ class ArangoDBCollection(val _collection: arangodb.ArangoCollection) extends Ara
     }
 
     def ensure(indexes: List[Index]): IO[List[IndexInfo]] = {
-      val generate: List[IO[IndexEntity]] = indexes.map { i =>
-        val fields = i.fields.asJava
-        i.`type` match {
-          case IndexType.Persistent => io {
-            val options = new PersistentIndexOptions
-            options.sparse(i.sparse)
-            options.unique(i.unique)
-            options.estimates(i.estimates)
-            _collection.ensurePersistentIndex(fields, options)
-          }
-          case IndexType.Geo => io {
-            val options = new GeoIndexOptions
-            options.geoJson(i.geoJson)
-            _collection.ensureGeoIndex(fields, options)
-          }
-          case IndexType.TTL => io {
-            val options = new TtlIndexOptions
-            options.expireAfter(i.expireAfterSeconds)
-            _collection.ensureTtlIndex(fields, options)
-          }
-        }
+      val generate: List[IO[IndexInfo]] = indexes.map {
+        case Index.Persistent(fields, sparse, unique, estimates) =>
+          val options = new PersistentIndexOptions
+          options.sparse(sparse)
+          options.unique(unique)
+          options.estimates(estimates)
+          io(_collection.ensurePersistentIndex(fields.asJava, options))
+        case Index.Geo(fields, geoJson) =>
+          val options = new GeoIndexOptions
+          options.geoJson(geoJson)
+          io(_collection.ensureGeoIndex(fields.asJava, options))
+        case Index.TTL(fields, expireAfterSeconds) =>
+          val options = new TtlIndexOptions
+          options.expireAfter(expireAfterSeconds)
+          io(_collection.ensureTtlIndex(fields.asJava, options))
+        case Index.Inverted(parallelism, fields, analyzer, features, includeAllFields, trackListPositions, searchField, cache, primaryKeyCache) =>
+          def convert(features: Set[AnalyzerFeature]): Seq[AF] = features.map {
+            case AnalyzerFeature.Frequency => AF.frequency
+            case AnalyzerFeature.Norm => AF.norm
+            case AnalyzerFeature.Position => AF.position
+            case AnalyzerFeature.Offset => AF.offset
+          }.toSeq
+          val options = new InvertedIndexOptions
+          options.parallelism(parallelism)
+          options.fields(fields.map { f =>
+            val i = new InvertedIndexField
+            i.name(f.name)
+            i.analyzer(f.analyzer.name)
+            i.includeAllFields(f.includeAllFields)
+            i.searchField(f.searchField)
+            i.trackListPositions(f.trackListPositions)
+            i.cache(f.cache)
+            i.features(convert(f.features): _*)
+            i
+          }: _*)
+          options.analyzer(analyzer.name)
+          options.features(convert(features): _*)
+          options.includeAllFields(includeAllFields)
+          options.trackListPositions(trackListPositions)
+          options.searchField(searchField)
+          options.cache(cache)
+          options.primaryKeyCache(primaryKeyCache)
+
+          io(_collection.ensureInvertedIndex(options))
+        case Index.Primary(_) => throw new UnsupportedOperationException(s"Primary indexes are created automatically!")
       }
-      generate.map(_.map(indexEntityConversion)).sequence
+      generate.sequence
     }
 
     def delete(indexIds: List[String]): IO[List[String]] = {
