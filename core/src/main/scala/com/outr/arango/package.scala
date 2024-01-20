@@ -1,8 +1,10 @@
 package com.outr
 
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 package object arango {
+  implicit def field2String[F](field: Field[F]): String = field.fieldName
   implicit class FieldList(fields: List[Field[_]]) {
     object index {
       def persistent(sparse: Boolean = false,
