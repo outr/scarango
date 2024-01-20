@@ -42,6 +42,16 @@ trait ArangoDBDocuments[T] {
     .map(deleteDocumentEntityConversion(_, toT))
 
   object batch {
+    def get(ids: List[Id[T]]): IO[List[Option[T]]] = io(_collection.getDocuments(ids.map(_._key).asJava, classOf[Json]))
+      .map(entity => entity.getDocuments.asScala.toList.map(json => Option(json).map(toT)))
+
+    def apply(ids: List[Id[T]], failOnMissing: Boolean = false): IO[List[T]] = get(ids).map(_.flatten).map { list =>
+      if (failOnMissing && ids.length != list.length) {
+        throw new RuntimeException(s"Missing results! Expected ${ids.length} but received ${list.length}.")
+      }
+      list
+    }
+
     def insert(docs: List[T], options: CreateOptions = CreateOptions.Insert, transaction: StreamTransaction = None.orNull): IO[CreateResults[T]] = {
       val insert = io(_collection.insertDocuments(
         docs.map(fromT).asJava,
