@@ -1,19 +1,20 @@
 package com.outr.arango.query
 
 import fabric.Json
+import fabric.io.JsonFormatter
 
 case class Query(parts: List[QueryPart], options: QueryOptions) extends QueryPart.Support with QueryOptionsSupport[Query] {
-  lazy val (variables: Map[String, fabric.Json], reverseLookup: Map[fabric.Json, String]) = {
+  lazy val (variables: Map[String, fabric.Json], reverseLookup: Map[String, String]) = {
     var argCounter = 0
     var map = Map.empty[String, fabric.Json]
-    var reverseMap = Map.empty[fabric.Json, String]
+    var reverseMap = Map.empty[String, String]
 
     def parsePart(part: QueryPart): Unit = part match {
       case QueryPart.Ref(_) => // Ignore ref
       case QueryPart.Container(parts) => parts.foreach(parsePart)
       case QueryPart.Static(_) => // Ignore static
       case QueryPart.Variable(v) =>
-        val id = reverseMap.get(v) match {
+        val id = reverseMap.get(JsonFormatter.Compact(v)) match {
           case Some(idValue) => idValue
           case None =>
             val idValue = s"arg$argCounter"
@@ -21,14 +22,14 @@ case class Query(parts: List[QueryPart], options: QueryOptions) extends QueryPar
             idValue
         }
         map += id -> v
-        reverseMap += v -> id
+        reverseMap += JsonFormatter.Compact(v) -> id
       case QueryPart.NamedVariable(name, v) => map.get(name) match {
         case Some(value) if v != value => throw new RuntimeException(s"Duplicate named variable with different values: $name with $v and $value")
         case Some(_) => // Already added
         case None =>
           val id = name
           map += id -> v
-          reverseMap += v -> id
+          reverseMap += JsonFormatter.Compact(v) -> id
       }
       case support: QueryPart.Support => parsePart(support.toQueryPart)
     }
@@ -36,6 +37,12 @@ case class Query(parts: List[QueryPart], options: QueryOptions) extends QueryPar
     parts.foreach(parsePart)
     map -> reverseMap
   }
+
+  def byName(key: String): fabric.Json = variables.getOrElse(key, throw new RuntimeException(s"Unable to find $key in ${variables.keys.mkString(", ")}"))
+  def byValue(value: fabric.Json): String = reverseLookup.getOrElse(
+    JsonFormatter.Compact(value),
+    throw new RuntimeException(s"Unable to find $value in ${reverseLookup.mkString(", ")}")
+  )
 
   lazy val string: String = asString(new RefManager)
 
@@ -46,7 +53,7 @@ case class Query(parts: List[QueryPart], options: QueryOptions) extends QueryPar
       case QueryPart.Ref(ref) => refManager.nameFor(ref)
       case QueryPart.Container(parts) => parts.map(part2String).mkString
       case QueryPart.Static(v) => v
-      case QueryPart.Variable(v) => s"@${reverseLookup(v)}"
+      case QueryPart.Variable(v) => s"@${byValue(v)}"
       case QueryPart.NamedVariable(name, _) => s"@$name"
       case support: QueryPart.Support => part2String(support.toQueryPart)
     }
