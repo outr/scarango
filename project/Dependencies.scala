@@ -22,7 +22,7 @@ object Dependencies {
 
     val spice: String = "0.5.2"
 
-    val scalaTest: String = "3.2.17"
+    val scalaTest: String = "3.2.18"
     
     val catsEffectTesting: String = "1.5.0"
   }
