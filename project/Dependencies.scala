@@ -4,7 +4,7 @@ object Dependencies {
   object version {
     val fabric: String = "1.14.0"
 
-    val profig: String = "3.4.12"
+    val profig: String = "3.4.13"
     
     val scalaPass: String = "1.2.8"
 
