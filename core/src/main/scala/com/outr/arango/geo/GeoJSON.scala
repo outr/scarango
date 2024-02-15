@@ -46,13 +46,8 @@ object GeoJSON {
     )
   }
 
-  implicit lazy val rw: RW[GeoJSON] = RW.poly[GeoJSON](getType = _.getClass.getSimpleName.replace("$", ""))(
-    "Point" -> GeoPoint.rw,
-    "MultiPoint" -> GeoMultiPoint.rw,
-    "LineString" -> GeoLineString.rw,
-    "MultiLineString" -> GeoMultiLineString.rw,
-    "Polygon" -> GeoPolygon.rw,
-    "MultiPolygon" -> GeoMultiPolygon.rw
+  implicit lazy val rw: RW[GeoJSON] = RW.poly[GeoJSON]()(
+    GeoPoint.rw, GeoMultiPoint.rw, GeoLineString.rw, GeoMultiLineString.rw, GeoPolygon.rw, GeoMultiPolygon.rw
   )
 }
 
