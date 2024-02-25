@@ -20,7 +20,7 @@ object Dependencies {
 
     val scalaMeta: String = "4.8.7"
 
-    val spice: String = "0.5.2"
+    val spice: String = "0.5.4"
 
     val scalaTest: String = "3.2.18"
     
