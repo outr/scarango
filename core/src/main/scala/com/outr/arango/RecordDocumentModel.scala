@@ -4,7 +4,7 @@ import com.outr.arango.core.{ComputeOn, ComputedValue}
 import fabric.rw._
 
 trait RecordDocumentModel[D <: RecordDocument[D]] extends DocumentModel[D] {
-  override final val collectionName: String = getClass.getSimpleName.replace("$", "")
+  override val collectionName: String = getClass.getSimpleName.replace("$", "")
 
   val created: Field[Long] = field("created")
   val modified: Field[Long] = field("modified")
