@@ -18,16 +18,16 @@ object GeoJSON {
   private[geo] def addType[T <: GeoJSON](name: String)(t: T, json: Json): Json = json.merge(obj(
     "type" -> name
   ))
-  private[geo] def pointArray(p: GeoPoint): Json = arr(p.longitude, p.latitude)
-  private[geo] def pointFromCoords(json: Json): GeoPoint = {
+  private[geo] def pointArray(p: Point): Json = arr(p.longitude, p.latitude)
+  private[geo] def pointFromCoords(json: Json): Point = {
     val arr = json.asArr
-    GeoPoint(
+    Point(
       latitude = arr.value(1).asDouble,
       longitude = arr.value(0).asDouble
     )
   }
-  private[geo] def pointsFromCoords(json: Json): List[GeoPoint] = json.asArr.value.toList.map(pointFromCoords)
-  private[geo] def multiPointsFromCoords(json: Json): List[List[GeoPoint]] = json.asArr.value.toList.map(pointsFromCoords)
+  private[geo] def pointsFromCoords(json: Json): List[Point] = json.asArr.value.toList.map(pointFromCoords)
+  private[geo] def multiPointsFromCoords(json: Json): List[List[Point]] = json.asArr.value.toList.map(pointsFromCoords)
   private[geo] def createRW[T <: GeoJSON](toCoordinates: T => Json,
                                           fromCoordinates: Json => T,
                                           dimensions: Int,
@@ -47,16 +47,16 @@ object GeoJSON {
   }
 
   implicit lazy val rw: RW[GeoJSON] = RW.poly[GeoJSON]()(
-    GeoPoint.rw, GeoMultiPoint.rw, GeoLineString.rw, GeoMultiLineString.rw, GeoPolygon.rw, GeoMultiPolygon.rw
+    Point.rw, MultiPoint.rw, LineString.rw, MultiLineString.rw, Polygon.rw, MultiPolygon.rw
   )
 }
 
-case class GeoPoint(latitude: Double, longitude: Double) extends GeoJSON {
+case class Point(latitude: Double, longitude: Double) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_POINT($longitude, $latitude)")
 }
 
-object GeoPoint {
-  implicit val rw: RW[GeoPoint] = createRW[GeoPoint](
+object Point {
+  implicit val rw: RW[Point] = createRW[Point](
     point => pointArray(point),
     pointFromCoords,
     dimensions = 1,
@@ -64,66 +64,66 @@ object GeoPoint {
   ).withPostRead(addType("Point"))
 }
 
-case class GeoMultiPoint(points: List[GeoPoint]) extends GeoJSON {
+case class MultiPoint(points: List[Point]) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_MULTIPOINT(${points.map(pointArray).json})")
 }
 
-object GeoMultiPoint {
-  implicit val rw: RW[GeoMultiPoint] = createRW[GeoMultiPoint](
+object MultiPoint {
+  implicit val rw: RW[MultiPoint] = createRW[MultiPoint](
     mp => mp.points.map(pointArray).json,
-    json => GeoMultiPoint(pointsFromCoords(json)),
+    json => MultiPoint(pointsFromCoords(json)),
     dimensions = 2,
     name = "MultiPoint"
   ).withPostRead(addType("MultiPoint"))
 }
 
-case class GeoLineString(points: List[GeoPoint]) extends GeoJSON {
+case class LineString(points: List[Point]) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_LINESTRING(${points.map(pointArray).json})")
 }
 
-object GeoLineString {
-  implicit val rw: RW[GeoLineString] = createRW[GeoLineString](
+object LineString {
+  implicit val rw: RW[LineString] = createRW[LineString](
     ls => ls.points.map(pointArray).json,
-    json => GeoLineString(pointsFromCoords(json)),
+    json => LineString(pointsFromCoords(json)),
     dimensions = 2,
     name = "LineString"
   ).withPostRead(addType("LineString"))
 }
 
-case class GeoMultiLineString(lines: List[List[GeoPoint]]) extends GeoJSON {
+case class MultiLineString(lines: List[List[Point]]) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_MULTILINESTRING(${lines.map(_.map(pointArray)).json})")
 }
 
-object GeoMultiLineString {
-  implicit val rw: RW[GeoMultiLineString] = createRW[GeoMultiLineString](
+object MultiLineString {
+  implicit val rw: RW[MultiLineString] = createRW[MultiLineString](
     mls => mls.lines.map(_.map(pointArray)).json,
-    json => GeoMultiLineString(multiPointsFromCoords(json)),
+    json => MultiLineString(multiPointsFromCoords(json)),
     dimensions = 3,
     name = "MultiLineString"
   ).withPostRead(addType("MultiLineString"))
 }
 
-case class GeoPolygon(points: List[GeoPoint]) extends GeoJSON {
+case class Polygon(points: List[Point]) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_POLYGON(${points.map(pointArray).json})")
 }
 
-object GeoPolygon {
-  implicit val rw: RW[GeoPolygon] = createRW[GeoPolygon](
+object Polygon {
+  implicit val rw: RW[Polygon] = createRW[Polygon](
     p => p.points.map(pointArray).json,
-    json => GeoPolygon(pointsFromCoords(json)),
+    json => Polygon(pointsFromCoords(json)),
     dimensions = 3,
     name = "Polygon"
   ).withPostRead(addType("Polygon"))
 }
 
-case class GeoMultiPolygon(polygons: List[List[GeoPoint]]) extends GeoJSON {
+case class MultiPolygon(polygons: List[List[Point]]) extends GeoJSON {
   override def asQueryPart: QueryPart = QueryPart.Static(s"GEO_MULTIPOLYGON(${polygons.map(_.map(pointArray)).json})")
 }
 
-object GeoMultiPolygon {
-  implicit val rw: RW[GeoMultiPolygon] = createRW[GeoMultiPolygon](
+object MultiPolygon {
+  implicit val rw: RW[MultiPolygon] = createRW[MultiPolygon](
     mp => mp.polygons.map(_.map(pointArray)).json,
-    json => GeoMultiPolygon(multiPointsFromCoords(json)),
+    json => MultiPolygon(multiPointsFromCoords(json)),
     dimensions = 4,
     name = "MultiPolygon"
   ).withPostRead(addType("MultiPolygon"))
