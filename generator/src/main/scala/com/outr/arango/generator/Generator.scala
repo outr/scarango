@@ -56,10 +56,33 @@ case class Generator(path: Path,
       c.ctor.children.foreach { t =>
         scribe.info(s"Child: $t (${t.getClass.getName})")
       }
+      if (c.mods.map(_.toString()).contains("case") && isDocumentClass(c)) {
+        val className = c.name.toString()
+        var params = c.ctor.paramClauses.head.values.map(p => Param(
+          name = p.name.toString(),
+          clazz = p.decltpe.get.toString()
+        ))
+        params.find(_.name == "_id") match {
+          case None => params = params ::: List(Param("_id", s"Id[$className]"))
+          case Some(p) if p.clazz != s"Id[$className]" =>
+            params = params.filterNot(_.name == "_id") ::: List(Param("_id", s"Id[$className]"))
+          case _ => // Ignore
+        }
+        val template = c.templ.toString()
+        scribe.info(s"Params: ${params.mkString(" | ")}")
+        val pre = s"case class $className"
+        val sep = s",\n${List.fill(pre.length + 1)(' ').mkString}"
+        val replacement = s"""$pre(${params.mkString(sep)}) $template"""
+        scribe.info(replacement)
+      }
     }
   }
 
   private def isDocumentClass(c: Defn.Class): Boolean = c.templ.children.exists { t =>
     t.toString().contains(s"Document[${c.name}]")
   } || c.mods.exists(_.toString() == "case")
+
+  case class Param(name: String, clazz: String) {
+    override def toString: String = s"$name: $clazz"
+  }
 }
