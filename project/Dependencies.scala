@@ -12,7 +12,7 @@ object Dependencies {
 
     val jackson: String = "4.2.0"
     
-    val catsEffect: String = "3.5.4"
+    val catsEffect: String = "3.5.6"
     
     val fs2: String = "3.9.4"
     
