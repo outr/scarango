@@ -24,7 +24,7 @@ object Dependencies {
 
     val scalaTest: String = "3.2.18"
     
-    val catsEffectTesting: String = "1.5.0"
+    val catsEffectTesting: String = "1.6.0"
   }
   val fabric: ModuleID = "org.typelevel" %% "fabric-io" % version.fabric
   val profig: ModuleID = "com.outr" %% "profig" % version.profig
