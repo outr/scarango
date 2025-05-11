@@ -3,7 +3,7 @@ import Tests.*
 
 val scala213 = "2.13.13"
 
-val scala3 = "3.3.3"
+val scala3 = "3.3.6"
 
 name := "scarango"
 ThisBuild / organization := "com.outr"
